@@ -16,7 +16,7 @@ small video clips for download
 - [![simple sweep](sample/simple_Sweep.mkv)]
 
 ## Screenshot
-[![first step](sample/SC013.jpg)]
+![first step](sample/SC013.jpg)
 
 ## first output
 result of screenshot with Fanuc postprocessor
