@@ -1,0 +1,45 @@
+/* 
+ * **************************************************************************
+ * 
+ *  file:       contourtargetdefinition.h
+ *  project:    kuteCAM
+ *  subproject: main application
+ *  purpose:    create gcode for toolpaths created from CAD models
+ *  created:    29.3.2022 by Django Reinhard
+ *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ * 
+ *  This program is free software: you can redistribute it and/or modify 
+ *  it under the terms of the GNU General Public License as published by 
+ *  the Free Software Foundation, either version 2 of the License, or 
+ *  (at your option) any later version. 
+ *   
+ *  This program is distributed in the hope that it will be useful, 
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ *  GNU General Public License for more details. 
+ *   
+ *  You should have received a copy of the GNU General Public License 
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * 
+ * **************************************************************************
+ */
+#ifndef CONTOURTARGETDEFINITION_H
+#define CONTOURTARGETDEFINITION_H
+#include "targetdefinition.h"
+
+
+class ContourTargetDefinition : public TargetDefinition
+{
+public:
+  explicit ContourTargetDefinition(const gp_Pnt& pos, QObject *parent = nullptr);
+  virtual ~ContourTargetDefinition() = default;
+
+  virtual QString toString() const;
+
+  double waterlineDepth() const;
+  void   setWaterlineDepth(double d);
+
+private:
+  double depthOfWaterline;
+  };
+#endif // CONTOURTARGETDEFINITION_H

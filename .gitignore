@@ -5,6 +5,7 @@
 *~
 *.qm
 *.pro.user
+*.txt.user
 lc
 docs/html
 *.qch
@@ -16,4 +17,5 @@ rednose*
 build/*
 test/*
 oldStuff/*
+.summary.txt
 /.project
