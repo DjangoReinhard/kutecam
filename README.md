@@ -15,8 +15,15 @@ small video clips for download
 - [![drill cycles](sample/drill_Cycles.mkv)]
 - [![simple sweep](sample/simple_Sweep.mkv)]
 
-## Screenshot
-![first step](sample/SC013.jpg)
+## Screenshots
+![first step](sample/kc001.jpg)
+
+![first step](sample/kc002.jpg)
+
+![first step](sample/kc005.jpg)
+
+![first step](sample/kc004.jpg)
+
 
 ## first output
 result of screenshot with Fanuc postprocessor
