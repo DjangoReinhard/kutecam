@@ -7,6 +7,14 @@
  - Qt5
  - opencascade 7.6
  - cmake build system
+ - cavaliercontour
+
+### Building
+- copy file ```sample/Interface.cmake``` to a directory of your choice.
+- change toplevel ```CMakeLists.txt``` so that **CMAKE_MODULE_PATH** matches directory, where you copied ```Interface.cmake``` to.
+- edit ```src/CMakeLists.txt``` and change second path entry of **target_include_directories** to match location of your copy of [CavalierContours](https://github.com/jbuckmccready/CavalierContours)
+- run **cmake-gui** or use **QtCreator** (*and ignore warnings from opencascade*)
+
 
 ## Teaser
 small video clips for download
