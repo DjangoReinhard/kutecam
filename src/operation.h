@@ -4,9 +4,10 @@
  *  file:       operation.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    10.4.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
+ *  created:    23.4.2022 by Django Reinhard
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -32,6 +33,7 @@
 #include <Bnd_Box.hxx>
 #include <TopoDS_Edge.hxx>
 #include <set>
+class GOContour;
 class QSettings;
 class TargetDefinition;
 class TDFactory;
@@ -100,6 +102,8 @@ public:
   int           kind() const;
   QString       kindAsString() const;
   double        lowerZ() const;
+  gp_Dir&       mainDirection();
+  gp_Dir        mainDirection() const;
   QString       name() const;
   double        offset() const;
   double        operationA() const;
@@ -161,9 +165,11 @@ public:
   Bnd_Box                        shBounds;
   Bnd_Box                        vBounds;
   Bnd_Box                        dBounds;
-  std::vector<TargetDefinition*> targets;
   std::vector<Handle(AIS_Shape)> cShapes;
+  std::vector<TargetDefinition*> targets;
   QVector<Handle(AIS_Shape)>     toolPaths;
+  Handle(AIS_Shape)              cutPart;
+  GOContour*                     cutShape;
   bool                           showCutPlanes;
   bool                           showCutParts;
   static TDFactory*              tdFactory;
@@ -175,6 +181,7 @@ private:
   void restore(QSettings& settings);
 
   QString                   opName;
+  gp_Dir                    opDirection;
   int /* OperationType */   opKind;
   int /* CutType */         type;
   int /* CutDirection */    cutDir;

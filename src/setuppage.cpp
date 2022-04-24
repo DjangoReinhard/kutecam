@@ -4,9 +4,10 @@
  *  file:       setuppage.cpp
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    11.4.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
+ *  created:    23.4.2022 by Django Reinhard
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -37,7 +38,11 @@
 
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepPrimAPI_MakeCylinder.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
+#include <BRepAdaptor_Surface.hxx>
+#include <BRepTools.hxx>
+#include <Geom_CylindricalSurface.hxx>
 #include <gp_Quaternion.hxx>
 #include <QDoubleSpinBox>
 #include <QStringListModel>
@@ -290,10 +295,35 @@ void SetupPage::enableVise(bool enabled) {
 
 void SetupPage::exploreModel(const TopoDS_Shape& shape) {
   Core().workData()->modShapes = Core().helper3D()->explodeShape(shape);
+  Bnd_Box bb = Core().workData()->workPiece->BoundingBox();
 
   for (auto& s : Core().workData()->modShapes) {
       Core().view3D()->showShape(s);
       }
+  std::vector<TopoDS_Face> wpFaces = Core().helper3D()->allFacesWithin(Core().workData()->workPiece->Shape());
+
+  for (auto f : wpFaces) {
+      std::vector<gp_Pnt> corners = Core().helper3D()->allVertexCoordinatesWithin(f);
+      int found = 0;
+
+      qDebug() << "exploreModel() - print corners of workpiece face:";
+
+      for (auto c : corners) {
+          qDebug() << "    c:" << c.X() << " / " << c.Y() << " / " << c.Z();
+
+          if (Core().helper3D()->isEqual(c.Z(), bb.CornerMin().Z()))
+             ++found;
+          }
+      if (found == corners.size()) {
+         Core().view3D()->setBaseFace(new AIS_Shape(f));
+         break;
+         }
+      }
+//  BRepAdaptor_Surface aSurface(Core().workData()->baseFace);
+//  gp_Pln              p = aSurface.Plane();
+//  gp_Dir              baseDir = p.Axis().Direction();
+
+  Core().view3D()->showShape(Core().view3D()->baseFace());
   Core().view3D()->fitAll();
   }
 
@@ -448,7 +478,7 @@ void SetupPage::fixWorkpiece() {
                                                  , ui->yWOff->value()
                                                  , ui->zWOff->value());
   work->workPiece->SetColor(Quantity_NOC_BLUE);
-  work->workPiece->SetTransparency(0.7);
+  work->workPiece->SetTransparency(0.8);
 
   qDebug() << "workpiece fixed?!?";
 
@@ -504,7 +534,6 @@ void SetupPage::loadProject(ProjectFile* pf, const TopoDS_Shape& mShape) {
   trans.Perform(mShape, true);
   work->model = new AIS_Shape(trans.Shape());
   emit modelChanged(work->model->BoundingBox());
-  exploreModel(work->model->Shape());
   TopoDS_Shape tmp;
 
   qloc = pf->value("workpiece-size").value<QVector3D>();
@@ -525,11 +554,12 @@ void SetupPage::loadProject(ProjectFile* pf, const TopoDS_Shape& mShape) {
                                       , qloc.y()
                                       , qloc.z());
   work->workPiece->SetColor(Quantity_NOC_BLUE);
-  work->workPiece->SetTransparency(0.7);
+  work->workPiece->SetTransparency(0.8);
   view3D->setWorkpiece(work->workPiece);
   Bnd_Box bb = work->workPiece->BoundingBox();
 
   view3D->showShape(work->workPiece, false);
+  exploreModel(work->model->Shape());
   ui->cbMaterial->setCurrentText(pf->value("workpiece-material").toString());
   work->material = ui->cbMaterial->currentText();
   view3D->setBounds(bb);

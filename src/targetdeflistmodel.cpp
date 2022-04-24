@@ -4,9 +4,10 @@
  *  file:       targetdeflistmodel.cpp
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    11.4.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
+ *  created:    23.4.2022 by Django Reinhard
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -27,17 +28,25 @@
 #include "targetdefinition.h"
 
 
-TargetDefListModel::TargetDefListModel(QObject* parent)
- : QAbstractListModel(parent) {
+TargetDefListModel::TargetDefListModel(std::vector<TargetDefinition*>* list, QObject* parent)
+ : QAbstractListModel(parent)
+ , pList(list) {
   }
 
 
 void TargetDefListModel::append(TargetDefinition* td) {
-  int newRow = list.size();
+  int newRow = pList->size();
 
   beginInsertRows(QModelIndex(), newRow, newRow);
-  list.push_back(td);
+  pList->push_back(td);
   endInsertRows();
+  }
+
+
+void TargetDefListModel::clear() {
+  beginResetModel();
+  pList->clear();
+  endResetModel();
   }
 
 
@@ -50,8 +59,8 @@ QVariant TargetDefListModel::data(int row, int column, int role) const {
 
 QVariant TargetDefListModel::data(const QModelIndex& index, int role) const {
   if (role != Qt::DisplayRole) return QVariant();
-  if (index.row() >= list.size()) return QVariant();
-  TargetDefinition* td = list.at(index.row());
+  if (index.row() >= pList->size()) return QVariant();
+  TargetDefinition* td = pList->at(index.row());
 
   if (!index.column()) return td->toString();
   return QVariant();
@@ -59,42 +68,42 @@ QVariant TargetDefListModel::data(const QModelIndex& index, int role) const {
 
 
 TargetDefinition* TargetDefListModel::item(int row) const {
-  return list.at(row);
+  return pList->at(row);
   }
 
 
 std::vector<TargetDefinition*>& TargetDefListModel::itemList() {
-  return list;
+  return *pList;
   }
 
 
 bool TargetDefListModel::removeRows(int row, int count, const QModelIndex& parent) {
-  int os = list.size();
+  int os = pList->size();
 
   beginRemoveRows(parent, row, row);
-  list.erase(list.begin() + row);
+  pList->erase(pList->begin() + row);
   endRemoveRows();
 
-  return list.size() < os;
+  return pList->size() < os;
   }
 
 
-void TargetDefListModel::replaceData(const std::vector<TargetDefinition *>& data) {
-  clear();
+void TargetDefListModel::replaceData(std::vector<TargetDefinition *>* data) {
+  if (!data) return;
   beginResetModel();
-  list = data;
+  pList = data;
   endResetModel();
   }
 
 
 int TargetDefListModel::rowCount(const QModelIndex &parent) const {
-  return list.size();
+  return pList->size();
   }
 
 
-void TargetDefListModel::clear() {
-  beginResetModel();
-  list.clear();
-  endResetModel();
+void TargetDefListModel::sort(int column, Qt::SortOrder order) {
+  if (order == Qt::AscendingOrder)
+     std::sort(pList->begin(), pList->end(), TargetDefinition::compareASC);
+  else
+    std::sort(pList->begin(), pList->end(), TargetDefinition::compareDESC);
   }
-

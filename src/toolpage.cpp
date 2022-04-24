@@ -4,9 +4,10 @@
  *  file:       toolpage.cpp
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    4.4.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
+ *  created:    22.4.2022 by Django Reinhard
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -75,7 +76,7 @@ bool ToolPage::eventFilter(QObject* o, QEvent* event) {
 
      switch (e->key()) {
        case Qt::Key_Insert:
-            int        rc = Core().toolListModel()->rowCount() + 1;
+            int        rc = Core().toolListModel()->rowCount();
             ToolEntry* nt = new ToolEntry(rc);
 
             addTool(nt);

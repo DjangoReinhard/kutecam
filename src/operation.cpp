@@ -4,9 +4,10 @@
  *  file:       operation.cpp
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    7.4.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
+ *  created:    23.4.2022 by Django Reinhard
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -24,7 +25,6 @@
  * **************************************************************************
  */
 #include "operation.h"
-//#include "core.h"
 #include "targetdefinition.h"
 #include "tdfactory.h"
 #include "workstep.h"
@@ -70,6 +70,7 @@ Operation::Operation(int id, QObject *parent)
  : QObject(parent)
  , showCutParts(true)
  , showCutPlanes(true)
+ , cutShape(nullptr)
  , opName(" - NEW - ")
  , opKind(ContourOperation)
  , type(CutRoughing)
@@ -104,6 +105,7 @@ Operation::Operation(QObject* parent)
  : QObject(parent)
  , showCutParts(true)
  , showCutPlanes(true)
+ , cutShape(nullptr)
  , opName(" - NEW - ")
  , opKind(0)
  , type(CutRoughing)
@@ -204,6 +206,16 @@ bool Operation::isAbsolute() const {
 
 bool Operation::isVertical() const {
   return vertical;
+  }
+
+
+gp_Dir& Operation::mainDirection() {
+  return opDirection;
+  }
+
+
+gp_Dir Operation::mainDirection() const {
+  return opDirection;
   }
 
 
@@ -462,6 +474,7 @@ void Operation::restore(QSettings& s) {
   setTopZ(s.value("zTop").toDouble());
   int               mx = s.beginReadArray("Targets");
   TargetDefinition* td;
+  Workstep*         ws;
 
   for (int i=0; i < mx; ++i) {
       s.setArrayIndex(i);
@@ -469,7 +482,6 @@ void Operation::restore(QSettings& s) {
       if (td) targets.push_back(td);
       }
   s.endArray();
-  Workstep* ws;
 
   mx = s.beginReadArray("WorkSteps");
   for (int i=0; i < mx; ++i) {
@@ -514,6 +526,7 @@ void Operation::store(QSettings& s) {
       targets.at(i)->store(s);
       }
   s.endArray();
+
   s.beginWriteArray("WorkSteps");
   for (int i=0; i < workingSteps.size(); ++i) {
       s.setArrayIndex(i);

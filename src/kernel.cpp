@@ -4,9 +4,10 @@
  *  file:       kernel.cpp
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    11.4.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
+ *  created:    18.4.2022 by Django Reinhard
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -44,6 +45,7 @@
 #include "viseentry.h"
 #include "viselistmodel.h"
 #include "wsfactory.h"
+#include <BRepLib.hxx>
 #include <QApplication>
 #include <QCloseEvent>
 #include <QDebug>
@@ -70,6 +72,7 @@ Kernel::Kernel(QApplication& app, MainWindow& win)
  , shapeListModel(new ShapeListModel(this))
  , viseListModel(new ViseListModel(this))
  , toolListModel(new ToolListModel(this)) {
+  BRepLib::Precision(1e-4);
   }
 
 

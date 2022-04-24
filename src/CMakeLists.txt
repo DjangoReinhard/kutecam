@@ -13,6 +13,11 @@ add_executable(kuteCAM
     drilltargetdefinition.cpp
     gcodewriter.cpp
     geomlistmodel.cpp
+    gocircle.cpp
+    gocontour.cpp
+    goline.cpp
+    gopocket.cpp
+    graphicobject.cpp
     kernel.cpp
     main.cpp
     mainwindow.cpp
@@ -21,6 +26,7 @@ add_executable(kuteCAM
     operationlistmodel.cpp
     operationspage.cpp
     operationsubpage.cpp
+    pathbuilder.cpp
     postprocessor.cpp
     ppfanuc.cpp
     preview3d.cpp
@@ -46,6 +52,7 @@ add_executable(kuteCAM
     viselistmodel.cpp
     work.cpp
     workstep.cpp
+    wpcutter.cpp
     wsarc.cpp
     wscycle.cpp
     wsfactory.cpp
@@ -65,7 +72,6 @@ use_interface_libraries(kuteCAM
                         )
 target_include_directories(kuteCAM
                            PRIVATE ${CMAKE_SOURCE_DIR}
-                           PRIVATE /d/linux/CavalierContours/include
                            )
 if(COMMAND qt_create_translation)
     qt_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})

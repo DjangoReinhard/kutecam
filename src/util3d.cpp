@@ -4,9 +4,10 @@
  *  file:       util3d.cpp
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    11.4.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
+ *  created:    24.4.2022 by Django Reinhard
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -24,6 +25,12 @@
  * **************************************************************************
  */
 #include "util3d.h"
+#include "graphicobject.h"
+#include "gocircle.h"
+#include "gocontour.h"
+#include "goline.h"
+#include "gopocket.h"
+#include "kuteCAM.h"
 #include <BRepAdaptor_Surface.hxx>
 #include <BRepAlgoAPI_Section.hxx>
 #include <BOPAlgo_Splitter.hxx>
@@ -34,6 +41,7 @@
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRep_Tool.hxx>
+#include <BRepLib.hxx>
 #include <BRepTools.hxx>
 #include <BRep_Builder.hxx>
 #include <GC_MakeArcOfCircle.hxx>
@@ -53,20 +61,17 @@
 #include <TopoDS.hxx>
 #include <TopoDS_Shape.hxx>
 #include <TopoDS_Vertex.hxx>
-#include "kuteCAM.h"
 #include <QString>
 #include <QDebug>
 #include <cmath>
 
 
+static const bool verbose = false;
+
+
 bool operator<(const gp_Pnt& l,
                const gp_Pnt& r) {
-  if (l.Z() == r.Z()) {
-     if (l.Y() == r.Y())
-        return l.X() < r.X();
-     return l.Y() < r.Y();
-     }
-  return l.Z() < r.Z();
+  return atan2(l.Y(), l.X()) < atan2(r.Y(), r.X());
   }
 
 
@@ -84,7 +89,7 @@ TopoDS_Shape Util3D::allEdgesWithin(const TopoDS_Shape& shape, Handle(TopTools_H
   ShapeAnalysis_FreeBounds          fb;
   Handle(TopTools_HSequenceOfShape) wires;
 
-  fb.ConnectEdgesToWires(v, Util3D::MinDelta, false, wires);
+  fb.ConnectEdgesToWires(v, Core::MinDelta, false, wires);
 
   qDebug() << wires->Size();
   if (wires->Size()) rv = wires->First();
@@ -122,14 +127,14 @@ std::vector<TopoDS_Face> Util3D::allFacesWithin(const TopoDS_Shape& shape) {
   }
 
 
-std::set<gp_Pnt> Util3D::allVertexCoordinatesWithin(const TopoDS_Shape& shape) {
-  std::set<gp_Pnt> vertices;
+std::vector<gp_Pnt> Util3D::allVertexCoordinatesWithin(const TopoDS_Shape& shape) {
+  std::vector<gp_Pnt> vertices;
 
   for (TopExp_Explorer vertexExplorer(shape, TopAbs_VERTEX); vertexExplorer.More(); vertexExplorer.Next()) {
       const auto &vertex = TopoDS::Vertex(vertexExplorer.Current());
 
       if (vertex.IsNull()) continue;
-      vertices.insert(BRep_Tool::Pnt(vertex));
+      vertices.push_back(BRep_Tool::Pnt(vertex));
       }
   return vertices;
   }
@@ -209,10 +214,6 @@ gp_Pnt Util3D::calcLine(Handle(Geom_Line) l, double param) const {
   }
 
 
-// S(u,v) = P + u * Dir_{u} + v * Dir_{v}
-//
-// (u,v) in (-infty, infty)
-// times    (-infty, infty).
 gp_Pnt Util3D::calcPlane(Handle(Geom_Plane) p, double param0, double param1) {
   const gp_Ax3& axis   = p->Position();
   gp_Pnt        start  = p->Location();
@@ -232,6 +233,13 @@ gp_Pnt Util3D::calcPlane(Handle(Geom_Plane) p, double param0, double param1) {
   }
 
 
+gp_Pnt Util3D::centerOf(const Bnd_Box& bb) {
+  return gp_Pnt(bb.CornerMin().X() + (bb.CornerMax().X() - bb.CornerMin().X()) / 2
+              , bb.CornerMin().Y() + (bb.CornerMax().Y() - bb.CornerMin().Y()) / 2
+              , bb.CornerMin().Z() + (bb.CornerMax().Z() - bb.CornerMin().Z()) / 2);
+  }
+
+
 TopoDS_Edge Util3D::createArc(const gp_Pnt& from, const gp_Pnt& to, double radius, bool ccw) {
   TopoDS_Edge edge;
   gp_Pnt a = from;
@@ -239,7 +247,6 @@ TopoDS_Edge Util3D::createArc(const gp_Pnt& from, const gp_Pnt& to, double radiu
 
   double x     = b.X() - a.X();     // get distance components
   double y     = b.Y() - a.Y();
-//  double angle = atan2(y, x);       // get orientation angle
   double l     = sqrt(x*x + y*y);   // length between A and B
 
   if (2*radius >= l) {
@@ -260,9 +267,7 @@ Handle(AIS_Shape) Util3D::createArc(const gp_Pnt& from, const gp_Pnt& to, const 
   double r0 = center.Distance(from);
   double r1 = center.Distance(to);
 
-//  qDebug() << "createArc: r1 - r0" << (r1 - r0);
-
-  assert(abs(r0 - r1) < MinDelta);
+  assert(abs(r0 - r1) < Core::MinDelta);
 
   gp_Dir       dir(0, 0, ccw ? 1 : -1);
   gp_Circ      rawCircle(gp_Ax2(center, dir), r0);
@@ -272,7 +277,6 @@ Handle(AIS_Shape) Util3D::createArc(const gp_Pnt& from, const gp_Pnt& to, const 
      edge = BRepBuilderAPI_MakeEdge(rawCircle);
      }
   else {
-//     Handle(Geom_TrimmedCurve) arc = GC_MakeArcOfCircle(rawCircle, from, to, ccw);
      edge = BRepBuilderAPI_MakeEdge(rawCircle, from, to);
      }
   return new AIS_Shape(edge);
@@ -317,8 +321,8 @@ Handle(AIS_Shape) Util3D::cut(const TopoDS_Shape& src, const TopoDS_Shape& tool)
 
 
 double Util3D::deburr(double v) {
-  if (abs(v) < MinDelta)     return 0;
-  if (abs(1 - v) < MinDelta) return 1;
+  if (abs(v) < Core::MinDelta)     return 0;
+  if (abs(1 - v) < Core::MinDelta) return 1;
   return v;
   }
 
@@ -330,6 +334,11 @@ gp_Dir Util3D::deburr(const gp_Dir& d) {
 
 gp_Pnt Util3D::deburr(const gp_Pnt& p) {
   return gp_Pnt(deburr(p.X()), deburr(p.Y()), deburr(p.Z()));
+  }
+
+
+gp_Vec Util3D::deburr(const gp_Vec& p) {
+  return gp_Vec(deburr(p.X()), deburr(p.Y()), deburr(p.Z()));
   }
 
 
@@ -393,22 +402,6 @@ void Util3D::dumpEdges(std::vector<TopoDS_Edge> &edges) {
   }
 
 
-void Util3D::dumpPolyline(const cavc::Polyline<double>& pl) {
-  qDebug() << "dumpPolyline ...";
-  for (auto& v : pl.vertexes()) {
-      qDebug() << "polyline vertex:" << v.x() << "/" << v.y() << " - " << v.bulge();
-      }
-  qDebug() << "\tend polyLine";
-  }
-
-
-void Util3D::dumpVertices(const std::set<gp_Pnt>& pool) {
-  for (gp_Pnt p : pool) {
-      qDebug() << "found vertex at:" << p.X() << " / " << p.Y() << " / " << p.Z();
-      }
-  }
-
-
 std::vector<Handle(AIS_Shape)> Util3D::explodeShape(const TopoDS_Shape& shape) {
   std::vector<Handle(AIS_Shape)>    shapes;
   std::vector<TopoDS_Face>          faces = allFacesWithin(shape);
@@ -463,6 +456,7 @@ Handle(AIS_Shape) Util3D::genFastMove(const gp_Pnt& from, const gp_Pnt& to) {
   Handle(AIS_Shape) move = new AIS_Shape(fm);
 
   move->SetColor(Quantity_NOC_CYAN);
+  move->SetWidth(2);
 
   return move;
   }
@@ -471,7 +465,7 @@ Handle(AIS_Shape) Util3D::genFastMove(const gp_Pnt& from, const gp_Pnt& to) {
 Handle(AIS_Shape) Util3D::genWorkArc(const gp_Pnt& from, const gp_Pnt& to, const gp_Pnt& center, bool ccw) {
   Handle(AIS_Shape) rv = createArc(from, to, center, ccw);
 
-  rv->SetColor(Quantity_NOC_RED);
+  rv->SetColor(Quantity_NOC_RED1);
   rv->SetWidth(3);
 
   return rv;
@@ -482,7 +476,7 @@ Handle(AIS_Shape) Util3D::genWorkLine(const gp_Pnt& from, const gp_Pnt& to) {
   TopoDS_Edge       tp   = BRepBuilderAPI_MakeEdge(from, to);
   Handle(AIS_Shape) path = new AIS_Shape(tp);
 
-  path->SetColor(Quantity_NOC_RED);
+  path->SetColor(Quantity_NOC_RED1);
   path->SetWidth(3);
 
   return path;
@@ -501,7 +495,7 @@ TopoDS_Shape Util3D::intersect(const TopoDS_Shape& src, const TopoDS_Shape& tool
   opCut.SetArguments(aLO);
   opCut.SetTools(aLT);
   opCut.SetNonDestructive(Standard_True);
-  opCut.SetCheckInverted(Standard_False);
+  opCut.SetCheckInverted(Standard_True);
   opCut.SetUseOBB(Standard_True);
   opCut.Build();
 
@@ -515,10 +509,23 @@ bool Util3D::isEqual(double a, double b, double minDelta) {
   }
 
 
-bool Util3D::isVertical(const gp_Dir &d) const {
-  if (abs(d.X()) < MinDelta
-   && abs(d.Y()) < MinDelta
-   && 1 - abs(d.Z()) < MinDelta) return true;
+bool Util3D::isEqual(const gp_Pnt& a, const gp_Pnt& b) {
+  return a.Distance(b) < Core::MinDelta;
+  }
+
+
+bool Util3D::isVertical(const gp_Dir& d) const {
+  if (abs(d.X()) < Core::MinDelta
+   && abs(d.Y()) < Core::MinDelta
+   && 1 - abs(d.Z()) < Core::MinDelta) return true;
+  return false;
+  }
+
+
+bool Util3D::isVertical(const gp_Vec& v) const {
+  if (abs(v.X()) < Core::MinDelta
+   && abs(v.Y()) < Core::MinDelta
+   && 1 - abs(v.Z()) < Core::MinDelta) return true;
   return false;
   }
 
@@ -637,191 +644,43 @@ gp_Vec Util3D::normalOfFace(const TopoDS_Shape& face) {
   }
 
 
-std::vector<Handle(AIS_Shape)> Util3D::pl2Shape(const cavc::Polyline<double>& pline, double commonZ, Quantity_Color c, double width) {
-  std::vector<Handle(AIS_Shape)> segments;
-  const double                   arcApproxError = 0.005;
-  auto                           visitor        = [&](std::size_t i, std::size_t j) {
-    Handle(AIS_Shape) is;
-    const auto&       v1 = pline[i];
-    const auto&       v2 = pline[j];
+GraphicObject* Util3D::parseGraphicObject(const QString& s) {
+  GraphicObject* rv = nullptr;
+  bool           ok   = false;
+  int            sep0 = s.indexOf(";");
+  int            type = s.midRef(0, sep0).toInt(&ok);
 
-    if (v1.bulgeIsZero() || fuzzyEqual(v1.pos(), v2.pos())) {
-       is = createLine(gp_Pnt(v1.x(), v1.y(), commonZ), gp_Pnt(v2.x(), v2.y(), commonZ));
-       }
-    else {
-       auto arc = arcRadiusAndCenter(v1, v2);
+  if (!ok) return nullptr;
 
-       if (arc.radius < arcApproxError + cavc::utils::realThreshold<double>()) {
-          qDebug() << "invalid circle segment!";
-          }
-       else {
-          is = createArc(gp_Pnt(v1.x(), v1.y(), commonZ)
-                       , gp_Pnt(v2.x(), v2.y(), commonZ)
-                       , gp_Pnt(arc.center.x(), arc.center.y(), commonZ)
-                       , v1.bulgeIsPos());
-          }
-       }
-    if (!is.IsNull()) {
-       is->SetWidth(width);
-       is->SetColor(c);
-       segments.push_back(is);
-       }
-    return true;
-    };
-  pline.visitSegIndices(visitor);
-
-  return segments;
+  switch (type) {
+    case GTLine:    rv = new GOLine(s); break;
+    case GTCircle:  rv = new GOCircle(s); break;
+    case GTContour: rv = new GOContour(s); break;
+    case GTPocket:  rv = new GOPocket(s); break;
+    }
+  return rv;
   }
 
 
-TopoDS_Shape Util3D::pl2Wire(const cavc::Polyline<double>& pline, double commonZ) {
-  Handle(TopTools_HSequenceOfShape) segments = new TopTools_HSequenceOfShape;
-  Handle(TopTools_HSequenceOfShape) wires;
-  auto                              visitor  = [&](std::size_t i, std::size_t j) {
-    Handle(AIS_Shape) is;
-    const auto&       v1 = pline[i];
-    const auto&       v2 = pline[j];
+GraphicObject* Util3D::toGraphicObject(TopoDS_Edge edge) {
+  GraphicObject*     rv = nullptr;
+  double             param0, param1;
+  Handle(Geom_Curve) c = BRep_Tool::Curve(edge, param0, param1);
+  gp_Pnt             p0, p1;
 
-    if (v1.bulgeIsZero() || fuzzyEqual(v1.pos(), v2.pos())) {
-       is = createLine(gp_Pnt(v1.x(), v1.y(), commonZ), gp_Pnt(v2.x(), v2.y(), commonZ));
-       }
-    else {
-       auto arc = arcRadiusAndCenter(v1, v2);
+  p0 = c->Value(param0);
+  p1 = c->Value(param1);
 
-       if (arc.radius < MinDelta + cavc::utils::realThreshold<double>()) {
-          qDebug() << "invalid circle segment!";
-          }
-       else {
-          is = createArc(gp_Pnt(v1.x(), v1.y(), commonZ)
-                       , gp_Pnt(v2.x(), v2.y(), commonZ)
-                       , gp_Pnt(arc.center.x(), arc.center.y(), commonZ)
-                       , v1.bulgeIsPos());
-          }
-       }
-    if (!is.IsNull()) segments->Append(is->Shape());
+  if (c->DynamicType() == STANDARD_TYPE(Geom_Line)) {
+     rv = new GOLine(p0, p1);
+     }
+  else if (c->DynamicType() == STANDARD_TYPE(Geom_Circle)) {
+     gp_Pnt pM = c->Value((param0 + param1) / 2);
 
-    return true;
-    };
-  pline.visitSegIndices(visitor);
-  ShapeAnalysis_FreeBounds fb;
-
-  fb.ConnectEdgesToWires(segments, MinDelta, false, wires);
-
-  return wires->First();
+     rv = new GOCircle(p0, p1, pM);
+     }
+  else {
+     throw std::domain_error("unsupported Geom-Type!");
+     }
+  return rv;
   }
-
-
-cavc::Polyline<double> Util3D::toPolyline(TopoDS_Shape wire) {
-  std::vector<TopoDS_Edge> edges = allEdgesWithin(wire);
-
-  return toPolyline(edges);
-  }
-
-
-cavc::Polyline<double> Util3D::toPolyline(const std::vector<TopoDS_Edge>& edges) {
-  cavc::Polyline<double>          polyLine;
-  double                          param0, param1, bulge;
-  const double                    minDelta = 0.0001;
-  gp_Pnt                          nP0, nP1, p0, p1, first, start, end;
-
-  for (int i=0; i < edges.size(); ++i) {
-      TopoDS_Edge        edge = edges.at(i);
-      Handle(Geom_Curve) c    = BRep_Tool::Curve(edge, param0, param1);
-
-      c->D0(param0, p0);
-      c->D0(param1, p1);
-      if (!i) {
-         if (edges.size() > 1) {
-            double             nParam0, nParam1;
-            TopoDS_Edge        next = edges.at(i+1);
-            Handle(Geom_Curve) nc   = BRep_Tool::Curve(next, nParam0, nParam1);
-
-            nc->D0(nParam0, nP0);
-            nc->D0(nParam1, nP1);
-
-            // matching vertex between both edges gives orientation of both
-            // this check needs to be done on first edge only
-            if (p0.IsEqual(nP0, minDelta) || p0.IsEqual(nP1, minDelta)) {
-               start = p1;
-               end   = p0;
-               }
-            else {
-               start = p0;
-               end   = p1;
-               }
-            }
-         else {
-            start = p0;
-            end   = p1;
-            }
-         first = start;
-         }
-      else {
-         // we got start vertex from last run, so only need to determine end/next start
-         if (start.IsEqual(p0, minDelta)) end = p1;
-         else                             end = p0;
-         }
-
-      if (c->DynamicType() == STANDARD_TYPE(Geom_Line)) {
-         bulge = 0;
-         qDebug() << "line from" << start.X() << "/" << start.Y()
-                  << " to "   << end.X() << "/" << end.Y();
-         polyLine.addVertex(abs(start.X()) < minDelta ? 0 : start.X()
-                          , abs(start.Y()) < minDelta ? 0 : start.Y()
-                          , bulge);
-         }
-      else if (c->DynamicType() == STANDARD_TYPE(Geom_Circle)) {
-         Handle(Geom_Circle) circle = Handle(Geom_Circle)::DownCast(c);
-         int                 orient = edge.Orientation();
-         bool                ccw    = circle->Axis().Direction().Z() < 0;
-
-         if (orient) ccw = !ccw;
-         bulge = tan((param1 - param0) / 4);
-         if ((param1 - param0) > M_PI) {
-            double tmp = (param1 - param0) / 2;
-
-            c->D0(tmp, p0);
-            bulge = tan((tmp - param0) / 4);
-            if (ccw) bulge *= -1;
-
-            qDebug() << "arc0 p0:" << start.X() << "/" << start.Y()
-                     << " - p1:"   << p0.X() << "/" << p0.Y()
-                     << "angle: " << (tmp - param0)
-                     << "\tbulge:" << bulge << "\tccw:" << (ccw ? "TRUE" : "FALSE") << "orient:" << orient;
-            qDebug() << "arc1 p0:" << start.X() << "/" << start.Y()
-                     << " - p1:"   << end.X() << "/" << end.Y()
-                     << "angle: " << (param1 - tmp)
-                     << "\tbulge:" << bulge << "\tccw:" << (ccw ? "TRUE" : "FALSE") << "orient:" << orient;
-
-            polyLine.addVertex(abs(start.X()) < minDelta ? 0 : start.X()
-                             , abs(start.Y()) < minDelta ? 0 : start.Y()
-                             , bulge);
-
-            polyLine.addVertex(abs(p0.X()) < minDelta ? 0 : p0.X()
-                             , abs(p0.Y()) < minDelta ? 0 : p0.Y()
-                             , bulge);
-            }
-         else {
-            if (ccw) bulge *= -1;
-
-            qDebug() << "arc0 p0:" << start.X() << "/" << start.Y()
-                     << " - p1:"   << end.X() << "/" << end.Y()
-                     << "angle: " << (param1 - param0) << "\tbulge:"
-                     << bulge << "\tccw:" << (ccw ? "TRUE" : "FALSE") << "orient:" << orient;
-
-            polyLine.addVertex(abs(start.X()) < minDelta ? 0 : start.X()
-                             , abs(start.Y()) < minDelta ? 0 : start.Y()
-                             , bulge);
-            }
-         }
-      start = end;
-      }
-  if (first.IsEqual(p0, minDelta) || first.IsEqual(p1, minDelta))
-     polyLine.isClosed() = true;
-  else
-     polyLine.addVertex(end.X(), end.Y(), bulge);
-  return polyLine;
-  }
-
-
-double const Util3D::MinDelta = 0.001;

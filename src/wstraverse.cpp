@@ -4,9 +4,10 @@
  *  file:       wstraverse.cpp
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
  *  created:    10.4.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -24,11 +25,14 @@
  * **************************************************************************
  */
 #include "wstraverse.h"
+#include "core.h"
+#include "util3d.h"
 #include <QSettings>
 
 
 WSTraverse::WSTraverse(const gp_Pnt& from, const gp_Pnt& to, QObject* parent)
  : Workstep(WTTraverse, from, to, parent) {
+  if (Core().helper3D()->isEqual(from, to)) throw new std::domain_error("startpoint and endpoint may not be the same!");
   }
 
 

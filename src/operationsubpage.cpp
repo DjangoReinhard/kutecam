@@ -4,9 +4,10 @@
  *  file:       operationsubpage.cpp
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    11.4.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
+ *  created:    23.4.2022 by Django Reinhard
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -29,11 +30,13 @@
 #include "core.h"
 #include "cuttingparameters.h"
 #include "occtviewer.h"
+#include "pathbuilder.h"
 #include "targetdeflistmodel.h"
 #include "toolentry.h"
 #include "toollistmodel.h"
 #include "util3d.h"
 #include "work.h"
+#include <BRepAdaptor_Surface.hxx>
 #include <QStringListModel>
 #include <QDebug>
 
@@ -44,6 +47,7 @@ OperationSubPage::OperationSubPage(OperationListModel* olm, TargetDefListModel* 
  , olm(olm)
  , curOP(nullptr)
  , activeTool(nullptr)
+ , pathBuilder(new PathBuilder)
  , tdModel(tdModel)
  , opTypes(nullptr) {
   ui->setupUi(this);
@@ -96,12 +100,12 @@ void OperationSubPage::absToggled(const QVariant& v) {
 
 
 void OperationSubPage::closeEvent(QCloseEvent *e) {
-  curOP->targets = tdModel->itemList();
   }
 
 
 void OperationSubPage::connectSignals() {
   connect(ui->cAbsolute, &QCheckBox::toggled, this, &OperationSubPage::absToggled);
+  connect(ui->cOutside,  &QCheckBox::toggled, this, &OperationSubPage::outToggled);
   connect(ui->cbTool,    QOverload<int>::of(&QComboBox::currentIndexChanged), this, &OperationSubPage::toolChanged);
   connect(ui->cbCooling, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &OperationSubPage::coolingChanged);
   connect(ui->cbCycle,   QOverload<int>::of(&QComboBox::currentIndexChanged), this, &OperationSubPage::cycleChanged);
@@ -126,11 +130,18 @@ void OperationSubPage::coolingChanged(const QVariant& v) {
   }
 
 
+// called from all child classes, so save possible changes from ui to old operation
+// before creating a new one.
 Operation* OperationSubPage::createOP(int id, const QString& name, OperationType type) {
   if (curOP) {
-     if (tdModel)                 curOP->targets = tdModel->itemList();
-     if (curOP->toolPaths.size()) Core().view3D()->removeShapes(curOP->toolPaths);
-     if (curOP->cShapes.size())   Core().view3D()->removeShapes(curOP->cShapes);
+     if (curOP->toolPaths.size()) {
+        Core().view3D()->removeShapes(curOP->toolPaths);
+        curOP->toolPaths.clear();
+        }
+     if (curOP->cShapes.size()) {
+        Core().view3D()->removeShapes(curOP->cShapes);
+        curOP->cShapes.clear();
+        }
      }
   curOP = new Operation(id, type);
   curOP->setName(name);
@@ -201,9 +212,10 @@ void OperationSubPage::fixit() {
                                                       , curOP->operationB()
                                                       , curOP->operationC());
 
-  curOP->wpBounds = wp->BoundingBox();
-  curOP->mBounds  = md->BoundingBox();
-  curOP->vBounds  = vs->BoundingBox();
+  curOP->wpBounds  = wp->BoundingBox();
+  curOP->mBounds   = md->BoundingBox();
+  curOP->vBounds   = vs->BoundingBox();
+  curOP->workPiece = wp;
   emit modelChanged(curOP->mBounds);
   wp.Nullify();
   vs.Nullify();
@@ -248,14 +260,14 @@ void OperationSubPage::loadOP(Operation *op) {
      activeTool = Core().toolListModel()->tool(ti);
      }
   else ui->cbTool->clear();
+  tdModel->replaceData(&op->targets);
   ui->opName->setText(op->name());
+  ui->cOutside->setChecked(op->isOutside());
   ui->cbType->setCurrentIndex(op->cutType());
   ui->cbDir->setCurrentIndex(op->direction());
   ui->cbFixture->setCurrentIndex(op->fixture());
   ui->cbCooling->setCurrentIndex(op->cooling());
   ui->cbCycle->setCurrentIndex(op->drillCycle());
-//  ui->spQmin->setValue(curOP->qMin());
-//  ui->spQmax->setValue(curOP->qMax());
   ui->spAe->setValue(op->cutWidth());
   ui->spAp->setValue(op->cutDepth());
   ui->spFz->setValue(op->feedPerTooth());
@@ -269,10 +281,9 @@ void OperationSubPage::loadOP(Operation *op) {
   ui->spR2->setValue(op->safeZ1());
   connectSignals();
 
-  if (!op->targets.size()) {
-     fixit();
-     processSelection();
-     }
+  fixit();
+  if (!tdModel->rowCount()) processSelection();
+  else                      processTargets();
   }
 
 
@@ -282,8 +293,16 @@ void OperationSubPage::offsetChanged(double v) {
 
 
 void OperationSubPage::opNameChanged(const QString& name) {
-//  qDebug() << "changed name of operation to" << name;
   curOP->setName(name);
+  }
+
+
+void OperationSubPage::outToggled(const QVariant& v) {
+  curOP->setOutside(v.toBool());
+  }
+
+
+void OperationSubPage::processTargets() {
   }
 
 
@@ -298,14 +317,11 @@ void OperationSubPage::r2Changed(double v) {
 
 
 void OperationSubPage::toolChanged(const QVariant &i) {
-  qDebug() << "tool changed to index #" << i;
   activeTool = Core().toolListModel()->tool(i.toInt());
-
-//  qDebug() << "activeTool: " << activeTool;
 
   if (!activeTool) return;
   curOP->setToolNum(activeTool->toolNumber());
-  if (curOP->speed() < Core().helper3D()->MinDelta) {
+  if (Core().helper3D()->isEqual(curOP->speed(), 0)) {
      CuttingParameters* cp = activeTool->cutParameter(Core().workData()->material);
 
      if (!cp) return;

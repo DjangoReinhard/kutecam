@@ -31,12 +31,20 @@ int getDominantAxis(const gp_Dir& dir) {
   int rv = 0;
 
   if (abs(dir.X()) > abs(dir.Y())) {
-     if (abs(dir.X()) > abs(dir.Z())) return 1;
-     return 3;
+     if (abs(dir.X()) > abs(dir.Z())) {
+        if (dir.X() > 0) return 1;
+        return -1;
+        }
+     if (dir.Z() > 0) return  3;
+     return -3;
      }
   else {
-     if (abs(dir.Y()) > abs(dir.Z())) return 2;
-     return 3;
+     if (abs(dir.Y()) > abs(dir.Z())) {
+        if (dir.Y() > 0) return  2;
+        return -2;
+        }
+     if (dir.Z() > 0) return 3;
+     return -3;
      }
   return rv;
   }

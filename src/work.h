@@ -4,9 +4,10 @@
  *  file:       work.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    28.3.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
+ *  created:    23.4.2022 by Django Reinhard
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -27,6 +28,7 @@
 #define WORK_H
 #include <QObject>
 #include <AIS_Shape.hxx>
+#include <TopoDS_Face.hxx>
 
 
 class Work : public QObject
@@ -40,6 +42,7 @@ public:
   std::vector<Handle(AIS_Shape)> modShapes;
   QString           material;
   bool              roundWorkPiece;
+//  TopoDS_Face       baseFace;
   Handle(AIS_Shape) workPiece;
   Handle(AIS_Shape) vl;
   Handle(AIS_Shape) vm;

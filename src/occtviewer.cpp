@@ -176,6 +176,11 @@ OcctQtViewer::~OcctQtViewer() {
   }
 
 
+Handle(AIS_Shape) OcctQtViewer::baseFace() {
+  return myBaseFace;
+  }
+
+
 void OcctQtViewer::configureGrid(const gp_Dir& d) {
   if (!myView) return;
   gp_Ax3 Ax3({0, 0, 0}, d);
@@ -230,25 +235,25 @@ void OcctQtViewer::dumpGlInfo(bool theIsBasic) {
   }
 
 
-void OcctQtViewer::evaluateSelection() {
-  qDebug() << "OcctQtViewer::evaluateSelection()";
-  emit clearCurves();
+//void OcctQtViewer::evaluateSelection() {
+//  qDebug() << "OcctQtViewer::evaluateSelection()";
+//  emit clearCurves();
 
-  myContext->InitSelected();
-  while (myContext->MoreSelected())  {
-        if (myContext->HasSelectedShape()) {
-           TopoDS_Shape shape = myContext->SelectedShape();
+//  myContext->InitSelected();
+//  while (myContext->MoreSelected())  {
+//        if (myContext->HasSelectedShape()) {
+//           TopoDS_Shape shape = myContext->SelectedShape();
 
-           emit shapeSelected(shape);
-           }
-        else {
-           Handle(AIS_InteractiveObject) anyObj = myContext->DetectedInteractive();
-//TODO:
-           qDebug() << "no selected shape found!";
-           }
-        myContext->NextSelected();
-        }
-  }
+//           emit shapeSelected(shape);
+//           }
+//        else {
+//           Handle(AIS_InteractiveObject) anyObj = myContext->DetectedInteractive();
+////TODO:
+//           qDebug() << "no selected shape found!";
+//           }
+//        myContext->NextSelected();
+//        }
+//  }
 
 
 std::vector<TopoDS_Shape> OcctQtViewer::selection() {
@@ -432,7 +437,7 @@ void OcctQtViewer::initializeGL() {
   Handle(Prs3d_Drawer) t_hilight_style = myContext->HighlightStyle();
 
   t_hilight_style->SetMethod(Aspect_TOHM_COLOR);
-  t_hilight_style->SetColor(Quantity_NOC_RED1);
+  t_hilight_style->SetColor(Quantity_NOC_MAGENTA);
   t_hilight_style->SetDisplayMode(1);
   t_hilight_style->SetTransparency(0.1f);
   Handle(Prs3d_Drawer)  t_select_style = myContext->SelectionStyle();
@@ -558,6 +563,7 @@ void OcctQtViewer::showShape(Handle(AIS_Shape) s, bool selectable) {
                    , 1 // displayMode
                    , selectable ? 0 : -1 // selectionMode
                    , false);
+  refresh();
   }
 
 
@@ -642,9 +648,9 @@ void OcctQtViewer::OnObjectDragged(const opencascade::handle<AIS_InteractiveCont
   }
 
 
-void OcctQtViewer::OnSelectionChanged(const Handle(AIS_InteractiveContext)& theCtx, const Handle(V3d_View)& theView) {
-  evaluateSelection();
-  }
+//void OcctQtViewer::OnSelectionChanged(const Handle(AIS_InteractiveContext)& theCtx, const Handle(V3d_View)& theView) {
+//  evaluateSelection();
+//  }
 
 
 Handle(AIS_Shape) OcctQtViewer::mainShape() {
@@ -771,6 +777,11 @@ void OcctQtViewer::setWorkpiece(opencascade::handle<AIS_Shape> wp) {
   }
 
 
+void OcctQtViewer::setBaseFace(opencascade::handle<AIS_Shape> bf) {
+  myBaseFace = bf;
+  }
+
+
 void OcctQtViewer::rotate(double dA, double dB, double dC) {
   gp_Quaternion q;
   gp_Trsf       r;
@@ -783,11 +794,9 @@ void OcctQtViewer::rotate(double dA, double dB, double dC) {
   myContext->DisplayedObjects(shapes);
   for (Handle(AIS_InteractiveObject)& s : shapes) {
       if (s->DynamicType() == STANDARD_TYPE(AIS_ViewCube)) continue;
-      if (s == myWorkpiece) {
-         myWorkpiece->SetLocalTransformation(tll);
-         }
-      else
-         myContext->SetLocation(s, tll);
+      if (s == myWorkpiece)     myWorkpiece->SetLocalTransformation(tll);
+      else if (s == myBaseFace) myBaseFace->SetLocalTransformation(tll);
+      else                      myContext->SetLocation(s, tll);
       }
   myView->Invalidate();
   update();

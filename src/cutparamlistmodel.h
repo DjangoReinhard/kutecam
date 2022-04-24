@@ -4,9 +4,10 @@
  *  file:       cutparamlistmodel.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
  *  created:    22.3.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -40,7 +41,6 @@ public:
   virtual QVariant            headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
   virtual int                 rowCount(const QModelIndex &parent = QModelIndex()) const override;
   virtual void                replace(QVector<CuttingParameters*> list);
-//  virtual void                setData(CuttingParameters* cp);
   virtual CuttingParameters*  cutParameter(int row) const;
   virtual QVector<CuttingParameters*> list();
 

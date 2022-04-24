@@ -4,9 +4,10 @@
  *  file:       xmltoolwriter.cpp
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    23.3.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
+ *  created:    22.4.2022 by Django Reinhard
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -36,7 +37,6 @@ XmlToolWriter::XmlToolWriter(QObject* parent)
 
 
 void XmlToolWriter::write(const QString& fileName, const QVector<ToolEntry *>& tools) {
-//  if (core->move2Backup(core->toolTable().fileName())) {
   QFile toolFile(fileName);
 
   if (toolFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
@@ -51,7 +51,10 @@ void XmlToolWriter::write(const QString& fileName, const QVector<ToolEntry *>& t
 
 void XmlToolWriter::writeLibrary(QTextStream& out, const QVector<ToolEntry*>& tools) {
   out << "<?xml version=\"1.0\" ?>\n<ToolLibrary>\n";
-  for (ToolEntry* t : tools) writeTool(out, t);
+  for (ToolEntry* t : tools) {
+      if (t->toolNumber() < 1) continue;
+      writeTool(out, t);
+      }
   out << "</ToolLibrary>\n";
   }
 

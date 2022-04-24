@@ -1,10 +1,5 @@
 #
-# cmake helper script to support interface definitions
-# especially include directories of interface libraries.
-#
-# copy this file to a location known to cmake
-# Note: I use /d/linux/cmake as "my" support directory for cmake.
-#       See line #6 of toplevel CMakeLists.txt
+# common settings for FalconView
 #
 include(GNUInstallDirs)
 set(CMAKE_INCLUDE_CURRENT_DIR_IN_INTERFACE ON)

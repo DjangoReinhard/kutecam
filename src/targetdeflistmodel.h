@@ -4,9 +4,10 @@
  *  file:       targetdeflistmodel.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    6.4.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
+ *  created:    23.4.2022 by Django Reinhard
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -33,7 +34,7 @@ class QModelIndex;
 class TargetDefListModel : public QAbstractListModel
 {
 public:
-  TargetDefListModel(QObject* parent = nullptr);
+  TargetDefListModel(std::vector<TargetDefinition*>* list, QObject* parent = nullptr);
 
   virtual void                    append(TargetDefinition* td);
   virtual void                    clear();
@@ -42,10 +43,11 @@ public:
   virtual TargetDefinition*       item(int row = 0) const;
   std::vector<TargetDefinition*>& itemList();
   virtual bool                    removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
-  virtual void                    replaceData(const std::vector<TargetDefinition*>& data);
+  virtual void                    replaceData(std::vector<TargetDefinition*>* data);
   virtual int                     rowCount(const QModelIndex &parent = QModelIndex()) const override;
+  virtual void                    sort(int column = 0, Qt::SortOrder order = Qt::AscendingOrder) override;
 
 private:
-  std::vector<TargetDefinition*> list;
+  std::vector<TargetDefinition*>* pList;
   };
 #endif // TARGETDEFLISTMODEL_H

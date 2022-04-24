@@ -4,9 +4,10 @@
  *  file:       operationlistmodel.cpp
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    7.4.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
+ *  created:    17.4.2022 by Django Reinhard
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -43,7 +44,9 @@ void OperationListModel::append(Operation* op) {
 
 
 void OperationListModel::clear() {
+  beginResetModel();
   list.clear();
+  endResetModel();
   }
 
 
@@ -114,14 +117,20 @@ int OperationListModel::rowCount(const QModelIndex& parent) const {
 
 
 void OperationListModel::setData(const QVector<Operation *> &ops) {
+  clear();
+  beginResetModel();
   for (Operation* o : ops) {
       append(o);
       }
+  endResetModel();
   }
 
 
 void OperationListModel::setData(const std::vector<Operation*>& ops) {
+  clear();
+  beginResetModel();
   for (Operation* o : ops) {
       append(o);
       }
+  endResetModel();
   }

@@ -4,9 +4,10 @@
  *  file:       subopsweep.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    7.4.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
+ *  created:    18.4.2022 by Django Reinhard
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -44,11 +45,12 @@ public slots:
 
 protected:
   std::vector<Handle(AIS_Shape)> createCutPlanes(Operation* op);
-  void createHorizontalToolpaths();
-  void createRoundToolpaths();
-  void createVerticalToolpaths();
-  Handle(AIS_Shape) genPathOffset(TopoDS_Wire wire, double off);
+  void createHorizontalToolpaths(const std::vector<Handle(AIS_Shape)>& cutPlanes);
+  void createRoundToolpaths(const std::vector<Handle(AIS_Shape)>& cutPlanes);
+  void createVerticalToolpaths(Operation* op, Handle(AIS_Shape) cutPart);
+//  Handle(AIS_Shape) genPathOffset(TopoDS_Wire wire, double off);
   void processSelection() override;
+  void processTargets() override;
   void showToolPath() override;
   gp_Pnt sweepBigClockwise(const Bnd_Box& bb, const gp_Pnt& lastTO);
   gp_Pnt sweepBigCounterClockwise(const Bnd_Box& bb, const gp_Pnt& lastTO);

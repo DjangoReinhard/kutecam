@@ -55,6 +55,7 @@ public:
   const QString& getGlInfo();
   virtual QSize  minimumSizeHint() const override { return QSize(200, 200); }
   virtual QSize  sizeHint()        const override { return QSize(500, 400); }
+  Handle(AIS_Shape) baseFace();
   Handle(AIS_Shape) mainShape();
   Handle(AIS_Shape) workpiece();
   TopLoc_Location   getLocation(const Handle(AIS_Shape)& s);
@@ -69,6 +70,7 @@ public:
 
   void move(double dX, double dY, double dZ);
   void rotate(double dA, double dB, double dC);
+  void setBaseFace(Handle(AIS_Shape) bf);
   void setBounds(const Bnd_Box& bounds);
   void setMainShape(Handle(AIS_Shape) s);
   void setWorkpiece(Handle(AIS_Shape) wp);
@@ -95,7 +97,7 @@ public slots:
   void reset2D();
   void reset3D();
   void refresh();
-  virtual void OnSelectionChanged (const Handle(AIS_InteractiveContext)& theCtx, const Handle(V3d_View)& theView) override;
+//  virtual void OnSelectionChanged (const Handle(AIS_InteractiveContext)& theCtx, const Handle(V3d_View)& theView) override;
   virtual void OnObjectDragged(const opencascade::handle<AIS_InteractiveContext> &theCtx, const opencascade::handle<V3d_View> &theView, AIS_DragAction theAction) override;
   void switchOrthographic(const QVariant& ortho);
   void switchWireframe(const QVariant& wf);
@@ -115,7 +117,7 @@ protected:
   virtual void mouseReleaseEvent(QMouseEvent* e) override;
   virtual void mouseMoveEvent(QMouseEvent* e) override;
   virtual void wheelEvent(QWheelEvent* e) override;
-  virtual void evaluateSelection();
+//  virtual void evaluateSelection();
 
   const Handle(V3d_Viewer)&             viewer() const    { return myViewer; }
   const Handle(V3d_View)&               view() const      { return myView; }
@@ -140,6 +142,7 @@ private:
   Handle(AIS_ViewCube)           myViewCube;
   Handle(AIS_Shape)              myMainShape;
   Handle(AIS_Shape)              myWorkpiece;
+  Handle(AIS_Shape)              myBaseFace;
   QVector<Handle(AIS_Shape)>     shapes3D;
   QVector<Handle(AIS_Shape)>     dots;
   Util3D*                        helper;

@@ -4,9 +4,10 @@
  *  file:       operationsubpage.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    10.4.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
+ *  created:    23.4.2022 by Django Reinhard
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -33,6 +34,7 @@ namespace Ui {
 class OpSub;
 }
 QT_END_NAMESPACE
+class PathBuilder;
 class ToolEntry;
 class QStringListModel;
 class OperationListModel;
@@ -66,6 +68,7 @@ public slots:
   void fixtureChanged(int i);
   void offsetChanged(double v);
   void opNameChanged(const QString& name);
+  void outToggled(const QVariant& v);
   void r1Changed(double v);
   void r2Changed(double v);
   void toolChanged(const QVariant& i);
@@ -75,6 +78,7 @@ protected:
   virtual void connectSignals();
   Operation*   createOP(int id, const QString& name, OperationType type);
   QStringList  genCycleList();
+  virtual void processTargets();
 
 signals:
   void opCreated(Operation* op);
@@ -85,11 +89,12 @@ protected:
   OperationListModel* olm;
   Operation*          curOP;
   ToolEntry*          activeTool;
-  TargetDefListModel* tdModel;
+  PathBuilder*        pathBuilder;
   QStringListModel*   opTypes;
   QStringListModel*   dirModel;
   QStringListModel*   drillCycles;
   QStringListModel*   fixModel;
   QStringListModel*   coolingModes;
+  TargetDefListModel* tdModel;
   };
 #endif // OPERATIONSUBPAGE_H

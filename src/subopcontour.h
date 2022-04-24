@@ -4,9 +4,10 @@
  *  file:       subopcontour.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    11.4.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
+ *  created:    16.4.2022 by Django Reinhard
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -26,7 +27,6 @@
 #ifndef SUBOPCONTOUR_H
 #define SUBOPCONTOUR_H
 #include "operationsubpage.h"
-#include "cavc/polyline.hpp"
 
 
 class SubOPContour : public OperationSubPage

@@ -44,39 +44,74 @@ target_include_directories(IFOpenCASCADE
                            INTERFACE ${OpenCASCADE_INCLUDE_DIR}
                            )
 target_link_libraries(IFOpenCASCADE
-                      INTERFACE TKernel
-                      INTERFACE TKMath
-                      INTERFACE TKService
-                      INTERFACE TKV3d
-                      INTERFACE TKOpenGl
-                      INTERFACE TKBRep
-                      INTERFACE TKIGES
-                      INTERFACE TKSTL
-                      INTERFACE TKVRML
-                      INTERFACE TKSTEP
-                      INTERFACE TKSTEPAttr
-                      INTERFACE TKSTEP209
-                      INTERFACE TKSTEPBase
-                      INTERFACE TKGeomBase
-                      INTERFACE TKGeomAlgo
-                      INTERFACE TKG3d
-                      INTERFACE TKG2d
-                      INTERFACE TKXSBase
-                      INTERFACE TKShHealing
-                      INTERFACE TKHLR
-                      INTERFACE TKTopAlgo
-                      INTERFACE TKMesh
-                      INTERFACE TKPrim
-                      INTERFACE TKCDF
+                      INTERFACE TKBinL
+                      INTERFACE TKBin
+                      INTERFACE TKBinTObj
+                      INTERFACE TKBinXCAF
                       INTERFACE TKBool
                       INTERFACE TKBO
-                      INTERFACE TKFillet
-                      INTERFACE TKOffset
-                      INTERFACE TKLCAF
+                      INTERFACE TKBRep
                       INTERFACE TKCAF
+                      INTERFACE TKCDF
+                      INTERFACE TKDCAF
+                      INTERFACE TKDFBrowser
+                      INTERFACE TKDraw
+                      INTERFACE TKernel
+                      INTERFACE TKFeat
+                      INTERFACE TKFillet
+                      INTERFACE TKG2d
+                      INTERFACE TKG3d
+                      INTERFACE TKGeomAlgo
+                      INTERFACE TKGeomBase
+                      INTERFACE TKHLR
+                      INTERFACE TKIGES
+                      INTERFACE TKLCAF
+                      INTERFACE TKMath
+                      INTERFACE TKMesh
+                      INTERFACE TKMeshVS
+                      INTERFACE TKMessageModel
+                      INTERFACE TKMessageView
+                      INTERFACE TKOffset
+                      INTERFACE TKOpenGl
+                      INTERFACE TKOpenGlTest
+                      INTERFACE TKPrim
+                      INTERFACE TKQADraw
+                      INTERFACE TKRWMesh
+                      INTERFACE TKService
+                      INTERFACE TKShapeView
+                      INTERFACE TKShHealing
+                      INTERFACE TKStdL
+                      INTERFACE TKStd
+                      INTERFACE TKSTEP209
+                      INTERFACE TKSTEPAttr
+                      INTERFACE TKSTEPBase
+                      INTERFACE TKSTEP
+                      INTERFACE TKSTL
+                      INTERFACE TKTInspectorAPI
+                      INTERFACE TKTInspector
+                      INTERFACE TKTObjDRAW
+                      INTERFACE TKTObj
+                      INTERFACE TKToolsDraw
+                      INTERFACE TKTopAlgo
+                      INTERFACE TKTopTest
+                      INTERFACE TKTreeModel
+                      INTERFACE TKV3d
                       INTERFACE TKVCAF
-                      INTERFACE TKBin
+                      INTERFACE TKViewerTest
+                      INTERFACE TKView
+                      INTERFACE TKVInspector
+                      INTERFACE TKVRML
+                      INTERFACE TKXCAF
+                      INTERFACE TKXDEDRAW
+                      INTERFACE TKXDEIGES
+                      INTERFACE TKXDESTEP
+                      INTERFACE TKXMesh
+                      INTERFACE TKXmlL
                       INTERFACE TKXml
+                      INTERFACE TKXmlTObj
+                      INTERFACE TKXmlXCAF
+                      INTERFACE TKXSBase
+                      INTERFACE TKXSDRAW
                       )
 target_link_libraries(IFStandard
                       INTERFACE m

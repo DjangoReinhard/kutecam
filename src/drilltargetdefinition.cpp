@@ -4,9 +4,10 @@
  *  file:       drilltargetdefinition.cpp
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
  *  created:    7.4.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -36,9 +37,10 @@ DrillTargetDefinition::DrillTargetDefinition(const gp_Pnt& pos, const gp_Dir& di
 
 DrillTargetDefinition::DrillTargetDefinition(QSettings& s, QObject* parent)
  : TargetDefinition(s, parent) {
-  doDir.SetX(s.value("dtd-dirX").toDouble());
-  doDir.SetY(s.value("dtd-dirY").toDouble());
-  doDir.SetZ(s.value("dtd-dirZ").toDouble());
+  double x = s.value("dtd-dirX").toDouble();
+  double y = s.value("dtd-dirY").toDouble();
+  double z = s.value("dtd-dirZ").toDouble();
+  doDir = gp_Dir(x, y, z);
   doRadius = s.value("dtd-r").toDouble();
   }
 

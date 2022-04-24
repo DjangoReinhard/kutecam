@@ -4,9 +4,10 @@
  *  file:       selectionhandler.cpp
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    11.4.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
+ *  created:    23.4.2022 by Django Reinhard
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -25,6 +26,7 @@
  */
 #include "selectionhandler.h"
 #include "core.h"
+#include "gocontour.h"
 #include "occtviewer.h"
 #include "operation.h"
 #include "sweeptargetdefinition.h"
@@ -34,7 +36,9 @@
 #include "kuteCAM.h"
 
 #include <BRepBuilderAPI_MakeFace.hxx>
+#include <BRepAlgoAPI_Common.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
+#include <BRepAlgoAPI_Section.hxx>
 #include <BRepAlgoAPI_Splitter.hxx>
 #include <BRep_Tool.hxx>
 #include <GeomAdaptor_Surface.hxx>
@@ -50,11 +54,13 @@ SelectionHandler::SelectionHandler() {
   }
 
 
-cavc::Polyline<double> SelectionHandler::createContourFromSelection(Operation* op) {
+GOContour* SelectionHandler::createContourFromSelection(Operation* op) {
   std::vector<TopoDS_Shape> selection = Core().view3D()->selection();
-  cavc::Polyline<double>    res;
 
-  if (!selection.size()) return res;
+  if (!selection.size()) return nullptr;
+  gp_Pnt center(op->wpBounds.CornerMin().X() + (op->wpBounds.CornerMax().X() - op->wpBounds.CornerMin().X()) / 2
+              , op->wpBounds.CornerMin().Y() + (op->wpBounds.CornerMax().Y() - op->wpBounds.CornerMin().Y()) / 2
+              , op->wpBounds.CornerMin().Z() + (op->wpBounds.CornerMax().Z() - op->wpBounds.CornerMin().Z()) / 2);
   Handle(TopTools_HSequenceOfShape) ss = new TopTools_HSequenceOfShape;
   Handle(TopTools_HSequenceOfShape) wires;
   ShapeAnalysis_FreeBounds          fb;
@@ -68,7 +74,7 @@ cavc::Polyline<double> SelectionHandler::createContourFromSelection(Operation* o
 
       if (!curZ) curZ = (bb.CornerMax().Z() - bb.CornerMin().Z()) / 2 + bb.CornerMin().Z();
       gp_Pnt pos = Core().helper3D()->deburr(bb.CornerMin());
-      if (abs(op->waterlineDepth()) < Core().helper3D()->MinDelta)
+      if (!Core().helper3D()->isEqual(op->waterlineDepth(), 0))
          curZ = op->waterlineDepth();
       pos.SetZ(curZ);
       gp_Pln                   cutPlane(pos, {0, 0, 1});
@@ -76,119 +82,79 @@ cavc::Polyline<double> SelectionHandler::createContourFromSelection(Operation* o
       TopoDS_Shape             cs = Core().helper3D()->intersect(s, mf.Shape());
       std::vector<TopoDS_Edge> ce = Core().helper3D()->allEdgesWithin(cs);
 
+      if (!ce.size()) return nullptr;
       ss->Append(ce.at(0));
       }
-  fb.ConnectEdgesToWires(ss, Core().helper3D()->MinDelta, false, wires);
-  std::vector<TopoDS_Edge> edges    = Core().helper3D()->allEdgesWithin(wires->First());
+  fb.ConnectEdgesToWires(ss, Core::MinDelta, false, wires);
+  GOContour* contour = new GOContour(center);
+  std::vector<TopoDS_Edge> edges = Core().helper3D()->allEdgesWithin(wires->First());
 
-  res = Core().helper3D()->toPolyline(edges);
+  for (auto e : edges)
+      contour->add(e);
 
-  return res;
+  return contour;
   }
 
 
-Handle(AIS_Shape) SelectionHandler::createCutPart(Operation* op) {
-  std::vector<TopoDS_Shape> selection = Core().view3D()->selection();
-  TopTools_ListOfShape      joinArgs;
-  Handle(AIS_Shape)         res;
+// selected face identified by position and direction (either from selection, or from stored op)
+TopoDS_Shape SelectionHandler::createBaseContour(const gp_Pnt& pos, const gp_Dir& dir, Operation* op) {
+  Handle(AIS_Shape)       curBF = Core().helper3D()->fixRotation(Core().view3D()->baseFace()->Shape()
+                                                               , op->operationA()
+                                                               , op->operationB()
+                                                               , op->operationC());
+  gp_Vec                  vbf = Core().helper3D()->deburr(Core().helper3D()->normalOfFace(curBF->Shape()));
+  gp_Pln                  selectedPlane(pos, dir);
+  BRepBuilderAPI_MakeFace mfSelected(selectedPlane, -500, 500, -500, 500);
 
-  if (!selection.size()) return res;
-  double curZ = 0, deltaZ;
+  return BRepAlgoAPI_Section(curBF->Shape(), mfSelected.Shape());
+  }
 
-  for (auto& s : selection) {
-      Handle(Geom_Surface)   selectedFace = BRep_Tool::Surface(TopoDS::Face(s));
-      GeomAdaptor_Surface    surf(selectedFace);
-      Handle(AIS_Shape)      asTmp    = new AIS_Shape(s);
-      Bnd_Box                bb       = asTmp->BoundingBox(); bb.SetGap(0);
-      SweepTargetDefinition* std      = nullptr;
-      int                    reverted = s.Orientation();
 
-      //TODO: may be use value from spOff
-      if (!curZ) curZ = (bb.CornerMax().Z() - bb.CornerMin().Z()) / 2 + bb.CornerMin().Z();
-      deltaZ = Core().helper3D()->deburr(bb.CornerMax().Z() - bb.CornerMin().Z());
+Handle(AIS_Shape) SelectionHandler::createCutPart(TopoDS_Shape cf, Operation* op) {
+  Handle(AIS_Shape) curWP = Core().helper3D()->fixRotation(Core().workData()->workPiece->Shape()
+                                                         , op->operationA()
+                                                         , op->operationB()
+                                                         , op->operationC());
+  Handle(AIS_Shape) curBF = Core().helper3D()->fixRotation(Core().view3D()->baseFace()->Shape()
+                                                         , op->operationA()
+                                                         , op->operationB()
+                                                         , op->operationC());
+  gp_Vec vb = Core().helper3D()->deburr(Core().helper3D()->normalOfFace(curBF->Shape()));
 
-      qDebug() << "cut-face - curZ:" << curZ << " - deltaZ:" << deltaZ;
+  qDebug() << "SH::createCutPart - direction of baseFace:" << vb.X() << " / " << vb.Y() << " / " << vb.Z();
 
-      if (selectedFace->IsKind(STANDARD_TYPE(Geom_Plane))) {
-         gp_Pln                  pln = surf.Plane();
-         gp_Pnt                  pos = Core().helper3D()->deburr(pln.Location());
-         gp_Dir                  dir = Core().helper3D()->deburr(pln.Axis().Direction());
+  Handle(AIS_Shape)    rv;
+  BRepAlgoAPI_Splitter splitter;
+  TopTools_ListOfShape splitArgs;
+  TopTools_ListOfShape splitTools;
 
-         if (reverted) dir.Reverse();
-         gp_Pln                  cutPlane(pos, dir);
-         BRepBuilderAPI_MakeFace mf(cutPlane, -500, 500, -500, 500);
+  splitArgs.Append(curWP->Shape());
+  splitTools.Append(cf);
+  splitter.SetArguments(splitArgs);
+  splitter.SetTools(splitTools);
+  splitter.SetNonDestructive(Standard_True);
+  splitter.SetFuzzyValue(Core::MinDelta);
+  splitter.Build();
 
-         qDebug() << "selected plane - pos:" << pos.X() << " / " << pos.Y() << " / " << pos.Z()
-                  <<                "\tdir:" << dir.X() << " / " << dir.Y() << " / " << dir.Z();
+  if (splitter.IsDone()) {
+     splitter.SimplifyResult();
+     TopoDS_Shape    result = splitter.Shape();
+     TopoDS_Iterator it(result);
+     // first shape contains model, second shape is rest of workpiece
+     TopoDS_Shape      s0  = it.Value(); it.Next();
+     TopoDS_Shape      s1  = it.Value();
+     Handle(AIS_Shape) as0 = new AIS_Shape(s0);
+     Handle(AIS_Shape) as1 = new AIS_Shape(s1);
 
-         if (abs(dir.Z()) < Core().helper3D()->MinDelta) { // vertical plane
-            op->setVertical(true);
-            std = new SweepTargetDefinition(pos, dir);
-            std->setZMin(bb.CornerMin().Z());
-            std->setZMax(bb.CornerMax().Z());
-            joinArgs.Append(createCutPart(op, std)->Shape());
-            }
-         else if ((1 - abs(dir.Z())) < Core().helper3D()->MinDelta) { // horizontal plane
-            op->setVertical(false);
-            std = new SweepTargetDefinition(pos, dir);
-            std->setZMin(bb.CornerMin().Z());
-            std->setZMax(bb.CornerMax().Z());
-            joinArgs.Append(createCutPart(op, std)->Shape());
-            }
-         }
-      else if (selectedFace->IsKind(STANDARD_TYPE(Geom_CylindricalSurface))) {
-         gp_Cylinder cs  = surf.Cylinder();
-         gp_Pnt      pos = Core().helper3D()->deburr(cs.Location());
-         gp_Dir      dir = Core().helper3D()->deburr(cs.Axis().Direction());
-
-         qDebug() << "selected cylinder - pos:" << pos.X() << " / " << pos.Y() << " / " << pos.Z()
-                  <<                   "\tdir:" << dir.X() << " / " << dir.Y() << " / " << dir.Z();
-
-         if (Core().helper3D()->isVertical(dir)) {
-            op->setVertical(true);
-            std = new SweepTargetDefinition(pos, dir, cs.Radius());
-            std->setZMin(bb.CornerMin().Z());
-            std->setZMax(bb.CornerMax().Z());
-            joinArgs.Append(createCutPart(op, std)->Shape());
-            }
-         }
-      }
-  if (joinArgs.Size() > 1) {
-     TopoDS_Shape s0 = joinArgs.First();
-     TopoDS_Shape s1;
-
-     qDebug() << "joinArgs.size: " << joinArgs.Size();
-
-     joinArgs.RemoveFirst();
-     s1 = joinArgs.First();
-     BRepAlgoAPI_Fuse  join(s0, s1);
-     Handle(AIS_Shape) cutWP;
-
-     join.SetTools(joinArgs);
-     join.SetFuzzyValue(1.e-5);
-     join.Build();
-
-     if (!join.IsDone()) {
-        qDebug() << "join failed: ";
-        join.DumpErrors(std::cerr);
-        }
-     if (join.HasWarnings()) {
-        qDebug() << "Warnings : ";
-        join.DumpErrors(std::cerr);
-        }
-     if (join.IsDone()) {
-        join.SimplifyResult();
-
-        res = new AIS_Shape(join.Shape());
-        }
+     if (op->isOutside()) rv = as1;
+     else                 rv = as0;
      }
-  else {
-     res = new AIS_Shape(joinArgs.First());
+  if (!rv.IsNull()) {
+     rv->SetColor(Quantity_NOC_CYAN);
+     rv->SetTransparency(0.8);
+     op->cShapes.push_back(rv);
      }
-  res->SetColor(Quantity_NOC_CYAN);
-  res->SetTransparency(0.8);
-
-  return res;
+  return rv;
   }
 
 
@@ -215,14 +181,6 @@ Handle(AIS_Shape) SelectionHandler::createCutPart(Operation* op, SweepTargetDefi
   TopTools_ListOfShape    splitArgs;
   TopTools_ListOfShape    splitTools;
 
-  qDebug() << "------------------------ determine cut part -----------------------------";
-  qDebug() << "cut-point:" << cutPos.X() << "/"
-                           << cutPos.Y() << "/"
-                           << cutPos.Z();
-  qDebug() << "plane direction:" << dir.X() << "/"
-                                 << dir.Y() << "/"
-                                 << dir.Z();
-  qDebug() << "-------------------------------------------------------------------------";
   splitArgs.Append(curWP->Shape());
   splitter.SetArguments(splitArgs);
 
@@ -230,9 +188,7 @@ Handle(AIS_Shape) SelectionHandler::createCutPart(Operation* op, SweepTargetDefi
   splitter.SetTools(splitTools);
 
   splitter.SetNonDestructive(Standard_True);
-  splitter.SetCheckInverted(Standard_False);
-  splitter.SetUseOBB(Standard_True);
-  splitter.SetFuzzyValue(1.e-5);
+  splitter.SetFuzzyValue(Core::MinDelta);
   splitter.Build();
 
   if (splitter.IsDone()) {
@@ -246,20 +202,7 @@ Handle(AIS_Shape) SelectionHandler::createCutPart(Operation* op, SweepTargetDefi
      Handle(AIS_Shape) as1 = new AIS_Shape(s1);
      Bnd_Box           bb0 = as0->BoundingBox();
      Bnd_Box           bb1 = as1->BoundingBox();
-
-     qDebug() << "bb of first shape:" << bb0.CornerMin().X() << "/"
-                                      << bb0.CornerMin().Y() << "/"
-                                      << bb0.CornerMin().Z()
-              << " ==> "              << bb0.CornerMax().X() << "/"
-                                      << bb0.CornerMax().Y() << "/"
-                                      << bb0.CornerMax().Z();
-     qDebug() << "bb of second shape:" << bb1.CornerMin().X() << "/"
-                                       << bb1.CornerMin().Y() << "/"
-                                       << bb1.CornerMin().Z()
-              << " ==> "               << bb1.CornerMax().X() << "/"
-                                       << bb1.CornerMax().Y() << "/"
-                                       << bb1.CornerMax().Z();
-     int checkDir = getDominantAxis(dir);
+     int               checkDir = getDominantAxis(dir);
 
      switch (checkDir) {
        case 1:  // x is dominant

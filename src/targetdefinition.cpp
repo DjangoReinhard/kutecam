@@ -4,9 +4,10 @@
  *  file:       targetdefinition.cpp
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    7.4.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
+ *  created:    23.4.2022 by Django Reinhard
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -44,4 +45,16 @@ void TargetDefinition::store(QSettings& s) {
   s.setValue("tdPosX", tdPos.X());
   s.setValue("tdPosY", tdPos.Y());
   s.setValue("tdPosZ", tdPos.Z());
+  }
+
+
+bool TargetDefinition::compareASC(TargetDefinition *left, TargetDefinition *right) {
+  if (!left || !right) return false;
+  return atan2(left->pos().Y(), left->pos().X()) < atan2(right->pos().Y(), right->pos().X());
+  }
+
+
+bool TargetDefinition::compareDESC(TargetDefinition *left, TargetDefinition *right) {
+  if (!left || !right) return false;
+  return atan2(left->pos().Y(), left->pos().X()) > atan2(right->pos().Y(), right->pos().X());
   }

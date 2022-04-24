@@ -4,9 +4,10 @@
  *  file:       selectionhandler.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    2.4.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
+ *  created:    23.4.2022 by Django Reinhard
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -27,7 +28,7 @@
 #define SELECTIONHANDLER_H
 #include <TopoDS_Wire.hxx>
 #include <AIS_Shape.hxx>
-#include "cavc/polyline.hpp"
+class GOContour;
 class Operation;
 class SweepTargetDefinition;
 
@@ -37,8 +38,10 @@ class SelectionHandler
 public:
   SelectionHandler();
 
-  cavc::Polyline<double> createContourFromSelection(Operation* op);
-  Handle(AIS_Shape)      createCutPart(Operation* op);
-  Handle(AIS_Shape)      createCutPart(Operation* op, SweepTargetDefinition* std);
+  TopoDS_Shape      createBaseContour(const gp_Pnt& pos, const gp_Dir& dir, Operation* op);
+  GOContour*        createContourFromSelection(Operation* op);
+  Handle(AIS_Shape) createCutPart(TopoDS_Shape cf, Operation* op);
+  Handle(AIS_Shape) createCutPart(Operation* op);
+  Handle(AIS_Shape) createCutPart(Operation* op, SweepTargetDefinition* std);
   };
 #endif // SELECTIONHANDLER_H

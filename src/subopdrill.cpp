@@ -4,9 +4,10 @@
  *  file:       subopdrill.cpp
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    8.4.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
+ *  created:    23.4.2022 by Django Reinhard
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -80,11 +81,6 @@ void SubOPDrill::processSelection() {
   Bnd_Box bbWP = curWP->BoundingBox();
 
   curOP->setTopZ(bbWP.CornerMax().Z());
-  tdModel->clear();
-  qDebug() << "==========================================================";
-  qDebug() << "processSelection() ...";
-  qDebug() << "==========================================================";
-
   for (auto s : selection) {
       Handle(AIS_Shape) asTmp = new AIS_Shape(s);
       Bnd_Box           bbSel = asTmp->BoundingBox(); bbSel.SetGap(0);
@@ -182,12 +178,6 @@ void SubOPDrill::processSelection() {
   }
 
 
-bool comparePos(TargetDefinition* l, TargetDefinition* r) {
-  if (!l || !r) return false;
-  return atan2(l->pos().Y(), l->pos().X()) < atan2(r->pos().Y(), r->pos().X());
-  }
-
-
 void SubOPDrill::showToolPath() {
   if (!curOP->workSteps().size()) return;
   Workstep* ws = curOP->workSteps().at(0);
@@ -264,7 +254,7 @@ void SubOPDrill::toolPath() {
      Core().view3D()->removeShapes(curOP->toolPaths);
      curOP->toolPaths.clear();
      }
-  std::sort(tdModel->itemList().begin(), tdModel->itemList().end(), comparePos);
+  tdModel->sort();
   for (TargetDefinition* td : tdModel->itemList()) {
       DrillTargetDefinition* dtd = dynamic_cast<DrillTargetDefinition*>(td);
       gp_Pnt                 from(dtd->pos().X(), dtd->pos().Y(), safeZ1);
@@ -284,8 +274,8 @@ bool SubOPDrill::validateDrillTargets() {
   for (TargetDefinition* td: tdModel->itemList()) {
       DrillTargetDefinition* dtd = static_cast<DrillTargetDefinition*>(td);
 
-      if (oldR < Core().helper3D()->MinDelta) oldR = dtd->radius();
-      if (abs(oldR - dtd->radius()) > Core().helper3D()->MinDelta)
+      if (Core().helper3D()->isEqual(oldR, 0)) oldR = dtd->radius();
+      if (!Core().helper3D()->isEqual(oldR, dtd->radius()))
          seenDifferentRadius = true;
       oldR = dtd->radius();
       }

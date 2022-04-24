@@ -17,5 +17,7 @@ rednose*
 build/*
 test/*
 oldStuff/*
+.prjInfo
 .summary.txt
+summary.txt
 /.project

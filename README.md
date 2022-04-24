@@ -7,12 +7,11 @@
  - Qt5
  - opencascade 7.6
  - cmake build system
- - cavaliercontour
+
 
 ### Building
 - copy file ```sample/Interface.cmake``` to a directory of your choice.
 - change toplevel ```CMakeLists.txt``` so that **CMAKE_MODULE_PATH** matches directory, where you copied ```Interface.cmake``` to.
-- edit ```src/CMakeLists.txt``` and change second path entry of **target_include_directories** to match location of your copy of [CavalierContours](https://github.com/jbuckmccready/CavalierContours)
 - run **cmake-gui** or use **QtCreator** (*and ignore warnings from opencascade*)
 
 
@@ -24,13 +23,26 @@ small video clips for download
 - [![simple sweep](sample/simple_Sweep.mkv)]
 
 ## Screenshots
+- **drill some holes**
 ![first step](sample/kc001.jpg)
 
+- **sweep top face**
 ![first step](sample/kc002.jpg)
 
+- **drill holes in rotated part**
 ![first step](sample/kc005.jpg)
 
-![first step](sample/kc004.jpg)
+- **sweep face of rotated part**
+![first step](sample/kc009.jpg)
+
+- **sweep down more material**
+![first step](sample/kc008.jpg)
+
+- **rough mill vertical contour (several selected faces)**
+![first step](sample/kc010.jpg)
+
+- **mill down a corner of workpiece rotated by multiple axis**
+![first step](sample/kc007.jpg)
 
 
 ## first output

@@ -4,9 +4,10 @@
  *  file:       core.cpp
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    11.4.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
+ *  created:    18.4.2022 by Django Reinhard
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -179,6 +180,11 @@ void Core::setWorkData(Work *data) {
   }
 
 
+ShapeFix_ShapeTolerance& Core::shapeFix() {
+  return k->shapeTolerance;
+  }
+
+
 void Core::switchPage(const QString &page) {
   qDebug() << "requested page:" << page;
   if (k->pages.contains(page)) {
@@ -224,3 +230,4 @@ const QString Core::PgInfo         = tr("Info");
 const QString Core::PgConfig       = tr("Config");
 const QString Core::PgOperations   = tr("Operations");
 const QString Core::PgTools        = tr("Tools");
+const double  Core::MinDelta       = 0.001;

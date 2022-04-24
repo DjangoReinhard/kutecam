@@ -4,9 +4,10 @@
  *  file:       operationspage.cpp
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    11.4.2022 by Django Reinhard
- *  copyright:  2022 - 2022 Django Reinhard -  all rights reserved
+ *  purpose:    create a graphical application, that assists in identify
+ *              and process model elements                        
+ *  created:    23.4.2022 by Django Reinhard
+ *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
  *  it under the terms of the GNU General Public License as published by 
@@ -82,11 +83,12 @@ OperationsPage::OperationsPage(QWidget *parent)
  , currentOperation(nullptr)
  , opStack(new QStackedLayout())
  , subPage(nullptr)
- , tdModel(new TargetDefListModel()) {
+ , tdModel(new TargetDefListModel(&dummy)) {
   ui->setupUi(this);  
   ui->Operation->setLayout(opStack);
   ui->lstOperations->setModel(olm);
   connect(Core().uiMainWin()->actionToolPath, &QAction::triggered, this, &OperationsPage::toolPath);
+  connect(Core().uiMainWin()->actionSelReprocess, &QAction::triggered, this, &OperationsPage::reSelect);
   connect(Core().uiMainWin()->actionGenerate_GCode, &QAction::triggered, this, &OperationsPage::genGCode);
   connect(ui->lstOperations->selectionModel(),  &QItemSelectionModel::selectionChanged, this, &OperationsPage::opSelected);
   connect(Core().view3D(), &OcctQtViewer::shapeSelected,  this, &OperationsPage::shapeSelected);
@@ -112,6 +114,20 @@ OperationsPage::OperationsPage(QWidget *parent)
   }
 
 
+void OperationsPage::addOperation(Operation* op) { // op stil not current operation
+  op->setOperationA(ui->spA->value());
+  op->setOperationB(ui->spB->value());
+  op->setOperationC(ui->spC->value());
+  olm->append(op);
+  int         total = ui->lstOperations->model()->rowCount();
+  QModelIndex mi    = olm->index(total - 1);
+
+  qDebug() << "set current (operation) index to" << mi.row();
+
+  ui->lstOperations->setCurrentIndex(mi);
+  }
+
+
 void OperationsPage::clear() {
   olm->clear();
   }
@@ -124,20 +140,6 @@ void OperationsPage::cutDepthChanged(double d) {
 
      scp->updateCut(d);
      }
-  }
-
-
-void OperationsPage::addOperation(Operation* op) {
-  op->setOperationA(ui->spA->value());
-  op->setOperationB(ui->spB->value());
-  op->setOperationC(ui->spC->value());
-  olm->append(op);
-  int         total = ui->lstOperations->model()->rowCount();
-  QModelIndex mi    = olm->index(total - 1);
-
-  qDebug() << "set current (operation) index to" << mi.row();
-
-  ui->lstOperations->setCurrentIndex(mi);
   }
 
 
@@ -174,6 +176,9 @@ bool OperationsPage::eventFilter(QObject *obj, QEvent *event) {
                QModelIndex mi = ui->lstOperations->currentIndex();
 
                olm->moveUp(mi);
+               mi = olm->index(mi.row() - 1, 0);
+               ui->lstOperations->setCurrentIndex(mi);
+
                return true;
                }
             break;
@@ -182,6 +187,9 @@ bool OperationsPage::eventFilter(QObject *obj, QEvent *event) {
                QModelIndex mi = ui->lstOperations->currentIndex();
 
                olm->moveDown(mi);
+               mi = olm->index(mi.row() + 1, 0);
+               ui->lstOperations->setCurrentIndex(mi);
+
                return true;
                }
             break;
@@ -216,6 +224,7 @@ bool OperationsPage::eventFilter(QObject *obj, QEvent *event) {
                   qDebug() << "DELETE on operations list pressed ...";
                   qDebug() << "\tshould delete operation #" << ui->lstOperations->currentIndex();
 
+                  //TODO: handle currentOperation and reselection!
                   olm->removeRow(ui->lstOperations->currentIndex().row());
 
                   return true;
@@ -252,10 +261,9 @@ void OperationsPage::genGCode() {
   }
 
 
-void OperationsPage::loadOperation(Operation* op) {
+void OperationsPage::loadOperation(Operation* op) { // don't touch old operation any more!
   if (!op) return;
   if (currentOperation) {
-     if (currentOperation->targets.size())   currentOperation->targets = tdModel->itemList();
      if (currentOperation->toolPaths.size()) Core().view3D()->removeShapes(currentOperation->toolPaths);
      if (currentOperation->cShapes.size())   Core().view3D()->removeShapes(currentOperation->cShapes);
      }
@@ -280,7 +288,6 @@ void OperationsPage::loadOperation(Operation* op) {
 
   ui->dsCut->setValue(op->waterlineDepth());
   if (currentOperation) {
-     if (currentOperation->targets.size())     tdModel->replaceData(currentOperation->targets);
      if (currentOperation->cShapes.size())     Core().view3D()->showShapes(currentOperation->cShapes);
      if (currentOperation->workSteps().size()) subPage->showToolPath();
      Core().view3D()->refresh();
@@ -290,8 +297,6 @@ void OperationsPage::loadOperation(Operation* op) {
 
 void OperationsPage::loadProject(ProjectFile *pf) {
   if (!pf) return;
-  olm->clear();
-  tdModel->clear();
   std::vector<Operation*> opList = Core().loadOperations(pf);
 
   olm->setData(opList);
@@ -300,12 +305,25 @@ void OperationsPage::loadProject(ProjectFile *pf) {
 
 
 void OperationsPage::opSelected(const QItemSelection &selected, const QItemSelection &deselected) {
-  QModelIndexList il = selected.indexes();
-  QModelIndex     mi = il.at(0);
+  QModelIndexList il    = selected.indexes();
+  QModelIndex     mi    = il.at(0);
+  Operation*      nxtOP = olm->operation(mi.row());
 
   qDebug() << "current operation changed: #" << mi.row();
 
-  loadOperation(olm->operation(mi.row()));
+  loadOperation(nxtOP);
+  }
+
+
+void OperationsPage::reSelect() {
+  if (!subPage) return;
+  if (currentOperation) {
+     currentOperation->setOperationA(ui->spA->value());
+     currentOperation->setOperationB(ui->spB->value());
+     currentOperation->setOperationC(ui->spC->value());
+     }
+  subPage->fixit();
+  subPage->processSelection();
   }
 
 
@@ -316,7 +334,6 @@ void OperationsPage::rotate() {
 
   if (currentOperation) Core().view3D()->removeShapes(currentOperation->toolPaths);
   Core().view3D()->rotate(deg2rad(dA), deg2rad(dB), deg2rad(dC));
-//  emit modelChanged(Core().workData()->model->BoundingBox());
   }
 
 
