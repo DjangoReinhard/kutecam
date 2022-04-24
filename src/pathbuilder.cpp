@@ -306,6 +306,7 @@ std::vector<Workstep*> PathBuilder::genToolPath(Operation* op, Handle(AIS_Shape)
   int                    n=0;
 
   if (curveIsBorder) firstOffset += abs(calcAdditionalOffset(std, contour));
+  contour->extendBy(10);
   contour->simplify(curZ);
   qDebug() << "cutting contour:" << contour->toString();
   qDebug() << "center of workpiece:" << center.X() << " / " << center.Y();

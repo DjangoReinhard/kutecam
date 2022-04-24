@@ -303,7 +303,7 @@ void GOContour::setContour(TopoDS_Shape contour) {
 std::vector<GraphicObject*>& GOContour::simplify(double z) {
   int mx = segs.size();
 
-  if (segs.size() > 1) {
+  if (segs.size() > 2) {
      for (int i=0; i < mx; ++i) {
          GraphicObject* o0 = segs.at(i);
          GraphicObject* o1 = segs.at((i+1) < mx ? (i+1) : 0);
@@ -334,7 +334,7 @@ std::vector<GraphicObject*>& GOContour::simplify(double z) {
      setStartPoint(segs.at(0)->startPoint());
      setEndPoint(segs.at(segs.size() - 1)->endPoint());
      }
-  else {
+  else if (segs.size() == 1) {
      // need at least 2 segments to form a wire for offset paths
      GraphicObject* go = segs.at(0);
 
