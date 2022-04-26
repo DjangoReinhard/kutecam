@@ -137,6 +137,7 @@ void MainWindow::openProject() {
 
   ui->actionModelSetup->setEnabled(false);
   ui->actionOperationsSetup->setEnabled(true);
+  ui->actionProjectSave->setEnabled(true);
   Core().switchPage(Core::PgOperations);
   ui->message->clear();
   startTimer();

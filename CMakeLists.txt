@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 ##################################   TOP   ###################################
-project(kuteCAM VERSION 0.1)
+project(SimpleCAM     VERSION 0.1)
 ##############################################################################
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 set(CMAKE_MODULE_PATH /d/linux/cmake)
@@ -122,3 +122,4 @@ target_link_libraries(IFStandard
                       INTERFACE util
                       )
 add_subdirectory(src)
+add_subdirectory(test)

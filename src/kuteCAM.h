@@ -25,12 +25,14 @@
  */
 #ifndef KUTECAM_H
 #define KUTECAM_H
+#include <gp_Dir.hxx>
+#include <gp_Pnt.hxx>
 #include <cmath>
-class gp_Dir;
+
 
 
 int getDominantAxis(const gp_Dir& dir);
-
+int relPos(const gp_Pnt& reference, const gp_Pnt& other);
 
 inline double deg2rad(double deg) {
   return deg * M_PI / 180.0;

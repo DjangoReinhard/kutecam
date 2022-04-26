@@ -25,12 +25,20 @@
  * **************************************************************************
  */
 #include "targetdefinition.h"
+#include "core.h"
+#include "graphicobject.h"
+#include "gocontour.h"
+#include "util3d.h"
 #include <QSettings>
 
 
-TargetDefinition::TargetDefinition(const gp_Pnt& pos, QObject* parent)
+TargetDefinition::TargetDefinition(const gp_Pnt& pos, double radius, QObject* parent)
  : QObject(parent)
- , tdPos(pos) {
+ , tdPos(pos)
+ , zmin(0)
+ , zmax(0)
+ , r(radius)
+ , cc(nullptr) {
   }
 
 
@@ -38,6 +46,16 @@ TargetDefinition::TargetDefinition(QSettings& s, QObject* parent) {
   tdPos.SetX(s.value("tdPosX").toDouble());
   tdPos.SetY(s.value("tdPosY").toDouble());
   tdPos.SetZ(s.value("tdPosZ").toDouble());
+  r    = s.value("tdRadius").toDouble();
+  zmin = s.value("tdZMin").toDouble();
+  zmax = s.value("tdZMax").toDouble();
+  QString cSrc = s.value("contour").toString();
+
+  if (!cSrc.isEmpty()) {
+     GraphicObject* go = Core().helper3D()->parseGraphicObject(s.value("contour").toString());
+
+     cc = static_cast<GOContour*>(go);
+     }
   }
 
 
@@ -45,6 +63,10 @@ void TargetDefinition::store(QSettings& s) {
   s.setValue("tdPosX", tdPos.X());
   s.setValue("tdPosY", tdPos.Y());
   s.setValue("tdPosZ", tdPos.Z());
+  s.setValue("tdRadius", r);
+  s.setValue("tdZMin", zMin());
+  s.setValue("tdZMax", zMax());
+  if (cc) s.setValue("contour", cc->toString());
   }
 
 

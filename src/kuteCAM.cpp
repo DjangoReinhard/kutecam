@@ -24,7 +24,6 @@
  * **************************************************************************
  */
 #include "kuteCAM.h"
-#include <gp_Dir.hxx>
 
 
 int getDominantAxis(const gp_Dir& dir) {
@@ -47,4 +46,13 @@ int getDominantAxis(const gp_Dir& dir) {
      return -3;
      }
   return rv;
+  }
+
+
+int relPos(const gp_Pnt& reference, const gp_Pnt& other) {
+  double d = -reference.X() * other.Y() + reference.Y() * other.X();
+
+  if (d < 0) return -1;
+  if (d > 0) return 1;
+  return 0;
   }

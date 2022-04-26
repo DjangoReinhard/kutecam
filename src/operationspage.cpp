@@ -351,6 +351,15 @@ void OperationsPage::shapeSelected(const TopoDS_Shape &shape) {
 
 void OperationsPage::toolPath() {
   if (!subPage) return;
+  if (currentOperation->toolPaths.size()) {
+     Core().view3D()->removeShapes(currentOperation->toolPaths);
+     currentOperation->toolPaths.clear();
+     }
+  if (currentOperation->cShapes.size()) {
+     Core().view3D()->removeShapes(currentOperation->cShapes);
+     currentOperation->cShapes.clear();
+     }
+  if (currentOperation->workSteps().size()) currentOperation->workSteps().clear();
   subPage->fixit();
   subPage->toolPath();
   }

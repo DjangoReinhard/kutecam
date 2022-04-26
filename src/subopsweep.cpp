@@ -218,78 +218,6 @@ void SubOPSweep::createOP() { // TODO: save possible changes to old operation ?
   }
 
 
-//void SubOPSweep::createRoundToolpaths(const std::vector<Handle(AIS_Shape)>& cutPlanes) {
-//  int               mx = cutPlanes.size();
-//  gp_Pnt            from, to, startXXPos;
-//  TopoDS_Edge       e;
-//  Handle(AIS_Shape) path;
-//  bool              againstFeed = ui->cbDir->currentIndex() == 1;
-
-//  for (int i=0; i < mx; ++i) {
-//      Handle(AIS_Shape) s      = cutPlanes.at(i);
-//      Bnd_Box           bb     = s->BoundingBox(); bb.SetGap(0);
-//      gp_Pnt            center = gp_Pnt((bb.CornerMin().X() + bb.CornerMax().X()) / 2
-//                                      , (bb.CornerMin().Y() + bb.CornerMax().Y()) / 2
-//                                      , bb.CornerMin().Z());
-//      double            radius = (bb.CornerMax().X() - bb.CornerMin().X()) / 2;
-//      double            xStart = radius + activeTool->fluteDiameter() * 0.6;
-//      double            rStart = radius - curOP->cutWidth() + activeTool->fluteDiameter() / 2;
-//      double            lastY  = rStart;
-//      double            curZ   = bb.CornerMin().Z();
-//      double            curR   = rStart;
-
-//      qDebug() << "round cut plane: "
-//               << bb.CornerMin().X() << "/" << bb.CornerMin().Y() << "/" << bb.CornerMin().Z()
-//               << "\tto\t"
-//               << bb.CornerMax().X() << "/" << bb.CornerMax().Y() << "/" << bb.CornerMax().Z();
-
-//      if (i) {
-//         from = to;
-//         to   = gp_Pnt(startXXPos.X(), startXXPos.Y(), from.Z());
-//         curOP->workSteps().push_back(new WSTraverse(from, to));
-
-//         from = to;
-//         to   = gp_Pnt(startXXPos.X(), startXXPos.Y(), curZ);
-//         curOP->workSteps().push_back(new WSTraverse(from, to));
-//         }
-//      from = againstFeed ? gp_Pnt(center.X() + xStart, center.Y() + rStart, curZ)
-//                         : gp_Pnt(center.X() - xStart, center.Y() + rStart, curZ);
-//      if (!i) startXXPos = from;
-//      to = gp_Pnt(center.X(), center.Y() + rStart, curZ);
-
-//      qDebug() << "start line from:" << from.X() << "/"
-//                                     << from.Y() << "/"
-//                                     << from.Z()
-//               << "   to   "         << to.X()   << "/"
-//                                     << to.Y()   << "/"
-//                                     << to.Z();
-//      curOP->workSteps().push_back(new WSStraightMove(from, to));
-//      from = to;
-//      curOP->workSteps().push_back(new WSArc(from, to, center, againstFeed));
-//      lastY = startXXPos.Y();
-//      curR -= curOP->cutWidth();
-
-//      while (curR > 0) {
-//            from = to;
-//            to   = gp_Pnt(center.X()
-//                        , -curR
-//                        , curZ);
-//            center.SetY(lastY - (lastY + curR) / 2);
-//            curOP->workSteps().push_back(new WSArc(from, to, center, againstFeed));
-//            from = to;
-//            to   = gp_Pnt(center.X(), curR, curZ);
-//            center.SetY(0);
-//            curOP->workSteps().push_back(new WSArc(from, to, center, againstFeed));
-//            curR -= curOP->cutWidth();
-//            lastY = to.Y();
-//            }
-//      from = to;
-//      to   = gp_Pnt(from.X(), from.Y(), from.Z() + 5);
-//      curOP->workSteps().push_back(new WSTraverse(from, to));
-//      }
-//  }
-
-
 void SubOPSweep::processSelection() {
   if (curOP->cShapes.size()) {
      Core().view3D()->removeShapes(curOP->cShapes);
@@ -616,18 +544,9 @@ gp_Pnt SubOPSweep::sweepBigCounterClockwise(const Bnd_Box& bb, const gp_Pnt& las
   }
 
 
+// parent already called fixit() and cleanup calls
 void SubOPSweep::toolPath() {
   if (!curOP->cutDepth()) return;
-  if (curOP->toolPaths.size()) {
-     Core().view3D()->removeShapes(curOP->toolPaths);
-     curOP->toolPaths.clear();
-     }
-  if (curOP->cShapes.size()) {
-     Core().view3D()->removeShapes(curOP->cShapes);
-     curOP->cShapes.clear();
-     }
-  if (curOP->workSteps().size()) curOP->workSteps().clear();
-
   processTargets();
   if (curOP->isVertical()) {
      qDebug() << "OP sweep - gonna create VERTICAL toolpath ...";

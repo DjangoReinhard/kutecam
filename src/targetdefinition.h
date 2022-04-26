@@ -29,25 +29,38 @@
 #include <QObject>
 #include <gp_Pnt.hxx>
 class QSettings;
+class GOContour;
 
 
 class TargetDefinition : public QObject
 {
   Q_OBJECT
 public:
-  explicit TargetDefinition(const gp_Pnt& pos, QObject* parent = nullptr);
+  explicit TargetDefinition(const gp_Pnt& pos, double radius, QObject* parent = nullptr);
   explicit TargetDefinition(QSettings& settings, QObject* parent = nullptr);
   virtual ~TargetDefinition() = default;
 
   virtual void    store(QSettings& settings);
   virtual QString toString() const = 0;
 
-  gp_Pnt pos()    const { return tdPos; }
+  GOContour* contour() const { return cc; }
+  gp_Pnt pos() const  { return tdPos; }
+  double radius() const { return r; }
+  double zMin() const { return zmin; }
+  double zMax() const { return zmax; }
+  void   setContour(GOContour* c) { cc = c; }
+  void   setRadius(double radius) { r = radius; }
+  void   setZMin(double z) { zmin = z; }
+  void   setZMax(double z) { zmax = z; }
 
   static bool     compareASC(TargetDefinition* left, TargetDefinition* right);
   static bool     compareDESC(TargetDefinition* left, TargetDefinition* right);
 
-protected:
-  gp_Pnt tdPos;
+private:
+  gp_Pnt     tdPos;
+  double     zmin;
+  double     zmax;
+  double     r;
+  GOContour* cc;
   };
 #endif // TARGETDEFINITION_H

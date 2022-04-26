@@ -249,11 +249,6 @@ void SubOPDrill::toolPath() {
   qDebug() << "toolpath generation - change lower z from" << curOP->lowerZ() << "\tto" << drillDepth;
 
   curOP->setLowerZ(drillDepth);
-  curOP->workSteps().clear();
-  if (curOP->toolPaths.size()) {
-     Core().view3D()->removeShapes(curOP->toolPaths);
-     curOP->toolPaths.clear();
-     }
   tdModel->sort();
   for (TargetDefinition* td : tdModel->itemList()) {
       DrillTargetDefinition* dtd = dynamic_cast<DrillTargetDefinition*>(td);

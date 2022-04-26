@@ -29,9 +29,8 @@
 
 
 DrillTargetDefinition::DrillTargetDefinition(const gp_Pnt& pos, const gp_Dir& dir, double radius, QObject* parent)
- : TargetDefinition(pos, parent)
- , doDir(dir)
- , doRadius(radius) {
+ : TargetDefinition(pos, radius, parent)
+ , doDir(dir) {
   }
 
 
@@ -41,7 +40,7 @@ DrillTargetDefinition::DrillTargetDefinition(QSettings& s, QObject* parent)
   double y = s.value("dtd-dirY").toDouble();
   double z = s.value("dtd-dirZ").toDouble();
   doDir = gp_Dir(x, y, z);
-  doRadius = s.value("dtd-r").toDouble();
+//  doRadius = s.value("dtd-r").toDouble();
   }
 
 
@@ -56,8 +55,8 @@ void DrillTargetDefinition::store(QSettings& s) {
 
 
 QString DrillTargetDefinition::toString() const {
-  QString rv = QString("R: %3\tat\t%1\t/\t%2").arg(tdPos.X())
-                                              .arg(tdPos.Y())
-                                              .arg(doRadius);
+  QString rv = QString("R: %3\tat\t%1\t/\t%2").arg(pos().X())
+                                              .arg(pos().Y())
+                                              .arg(radius());
   return rv;
   }

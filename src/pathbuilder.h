@@ -43,6 +43,7 @@ public:
 
   double                               calcAdditionalOffset(SweepTargetDefinition* std, GOContour* c);
   int                                  calcSafeOffsets(double& safeX, double& safeY, const gp_Dir& baseNorm, Operation* op, double xtend);
+  std::vector<Workstep*>               genToolPath(Operation* op);
   std::vector<Workstep*>               genToolPath(Operation* op, Handle(AIS_Shape) cutPart);
   std::vector<Workstep*>               genPath4Pockets(Operation* op, const Bnd_Box& bb, const gp_Dir& baseNorm, const std::vector<std::vector<GOPocket*>>& pool, double xtend);
   std::vector<Workstep*>               genRoundToolpaths(Operation* op, const std::vector<Handle(AIS_Shape)>& cutPlanes);

@@ -25,11 +25,13 @@
  * **************************************************************************
  */
 #include "gopocket.h"
+#include "gocontour.h"
 #include <gp_Pnt.hxx>
 
 
-GOPocket::GOPocket(double from, double to)
- : GraphicObject(GraphicType::GTPocket, gp_Pnt(from, 0, 0), gp_Pnt(to, 0, 0)) {
+//GOPocket::GOPocket(double from, double to)
+GOPocket::GOPocket(const gp_Pnt& start, const gp_Pnt& end)
+ : GraphicObject(GraphicType::GTPocket, start, end) {
   }
 
 
@@ -48,7 +50,20 @@ double GOPocket::a1() const {
   }
 
 
-std::vector<GOContour*>& GOPocket::contours() {
+bool GOPocket::add(GOContour* c) {
+  double ds0 = startPoint().Distance(c->startPoint());
+  double de0 = endPoint().Distance(c->endPoint());
+  double ds1 = startPoint().Distance(c->endPoint());
+  double de1 = endPoint().Distance(c->startPoint());
+
+  if (ds1 < ds0 && de1 < de0) c->invert();
+  pool.push_back(c);
+
+  return true;
+  }
+
+
+const std::vector<GOContour*>& GOPocket::contours() const {
   return pool;
   }
 

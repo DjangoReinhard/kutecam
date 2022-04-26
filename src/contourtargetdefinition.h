@@ -37,10 +37,6 @@ public:
 
   virtual QString toString() const;
 
-  double waterlineDepth() const;
-  void   setWaterlineDepth(double d);
-
 private:
-  double depthOfWaterline;
   };
 #endif // CONTOURTARGETDEFINITION_H

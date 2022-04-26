@@ -45,27 +45,27 @@ public:
 
   Bnd_Box    baseDelim() const               { return bbBase; }
   gp_Dir     baseDir() const                 { return dirBase; }
-  GOContour* contour() const                 { return cc; }
+//  GOContour* contour() const                 { return cc; }
   gp_Dir     dir() const                     { return soDir; }
   bool       isBaseBorder() const            { return baseIsBorder; }
-  double     radius() const                  { return r;    }
+//  double     radius() const                  { return r;    }
   void       setBaseDelim(const Bnd_Box& bb) { bbBase = bb; }
-  void       setContour(GOContour* c)        { cc = c; }
+//  void       setContour(GOContour* c)        { cc = c; }
   void       setBaseDir(const gp_Dir& nd)    { dirBase = nd; }
   void       setBaseIsBorder(bool bib)       { baseIsBorder = bib; }
-  void       setZMin(double z)               { zmin = z; }
-  void       setZMax(double z)               { zmax = z; }
-  double     zMin() const                    { return zmin; }
-  double     zMax() const                    { return zmax; }
+//  void       setZMin(double z)               { zmin = z; }
+//  void       setZMax(double z)               { zmax = z; }
+//  double     zMin() const                    { return zmin; }
+//  double     zMax() const                    { return zmax; }
 
 private:
   gp_Dir     soDir;
   gp_Dir     dirBase;
   Bnd_Box    bbBase;
   bool       baseIsBorder;
-  GOContour* cc;
-  double     r;
-  double     zmin;
-  double     zmax;
+//  GOContour* cc;
+//  double     r;
+//  double     zmin;
+//  double     zmax;
   };
 #endif // SWEEPTARGETDEFINITION_H

@@ -43,10 +43,10 @@ public:
   virtual QString toString() const override;
 
   gp_Dir dir() const { return doDir; }
-  double radius() const { return doRadius; }
+//  double radius() const { return doRadius; }
 
 private:
   gp_Dir doDir;
-  double doRadius;
+//  double doRadius;
   };
 #endif // DRILLTARGETDEFINITION_H

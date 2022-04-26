@@ -28,15 +28,19 @@
 #include "ui_opSub.h"
 #include "ui_mainwindow.h"
 #include "cuttingparameters.h"
+#include "gocontour.h"
 #include "operationlistmodel.h"
 #include "occtviewer.h"
 #include "contourtargetdefinition.h"
+#include "pathbuilder.h"
+#include "selectionhandler.h"
 #include "targetdeflistmodel.h"
 #include "toolentry.h"
 #include "toollistmodel.h"
 #include "core.h"
 #include "util3d.h"
 #include "work.h"
+#include "wpcutter.h"
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepOffsetAPI_MakeOffset.hxx>
 #include <BRepAlgoAPI_Section.hxx>
@@ -69,8 +73,13 @@ void SubOPContour::createOP() {
   }
 
 
+// when we create a contour operation, waterline depth is always 0
+// so create a path here - instead create a path at toolpath generation request
 void SubOPContour::processSelection() {
+  // no support for selection
 
+  // waterline depth will be handled by parent (OperationsPage),
+  // so nothing to do here!
   }
 
 
@@ -78,16 +87,42 @@ void SubOPContour::showToolPath() {
   }
 
 
-void SubOPContour::toolPath() {
+// curOP->waterlineDepth() tells where to take the waterline.
+// It says nothing about milling depth or the like
+void SubOPContour::toolPath() {    
   qDebug() << "OP contour - gonna create toolpath ...";  
-  if (curOP->toolPaths.size()) {
-     Core().view3D()->removeShapes(curOP->toolPaths);
-     curOP->toolPaths.clear();
+  if (!curOP->cutDepth()) return;
+  if (Core().workData()->modCut.IsNull()) return;
+  gp_Pnt     center = Core().helper3D()->centerOf(curOP->wpBounds);
+  GOContour* contour = new GOContour(center);
+
+  contour->setContour(Core().workData()->modCut->Shape());
+  if (!curOP->targets.size()) {
+     ContourTargetDefinition* ctd = new ContourTargetDefinition(Core().helper3D()->centerOf(curOP->wpBounds));
+
+     ctd->setContour(contour);
+     ctd->setZMax(curOP->wpBounds.CornerMax().Z());
+     ctd->setZMin(curOP->finalDepth());
+     curOP->targets.push_back(ctd);
      }
-  if (curOP->cShapes.size()) {
-     Core().view3D()->removeShapes(curOP->cShapes);
-     curOP->cShapes.clear();
-     }
+  gp_Pln cutPlane({center.X(), center.Y(), curOP->finalDepth()}, {0, 0, 1});
+  BRepBuilderAPI_MakeFace mf(cutPlane, -500, 500, -500, 500);
+  curOP->cutPart = Core().selectionHandler()->createCutPart(mf.Shape(), curOP);
+
+  curOP->workSteps() = pathBuilder->genToolPath(curOP, curOP->cutPart);
+
+  // curOP->waterlineDepth()
+//  WPCutter cutAlg(curOP->workPiece);
+
+//  std::vector<GOContour*> cutParts = cutAlgo.processShape(aw->Shape(), center);
+//  for (auto cp : cutParts)
+//      cp->extendBy(10);
+//  clippedCurves.push_back(cutParts);
+//  Core().view3D()->showShape(aw);
+
+//  std::vector<GOPocket*>         pool     = splitCurves(clippedCurves);
+//  std::vector<Handle(AIS_Shape)> toolPath = path4Pockets(pool);
+//  Core().view3D()->showShapes(toolPath);
   }
 
 
@@ -100,20 +135,10 @@ void SubOPContour::updateCut(double d) {
                                                                , curOP->operationA()
                                                                , curOP->operationB()
                                                                , curOP->operationC());
-  Handle(AIS_Shape)       curWP = Core().helper3D()->fixRotation(work->workPiece->Shape()
-                                                               , curOP->operationA()
-                                                               , curOP->operationB()
-                                                               , curOP->operationC());
-
   if (!work->modCut.IsNull()) Core().view3D()->removeShape(work->modCut);
-  if (!work->wpCut.IsNull())  Core().view3D()->removeShape(work->wpCut);
-  work->wpCut = new AIS_Shape(Core().helper3D()->intersect(mf.Shape(), curWP->Shape()));
-  work->wpCut->SetColor(Quantity_NOC_CYAN);
-
   work->modCut = new AIS_Shape(Core().helper3D()->intersect(mf.Shape(), model->Shape()));
   work->modCut->SetColor(Quantity_NOC_PURPLE);
-
-  Core().view3D()->showShape(work->wpCut);
   Core().view3D()->showShape(work->modCut);
+
   Core().view3D()->refresh();
   }

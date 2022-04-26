@@ -28,16 +28,14 @@
 
 
 ContourTargetDefinition::ContourTargetDefinition(const gp_Pnt& pos, QObject *parent)
- : TargetDefinition(pos, parent)
- , depthOfWaterline(0) {
+ : TargetDefinition(pos, 0, parent) {
   }
 
 
 QString ContourTargetDefinition::toString() const {
-  QString rv = QString("%1/%2/%3  at height %4")
-                      .arg(tdPos.X())
-                      .arg(tdPos.Y())
-                      .arg(tdPos.Z())
-                      .arg(depthOfWaterline);
+  QString rv = QString("%1/%2/%3")
+                      .arg(pos().X())
+                      .arg(pos().Y())
+                      .arg(pos().Z());
   return rv;
   }

@@ -33,6 +33,7 @@
 #include "kuteCAM.h"
 #include "occtviewer.h"
 #include "operation.h"
+#include "contourtargetdefinition.h"
 #include "sweeptargetdefinition.h"
 #include "toolentry.h"
 #include "toollistmodel.h"
@@ -120,7 +121,7 @@ int PathBuilder::calcSafeOffsets(double& safeX, double& safeY, const gp_Dir& bas
   }
 
 
-std::vector<Workstep*> PathBuilder::genPath4Pockets(Operation* op, const Bnd_Box& bb, const gp_Dir& baseNorm, const std::vector<std::vector<GOPocket*>>& pool, double xtend) {
+std::vector<Workstep*> PathBuilder::genPath4Pockets(Operation* op, const Bnd_Box& /*b_b*/, const gp_Dir& baseNorm, const std::vector<std::vector<GOPocket*>>& pool, double xtend) {
   double safeX, safeY;
   gp_Pnt center(op->wpBounds.CornerMin().X() + (op->wpBounds.CornerMax().X() - op->wpBounds.CornerMin().X()) / 2
               , op->wpBounds.CornerMin().Y() + (op->wpBounds.CornerMax().Y() - op->wpBounds.CornerMin().Y()) / 2
@@ -284,13 +285,57 @@ std::vector<Workstep*> PathBuilder::genRoundToolpaths(Operation* op, const std::
   }
 
 
+//std::vector<Workstep*> PathBuilder::genToolPath(Operation* op) {
+//  ContourTargetDefinition* ctd = static_cast<ContourTargetDefinition*>(op->targets.at(0));
+//  std::vector<Workstep*> toolPath;
+
+//  if (!ctd) return toolPath;
+//  std::vector<std::vector<std::vector<GOContour*>>> clippedParts;
+//  GOContour* contour     = ctd->contour();
+//  ToolEntry* activeTool  = Core().toolListModel()->tool(Core().toolListModel()->findToolNum(op->toolNum()));
+//  double     xtend       = activeTool->fluteDiameter() * 0.8;
+//  double     firstOffset = op->offset() + activeTool->fluteDiameter() / 2;
+//  double     startZ      = ctd->zMax();
+//  double     lastZ       = ctd->zMin();
+//  double     curZ        = startZ;
+
+//  contour->simplify(curZ);
+//  qDebug() << "cutting contour:" << contour->toString();
+//  qDebug() << "center of workpiece:" << ctd->pos().X() << " / " << ctd->pos().Y();
+//  curZ -= op->cutDepth();
+
+//  while (curZ > lastZ) {
+//        qDebug() << "cut depth is" << curZ;
+//        std::vector<std::vector<GOContour*>> levelContours = processCurve(op, contour, false, ctd->pos(), xtend, firstOffset, curZ);
+
+//        if (levelContours.size()) clippedParts.push_back(levelContours);
+//        curZ -= op->cutDepth();
+//        }
+//  curZ = lastZ;
+//  std::vector<std::vector<GOContour*>> levelContours = processCurve(op, contour, false, ctd->pos(), xtend, firstOffset, curZ);
+//  if (levelContours.size()) clippedParts.push_back(levelContours);
+
+//  qDebug() << "have" << clippedParts.size() << "cut stages\n";
+
+//  if (!clippedParts.size()) return toolPath;
+//  std::vector<std::vector<GOPocket*>> pool = splitCurves(clippedParts);
+//  toolPath = genPath4Pockets(op, bb, std->baseDir(), pool, xtend);
+
+//  return toolPath;
+//  }
+
+
+
 std::vector<Workstep*> PathBuilder::genToolPath(Operation* op, Handle(AIS_Shape) cutPart) {
-  SweepTargetDefinition* std = static_cast<SweepTargetDefinition*>(op->targets.at(0));
+  TargetDefinition*      td = op->targets.at(0);
+  SweepTargetDefinition* std = static_cast<SweepTargetDefinition*>(td);
+  std::vector<Workstep*> toolPath;
+
+  if (!td) return toolPath;
   gp_Pnt center(op->wpBounds.CornerMin().X() + (op->wpBounds.CornerMax().X() - op->wpBounds.CornerMin().X()) / 2
               , op->wpBounds.CornerMin().Y() + (op->wpBounds.CornerMax().Y() - op->wpBounds.CornerMin().Y()) / 2
               , op->wpBounds.CornerMin().Z() + (op->wpBounds.CornerMax().Z() - op->wpBounds.CornerMin().Z()) / 2);
-  GOContour*             contour = std->contour();
-  std::vector<Workstep*> toolPath;
+  GOContour* contour = td->contour();
 
   if (!contour) return toolPath;    // no vertical toolpath without contour!
   std::vector<std::vector<std::vector<GOContour*>>> clippedParts;
@@ -298,14 +343,14 @@ std::vector<Workstep*> PathBuilder::genToolPath(Operation* op, Handle(AIS_Shape)
   double                 xtend         = activeTool->fluteDiameter() * 0.8;
   double                 firstOffset   = op->offset() + activeTool->fluteDiameter() / 2;
   Bnd_Box                bb            = cutPart->BoundingBox();
-  bool                   curveIsBorder = std->isBaseBorder();
+  bool                   curveIsBorder = std ? std->isBaseBorder() : false;
   double                 startZ        = bb.CornerMax().Z();
   double                 lastZ         = fmax(startZ - activeTool->cuttingDepth()
                                             , op->finalDepth() + op->offset());
   double                 curZ          = startZ;
   int                    n=0;
 
-  if (curveIsBorder) firstOffset += abs(calcAdditionalOffset(std, contour));
+  if (std && curveIsBorder) firstOffset += abs(calcAdditionalOffset(std, contour));
   contour->extendBy(10);
   contour->simplify(curZ);
   qDebug() << "cutting contour:" << contour->toString();
@@ -328,6 +373,7 @@ std::vector<Workstep*> PathBuilder::genToolPath(Operation* op, Handle(AIS_Shape)
 
   if (!clippedParts.size()) return toolPath;
   std::vector<std::vector<GOPocket*>> pool = splitCurves(clippedParts);
+  gp_Dir workDir = std ? std->baseDir() : gp_Dir(0, 0, 1);
   toolPath = genPath4Pockets(op, bb, std->baseDir(), pool, xtend);
 
   return toolPath;
@@ -430,30 +476,39 @@ std::vector<std::vector<GOPocket*>> PathBuilder::splitCurves(const std::vector<s
           }
       qDebug() << "level" << maxCount << "has" << count << "pockets";
       auto cp = lp.at(maxCount);
+      int  n=0;
 
       // first create all pockets necessary
-      for (auto c : cp) pockets.push_back(new GOPocket(c->angStart(), c->angEnd()));
+      for (auto c : cp) {
+          int rp = relPos(c->startPoint(), c->endPoint());
+
+          qDebug() << "rp for pocket #" << ++n << "of z-level:" << nL << "is:" << rp;
+          if (rp > 0) pockets.push_back(new GOPocket(c->endPoint(), c->startPoint()));
+          else        pockets.push_back(new GOPocket(c->startPoint(), c->endPoint()));
+          }
 
       // process levelParts from out to in and fill created pockets
       for (auto i = lp.rbegin(); i != lp.rend(); ++i) {
           auto cp = *i;
 
-          for (int n=0; n < cp.size(); ++n) {
+          for (int n=0; n < cp.size(); ++n) { // orientation check and possibly flipping moved to
+                                              // moved to pocket.add(contour)
               auto   c  = cp.at(n);
-              double a0 = atan2(c->startPoint().Y(), c->startPoint().X());
-              double a1 = atan2(c->endPoint().Y(), c->endPoint().X());
+//              double a0 = atan2(c->startPoint().Y(), c->startPoint().X());
+//              double a1 = atan2(c->endPoint().Y(), c->endPoint().X());
+//              int    rp = relPos(c->startPoint(), c->endPoint());
 
-              if (a0 < a1)
-                 c->invert();
-              a0 = atan2(c->startPoint().Y(), c->startPoint().X());
-              a1 = atan2(c->endPoint().Y(), c->endPoint().X());
-              qDebug() << "\tcontour from"
-                       << c->startPoint().X() << " / " << c->startPoint().Y() << " / " << c->startPoint().Z()
-                       << "   to   "
-                       << c->endPoint().X() << " / " << c->endPoint().Y() << " / " << c->endPoint().Z()
-                       << "   with a0:" << a0 << " and a1:" << a1;
+//              qDebug() << "\tcontour from"
+//                       << c->startPoint().X() << " / " << c->startPoint().Y() << " / " << c->startPoint().Z()
+//                       << "   to   "
+//                       << c->endPoint().X() << " / " << c->endPoint().Y() << " / " << c->endPoint().Z()
+//                       << "   with a0:" << a0 << " and a1:" << a1 << "and rp:" << rp;
+//              if (!rp) rp = a0 < a1;
+//              if (rp < 0) c->invert();
+//              a0 = atan2(c->startPoint().Y(), c->startPoint().X());
+//              a1 = atan2(c->endPoint().Y(), c->endPoint().X());
 
-              pockets.at(n)->contours().push_back(c);
+              pockets.at(n)->add(c);
               }
           }
       // pockets with lowest item count should be first to be processed
