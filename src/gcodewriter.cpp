@@ -107,9 +107,16 @@ int GCodeWriter::processOperations(const QString& fileName, const Bnd_Box& wpBou
                                            .arg(curTool->fluteDiameter())
                                            .arg(curTool->freeLength())));
       double  speed = curOP->speed() * 1000 / M_PI / curTool->fluteDiameter();
+      int     line  = 0;
       gp_Pnt  pos;
 
-      if (curOP->workSteps().size()) pos = curOP->workSteps().at(0)->startPos();
+      if (curOP->workSteps().size()) {
+         for (; line < curOP->workSteps().size(); ++line) {
+             pos = curOP->workSteps().at(line)->startPos();
+             if (pos.Z() == 300) continue;
+             break;
+             }
+         }
       writeLine(out
               , pp->genOPIntro(i + 1
                              , curOP->fixture()
@@ -120,9 +127,10 @@ int GCodeWriter::processOperations(const QString& fileName, const Bnd_Box& wpBou
                              , nxtOP->toolNum()));
 
       switch (curOP->kind()) {
-        case ContourOperation: processContourTargets(out, curOP, curTool); break;
-        case DrillOperation:   processDrillTargets(out,   curOP, curTool); break;
-        case SweepOperation:   processSweepTargets(out,   curOP, curTool); break;
+        case ContourOperation: processPathTargets(out,  curOP, line, curTool); break;
+        case DrillOperation:   processDrillTargets(out, curOP, line, curTool); break;
+        case SweepOperation:   processPathTargets(out,  curOP, line, curTool); break;
+        case ClampingPlugOP:   processPathTargets(out,  curOP, line, curTool); break;
         }
       writeLine(out, pp->genOPExit());
       }
@@ -133,12 +141,12 @@ int GCodeWriter::processOperations(const QString& fileName, const Bnd_Box& wpBou
   }
 
 
-void GCodeWriter::processContourTargets(QTextStream& out, const Operation* op, ToolEntry* curTool) {
-  writeLine(out, pp->genProminentComment("contour-target - NOT IMPLEMENTED YET!"));
-  }
+//void GCodeWriter::processContourTargets(QTextStream& out, const Operation* op, ToolEntry* curTool) {
+//  writeLine(out, pp->genProminentComment("contour-target - NOT IMPLEMENTED YET!"));
+//  }
 
 
-void GCodeWriter::processDrillTargets(QTextStream& out, const Operation* op, ToolEntry* curTool) {
+void GCodeWriter::processDrillTargets(QTextStream& out, const Operation* op, int, ToolEntry* curTool) {
   double ss   = op->speed() * 1000 / M_PI / curTool->fluteDiameter();
   double feed = ss * curTool->numFlutes() * op->feedPerTooth();
 
@@ -161,13 +169,13 @@ void GCodeWriter::processDrillTargets(QTextStream& out, const Operation* op, Too
   }
 
 
-void GCodeWriter::processSweepTargets(QTextStream& out, const Operation* op, ToolEntry* curTool) {
+void GCodeWriter::processPathTargets(QTextStream& out, const Operation* op, int first, ToolEntry* curTool) {
   double ss   = op->speed() * 1000 / M_PI / curTool->fluteDiameter();
   double feed = ss * curTool->numFlutes() * op->feedPerTooth();
   WorkstepType lastMove = WTCycle;
   QString cmd;
 
-  for (int i=0; i < op->workSteps().size(); ++i) {
+  for (int i=first; i < op->workSteps().size(); ++i) {
       Workstep*       ws = op->workSteps().at(i);
       WSArc*          wa = static_cast<WSArc*>(ws);
       WSStraightMove* wm = static_cast<WSStraightMove*>(ws);

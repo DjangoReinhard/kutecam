@@ -32,10 +32,12 @@
 class ContourTargetDefinition : public TargetDefinition
 {
 public:
-  explicit ContourTargetDefinition(const gp_Pnt& pos, QObject *parent = nullptr);
+  explicit ContourTargetDefinition(const gp_Pnt& pos, QObject* parent = nullptr);
+  explicit ContourTargetDefinition(QSettings& settings, QObject* parent = nullptr);
   virtual ~ContourTargetDefinition() = default;
 
-  virtual QString toString() const;
+  virtual void    store(QSettings& settings) override;
+  virtual QString toString() const override;
 
 private:
   };

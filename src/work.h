@@ -42,7 +42,8 @@ public:
   std::vector<Handle(AIS_Shape)> modShapes;
   QString           material;
   bool              roundWorkPiece;
-//  TopoDS_Face       baseFace;
+  bool              cpOnTop;
+  Handle(AIS_Shape) clampingPlug;
   Handle(AIS_Shape) workPiece;
   Handle(AIS_Shape) vl;
   Handle(AIS_Shape) vm;

@@ -1162,7 +1162,7 @@
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
         <property name="minimum">
-         <double>-100.000000000000000</double>
+         <double>-99.989999999999995</double>
         </property>
         <property name="maximum">
          <double>-0.010000000000000</double>
@@ -1223,6 +1223,29 @@
         </property>
         <property name="maximum">
          <double>100.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QCheckBox" name="cOnTop">
+        <property name="text">
+         <string>on top</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="QDoubleSpinBox" name="zPosClamp">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="minimum">
+         <double>0.010000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>99.989999999999995</double>
         </property>
        </widget>
       </item>

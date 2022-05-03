@@ -1,12 +1,11 @@
 /* 
  * **************************************************************************
  * 
- *  file:       contourtargetdefinition.cpp
+ *  file:       cctargetdefinition.cpp
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create a graphical application, that assists in identify
- *              and process model elements                        
- *  created:    29.3.2022 by Django Reinhard
+ *  purpose:    create gcode for toolpaths created from CAD models
+ *  created:    28.4.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
@@ -24,30 +23,42 @@
  * 
  * **************************************************************************
  */
-#include "contourtargetdefinition.h"
+#include "cctargetdefinition.h"
 #include <QSettings>
 
 
-ContourTargetDefinition::ContourTargetDefinition(const gp_Pnt& pos, QObject* parent)
- : TargetDefinition(pos, 0, parent) {
+CCTargetDefinition::CCTargetDefinition(const gp_Pnt& pMin, const gp_Pnt& pMax, QObject *parent)
+ : TargetDefinition(pMin, 0, parent) {
+  this->pMax = pMax;
   }
 
 
-ContourTargetDefinition::ContourTargetDefinition(QSettings& s, QObject* parent)
+CCTargetDefinition::CCTargetDefinition(QSettings& s, QObject* parent)
  : TargetDefinition(s, parent) {
+  double x = s.value("ccPosX").toDouble();
+  double y = s.value("ccPosY").toDouble();
+  double z = s.value("ccPosZ").toDouble();
+
+  pMax = gp_Pnt(x, y, z);
   }
 
 
-void ContourTargetDefinition::store(QSettings& s) {
-  s.setValue("tdType", "ContourTarget");
+void CCTargetDefinition::store(QSettings& s) {
+  s.setValue("tdType", "CCTarget");
   TargetDefinition::store(s);
+  s.setValue("ccPosX", pMax.X());
+  s.setValue("ccPosY", pMax.Y());
+  s.setValue("ccPosZ", pMax.Z());
   }
 
 
-QString ContourTargetDefinition::toString() const {
-  QString rv = QString("%1/%2/%3")
+QString CCTargetDefinition::toString() const {
+  QString rv = QString("%1/%2/%3 - %4/%5/%6")
                       .arg(pos().X())
                       .arg(pos().Y())
-                      .arg(pos().Z());
+                      .arg(pos().Z())
+                      .arg(pMax.X())
+                      .arg(pMax.Y())
+                      .arg(pMax.Z());
   return rv;
   }

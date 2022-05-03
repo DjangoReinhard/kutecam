@@ -29,28 +29,41 @@
 #include "goline.h"
 #include "core.h"
 #include "util3d.h"
+#include <BRep_Builder.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRep_Tool.hxx>
 #include <ShapeAnalysis_FreeBounds.hxx>
 #include <ShapeFix_ShapeTolerance.hxx>
 #include <TopoDS.hxx>
 #include <QDebug>
+#include <cmath>
 
 
-GOContour::GOContour(const gp_Pnt& center)
+GOContour::GOContour(const gp_Pnt& center, int order)
  : GraphicObject(GraphicType::GTContour, gp_Pnt(), gp_Pnt())
- , center(center) {
+ , center(center)
+ , level(order) {
   }
 
 
 GOContour::GOContour(const QString& s)
-  : GraphicObject(GraphicType::GTContour, s) {
-  QStringList    sl = s.split("|");
+  : GraphicObject(GraphicType::GTContour, s)
+  , level(0) {
+  QStringList    sls   = s.split("|");
+  QStringList    sl    = sls.at(0).split(";");
+  QStringList    subSL = sl.at(3).split("/");
+  bool           ok    = false;
+  double         x, y, z;
   GraphicObject* go;
-  bool           ok;
 
-  for (int i=1; i < sl.size(); ++i) {
-      const QString& src = sl.at(i);
+  x = subSL.at(0).toDouble(&ok);
+  y = subSL.at(1).toDouble(&ok);
+  z = subSL.at(2).toDouble(&ok);  
+  center = gp_Pnt(x, y, z);
+
+  if (sl.size() > 4) level = sl.at(4).toInt();
+  for (int i=1; i < sls.size(); ++i) {
+      const QString& src = sls.at(i);
 
       go = Core().helper3D()->parseGraphicObject(src);
       if (go) add(go);
@@ -142,17 +155,16 @@ GraphicObject* GOContour::add(TopoDS_Shape s) {
      p1 = c->Value(param1);
 
      if (c->DynamicType() == STANDARD_TYPE(Geom_Line)) {
-        qDebug() << "segment is LINE from" << p0.X() << " / " << p0.Y() << " / " << p0.Z()
-                 << " to "                 << p1.X() << " / " << p1.Y() << " / " << p1.Z();
+//        qDebug() << "segment is LINE from" << p0.X() << " / " << p0.Y() << " / " << p0.Z()
+//                 << " to "                 << p1.X() << " / " << p1.Y() << " / " << p1.Z();
         rv = new GOLine(p0, p1);
         }
      else if (c->DynamicType() == STANDARD_TYPE(Geom_Circle)) {
-        gp_Pnt pM = c->Value((param0 + param1) / 2);
+//        qDebug() << "segment is CIRCLE from" << p0.X() << " / " << p0.Y() << " / " << p0.Z()
+//                 << " to "                   << p1.X() << " / " << p1.Y() << " / " << p1.Z();
+        Handle(Geom_Circle) hc = Handle(Geom_Circle)::DownCast(c);
 
-        qDebug() << "segment is CIRCLE from" << p0.X() << " / " << p0.Y() << " / " << p0.Z()
-                 << " to "                   << p1.X() << " / " << p1.Y() << " / " << p1.Z()
-                 << " with center"           << pM.X() << " / " << pM.Y() << " / " << pM.Z();
-        rv = new GOCircle(p0, p1, pM);
+        rv = new GOCircle(hc, param0, param1);
         }
      else {
         throw std::domain_error("unsupported Geom-Type!");
@@ -214,7 +226,19 @@ double GOContour::angStart() const {
   }
 
 
+double GOContour::distStart() const {
+  return startPoint().Distance(center);
+  }
+
+
+double GOContour::distEnd() const {
+  return endPoint().Distance(center);
+  }
+
+
+//TODO: check and ignore closed contours!
 GraphicObject& GOContour::extendBy(double length) {
+  if (Core().helper3D()->isEqual(startPoint(), endPoint())) return *this;
   extendStart(length);
   extendEnd(length);
 
@@ -253,6 +277,9 @@ GraphicObject* GOContour::extendStart(double length) {
      gp_Pnt sp = c->Value(fp);
      gp_Pnt ep = c->Value(lp);
 
+     if (c.IsNull()) {
+        qDebug() << "OUPS";
+        }
      segs.insert(segs.begin(), new GOLine(sp, ep));
      setStartPoint(sp);
      }
@@ -286,23 +313,35 @@ GraphicObject* GOContour::invert() {
   }
 
 
+int GOContour::order() const {
+  return level;
+  }
+
+
 std::vector<GraphicObject*>& GOContour::segments() {
   return segs;
   }
 
 
 void GOContour::setContour(TopoDS_Shape contour) {
-  std::vector<TopoDS_Edge> segments = Core().helper3D()->allEdgesWithin(contour);
+  Handle(TopTools_HSequenceOfShape) edgePool = new TopTools_HSequenceOfShape;
+  TopoDS_Shape                      offWire  = Core().helper3D()->allEdgesWithin(contour, edgePool);
+  std::vector<TopoDS_Edge>          segments = Core().helper3D()->allEdgesWithin(offWire);
 
-  segs.clear();
-  for (auto s : segments)
-      add(s);
+  for (auto s : segments) add(s);
   }
 
 
-std::vector<GraphicObject*>& GOContour::simplify(double z) {
-  int mx = segs.size();
+std::vector<GraphicObject*>& GOContour::simplify(double z, bool cw) {
+  int    mx = segs.size();
+  double a0 = angStart();
+  double a1 = angEnd();
 
+  while (a0 < 0) a0 += 2*M_PI;
+  while (a1 < 0) a1 += 2*M_PI;
+
+  if (cw && a0 < a1)       invert();
+  else if (!cw && a1 < a0) invert();
   if (segs.size() > 2) {
      for (int i=0; i < mx; ++i) {
          GraphicObject* o0 = segs.at(i);
@@ -368,13 +407,29 @@ TopoDS_Shape GOContour::toWire(double z) {
 
 
 Handle(AIS_Shape) GOContour::toShape(double z) {
-  return new AIS_Shape(toWire(z));
+//  return new AIS_Shape(toWire(z));
+  BRep_Builder    b;
+  TopoDS_Compound c;
+
+  b.MakeCompound(c);
+  for (int n=0; n < segs.size(); ++n) {
+      auto         go = segs.at(n);
+      TopoDS_Shape s  = go->toShape(z)->Shape();
+
+      Core().shapeFix().SetTolerance(s, Core().MinDelta);
+      b.Add(c, s);
+      }
+  return new AIS_Shape(c);
   }
 
 
 QString GOContour::toString() const {
   QString rv = GraphicObject::toString();
 
+  rv += QString(";%1/%2/%3;%4").arg(center.X(), 0, 'f', 4)
+                               .arg(center.Y(), 0, 'f', 4)
+                               .arg(center.Z(), 0, 'f', 4)
+                               .arg(level);
   for (auto s : segs) {
       rv += "|";
       rv += s->toString();

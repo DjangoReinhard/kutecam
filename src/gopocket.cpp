@@ -51,12 +51,13 @@ double GOPocket::a1() const {
 
 
 bool GOPocket::add(GOContour* c) {
-  double ds0 = startPoint().Distance(c->startPoint());
-  double de0 = endPoint().Distance(c->endPoint());
-  double ds1 = startPoint().Distance(c->endPoint());
-  double de1 = endPoint().Distance(c->startPoint());
+  double a0 = c->angStart();
+  double a1 = c->angEnd();
 
-  if (ds1 < ds0 && de1 < de0) c->invert();
+  while (a0 < 0) a0 += 2*M_PI;
+  while (a1 < 0) a1 += 2*M_PI;
+
+  if (a0 < a1) c->invert();
   pool.push_back(c);
 
   return true;

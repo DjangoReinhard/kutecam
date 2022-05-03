@@ -63,6 +63,7 @@ public:
   void fixWorkpiece();
   void fixVise();
   void loadProject(ProjectFile* pf, const TopoDS_Shape& model);
+  void onTopToggle();
   void transformModel();
   void setModel(const TopoDS_Shape& shape);
   void setProject(ProjectFile* pf);
@@ -76,9 +77,8 @@ signals:
   void modelChanged(const Bnd_Box& bb);
 
 private:
-  Ui::SetupPage*     ui;
-  Handle(AIS_Shape)  clampingPlug;
+  Ui::SetupPage*   ui;
   StringListModel* matModel;
-  ViseListModel*     vises;
+  ViseListModel*   vises;
   };
 #endif // SETUPPAGE_H

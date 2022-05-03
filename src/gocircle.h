@@ -27,6 +27,7 @@
 #ifndef GOCIRCLE_H
 #define GOCIRCLE_H
 #include "graphicobject.h"
+#include <Geom_Circle.hxx>
 #include <Geom_Curve.hxx>
 
 
@@ -34,6 +35,7 @@ class GOCircle : public GraphicObject
 {
 public:
   explicit GOCircle(const gp_Pnt& from, const gp_Pnt& to, const gp_Pnt& midPnt);
+  explicit GOCircle(Handle(Geom_Circle) hc, double p0, double p1);
   virtual ~GOCircle() = default;
 
   gp_Pnt                    center() const;

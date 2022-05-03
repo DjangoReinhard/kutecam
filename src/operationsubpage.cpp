@@ -282,6 +282,10 @@ void OperationSubPage::loadOP(Operation *op) {
   connectSignals();
 
   fixit();
+  if (curOP->cShapes.size()) {
+     Core().view3D()->removeShapes(curOP->cShapes);
+     curOP->cShapes.clear();
+     }
   if (!tdModel->rowCount()) processSelection();
   else                      processTargets();
   }

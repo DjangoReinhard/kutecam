@@ -1,7 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>src/mainwindow.ui</file>
-        <file>src/info.ui</file>
         <file>src/setup.ui</file>
         <file>src/preview.ui</file>
         <file>src/status.ui</file>

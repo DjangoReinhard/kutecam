@@ -71,6 +71,17 @@ GOCircle::GOCircle(const gp_Pnt& from, const gp_Pnt& to, const gp_Pnt& midPoint)
   }
 
 
+GOCircle::GOCircle(Handle(Geom_Circle) hc, double p0, double p1)
+ : GraphicObject(GraphicType::GTCircle, hc->Value(p0), hc->Value(p1)) {
+  curve = hc;
+  this->p0 = p0;
+  this->p1 = p1;
+  this->r  = hc->Radius();
+  this->centerPnt = hc->Position().Location();
+  this->axis      = hc->Position().Direction();
+  }
+
+
 GOCircle::GOCircle(const QString& s)
  : GraphicObject(GraphicType::GTCircle, s) {
   QStringList sl    = s.split(";");
@@ -197,7 +208,7 @@ Handle(Geom_Curve) GOCircle::startTangent(double length, double* param0, double*
 
 
 Handle(AIS_Shape) GOCircle::toShape(double z) {
-  if (Core().helper3D()->isEqual(abs(z), 0))
+  if (!Core().helper3D()->isEqual(abs(z), 0))
      centerPnt.SetZ(z);
   gp_Circ     rawCircle(gp_Ax2(centerPnt, axis), r);
   TopoDS_Edge edge;

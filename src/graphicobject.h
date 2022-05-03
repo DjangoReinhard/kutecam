@@ -78,5 +78,8 @@ private:
   GraphicType gType;
   gp_Pnt      fromPnt;
   gp_Pnt      toPnt;
+  int         relPos;
+  int         relStart;
+  int         relEnd;
   };
 #endif // GRAPHICOBJECT_H

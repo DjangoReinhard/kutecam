@@ -29,13 +29,16 @@
 #include "operationsubpage.h"
 #include <TopoDS_Wire.hxx>
 class SweepTargetDefinition;
+class OperationsListModel;
+class TargetDefListModel;
+class QWidget;
 
 
 class SubOPSweep : public OperationSubPage
 {
   Q_OBJECT
 public:
-  explicit SubOPSweep(OperationListModel* olm, TargetDefListModel* tdModel, QWidget *parent = nullptr);
+  explicit SubOPSweep(OperationListModel* olm, TargetDefListModel* tdModel, QWidget* parent = nullptr);
   virtual ~SubOPSweep() = default;
 
   virtual void toolPath() override;

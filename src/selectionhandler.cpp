@@ -202,7 +202,7 @@ Handle(AIS_Shape) SelectionHandler::createCutPart(Operation* op, SweepTargetDefi
      Handle(AIS_Shape) as1 = new AIS_Shape(s1);
      Bnd_Box           bb0 = as0->BoundingBox();
      Bnd_Box           bb1 = as1->BoundingBox();
-     int               checkDir = getDominantAxis(dir);
+     int               checkDir = kute::getDominantAxis(dir);
 
      switch (checkDir) {
        case 1:  // x is dominant

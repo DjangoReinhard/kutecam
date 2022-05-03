@@ -25,6 +25,8 @@
  * **************************************************************************
  */
 #include "tdfactory.h"
+#include "cctargetdefinition.h"
+#include "contourtargetdefinition.h"
 #include "drilltargetdefinition.h"
 #include "sweeptargetdefinition.h"
 #include <QSettings>
@@ -33,7 +35,9 @@
 TargetDefinition* TDFactory::createTargetDefinition(QSettings &s) {
   QString           type = s.value("tdType").toString();
 
-  if (type == "DrillTarget")      return new DrillTargetDefinition(s);
-  else if (type == "SweepTarget") return new SweepTargetDefinition(s);
+  if (type == "DrillTarget")        return new DrillTargetDefinition(s);
+  else if (type == "SweepTarget")   return new SweepTargetDefinition(s);
+  else if (type == "CCTarget")      return new CCTargetDefinition(s);
+  else if (type == "ContourTarget") return new ContourTargetDefinition(s);
   return nullptr;
   }

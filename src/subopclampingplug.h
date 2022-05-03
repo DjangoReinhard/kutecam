@@ -1,12 +1,11 @@
 /* 
  * **************************************************************************
  * 
- *  file:       gcodewriter.h
+ *  file:       subopclampingplug.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create a graphical application, that assists in identify
- *              and process model elements                        
- *  created:    11.4.2022 by Django Reinhard
+ *  purpose:    create gcode for toolpaths created from CAD models
+ *  created:    28.4.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
@@ -24,31 +23,29 @@
  * 
  * **************************************************************************
  */
-#ifndef GCODEWRITER_H
-#define GCODEWRITER_H
-#include <QVector>
-class Bnd_Box;
-class QString;
-class Operation;
-class PostProcessor;
-class ToolEntry;
-class QTextStream;
+#ifndef SUBOPCLAMPINGPLUG_H
+#define SUBOPCLAMPINGPLUG_H
+#include "operationsubpage.h"
+class CCTargetDefinition;
 
 
-class GCodeWriter
+class SubOPClampingPlug : public OperationSubPage
 {
+  Q_OBJECT
 public:
-  explicit GCodeWriter(PostProcessor* pp);
+  explicit SubOPClampingPlug(OperationListModel* olm, TargetDefListModel* tdModel, QWidget* parent = nullptr);
+  virtual ~SubOPClampingPlug() = default;
 
-  int  processOperations(const QString& fileName, const Bnd_Box& wpBounds, const QVector<Operation*>& operations);
+  virtual void toolPath() override;
+
+public slots:
+  void createOP();
 
 protected:
-//  void processContourTargets(QTextStream& out, const Operation* op, ToolEntry* curTool);
-  void processDrillTargets(QTextStream& out, const Operation* op, int first, ToolEntry* curTool);
-  void processPathTargets(QTextStream& out, const Operation* op, int first, ToolEntry* curTool);
-  void writeLine(QTextStream& out, const QString& line = QString());
-
-private:
-  PostProcessor*  pp;
+  int findMax(double d0, double d1, double d2, double d3);
+  int findMax(int d0, int d1, int d2, int d3);
+  void processSelection() override;
+  void processTargets() override;
+  void showToolPath() override;
   };
-#endif // GCODEWRITER_H
+#endif // SUBOPCLAMPINGPLUG_H

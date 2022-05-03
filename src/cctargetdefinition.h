@@ -1,12 +1,11 @@
 /* 
  * **************************************************************************
  * 
- *  file:       gcodewriter.h
+ *  file:       cctargetdefinition.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create a graphical application, that assists in identify
- *              and process model elements                        
- *  created:    11.4.2022 by Django Reinhard
+ *  purpose:    create gcode for toolpaths created from CAD models
+ *  created:    28.4.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
@@ -24,31 +23,26 @@
  * 
  * **************************************************************************
  */
-#ifndef GCODEWRITER_H
-#define GCODEWRITER_H
-#include <QVector>
-class Bnd_Box;
-class QString;
-class Operation;
-class PostProcessor;
-class ToolEntry;
-class QTextStream;
+#ifndef CCTARGETDEFINITION_H
+#define CCTARGETDEFINITION_H
+#include "targetdefinition.h"
+class GOContour;
 
 
-class GCodeWriter
+class CCTargetDefinition : public TargetDefinition
 {
 public:
-  explicit GCodeWriter(PostProcessor* pp);
+  explicit CCTargetDefinition(const gp_Pnt& pMin, const gp_Pnt& pMax, QObject* parent = nullptr);
+  explicit CCTargetDefinition(QSettings& settings, QObject* parent = nullptr);
+  virtual ~CCTargetDefinition() = default;
 
-  int  processOperations(const QString& fileName, const Bnd_Box& wpBounds, const QVector<Operation*>& operations);
+  gp_Pnt cornerMin() const { return pos(); };
+  gp_Pnt cornerMax() const { return pMax;  };
 
-protected:
-//  void processContourTargets(QTextStream& out, const Operation* op, ToolEntry* curTool);
-  void processDrillTargets(QTextStream& out, const Operation* op, int first, ToolEntry* curTool);
-  void processPathTargets(QTextStream& out, const Operation* op, int first, ToolEntry* curTool);
-  void writeLine(QTextStream& out, const QString& line = QString());
+  virtual void    store(QSettings& settings) override;
+  virtual QString toString() const override;
 
 private:
-  PostProcessor*  pp;
+  gp_Pnt pMax;
   };
-#endif // GCODEWRITER_H
+#endif // CCTARGETDEFINITION_H

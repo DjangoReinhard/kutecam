@@ -72,7 +72,7 @@ Operation::Operation(int id, QObject *parent)
  , showCutPlanes(true)
  , cutShape(nullptr)
  , opName(" - NEW - ")
- , opKind(ContourOperation)
+ , opKind(0)
  , type(CutRoughing)
  , coolingMode(NO_Cooling)
  , dc(NO_Cycle)
@@ -192,6 +192,7 @@ int Operation::fixture() const {
 QString Operation::kindAsString() const {
   switch (opKind) {
     case ContourOperation:  return xstr(ContourOperation);
+    case ClampingPlugOP:    return xstr(ClampingPlugOP);
     case DrillOperation:    return xstr(DrillOperation);
     case SweepOperation:    return xstr(SweepOperation);
     }
@@ -351,6 +352,9 @@ void Operation::setKind(int kind) {
 void Operation::setKind(const QString& kindName) {
   if (!kindName.compare(xstr(ContourOperation))) {
      opKind = ContourOperation;
+     }
+  else if (!kindName.compare(xstr(ClampingPlugOP))) {
+     opKind = ClampingPlugOP;
      }
   else if (!kindName.compare(xstr(DrillOperation))) {
      opKind = DrillOperation;
@@ -566,10 +570,11 @@ std::vector<Workstep*>& Operation::workSteps() {
   }
 
 
-QString    Operation::OPSweep    = tr("Sweep");
-QString    Operation::OPContour  = tr("Contour");
-QString    Operation::OPDrill    = tr("Drill");
-QString    Operation::OTRoughing = tr("Roughing");
-QString    Operation::OTFinish   = tr("Finish");
-TDFactory* Operation::tdFactory  = nullptr;
-WSFactory* Operation::wsFactory  = nullptr;
+//QString    Operation::OPSweep        = tr("Sweep");
+//QString    Operation::OPContour      = tr("Contour");
+//QString    Operation::OPClampingPlug = tr("Contour");
+//QString    Operation::OPDrill        = tr("Drill");
+QString    Operation::OTRoughing     = tr("Roughing");
+QString    Operation::OTFinish       = tr("Finish");
+TDFactory* Operation::tdFactory      = nullptr;
+WSFactory* Operation::wsFactory      = nullptr;

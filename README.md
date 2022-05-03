@@ -44,6 +44,9 @@ small video clips for download
 - **mill down a corner of workpiece rotated by multiple axis**
 ![first step](sample/kc007.jpg)
 
+- **mill a clamping plug for later 5-axis processing**
+![first step](sample/kc011.jpg)
+
 
 ## first output
 result of screenshot with Fanuc postprocessor

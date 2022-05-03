@@ -1,4 +1,4 @@
-/* 
+/*
  * **************************************************************************
  * 
  *  file:       util3d.cpp
@@ -36,6 +36,7 @@
 #include <BOPAlgo_Splitter.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
+#include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
 #include <BRepAlgoAPI_Splitter.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
@@ -283,6 +284,13 @@ Handle(AIS_Shape) Util3D::createArc(const gp_Pnt& from, const gp_Pnt& to, const 
   }
 
 
+Handle(AIS_Shape) Util3D::createBox(const gp_Pnt& p0, const gp_Pnt& p1) {
+  TopoDS_Shape s = BRepPrimAPI_MakeBox(p0, p1);
+
+  return new AIS_Shape(s);
+  }
+
+
 Handle(AIS_Shape) Util3D::createLine(const gp_Pnt& from, const gp_Pnt& to) {
   gp_Pnt end = gp_Pnt(to);
 
@@ -427,9 +435,9 @@ Handle(AIS_Shape) Util3D::fixRotation(const TopoDS_Shape& s, double angA, double
   gp_Quaternion q;
   gp_Trsf       r;
 
-  q.SetEulerAngles(gp_Intrinsic_XYZ, deg2rad(angA)
-                                   , deg2rad(angB)
-                                   , deg2rad(angC));
+  q.SetEulerAngles(gp_Intrinsic_XYZ, kute::deg2rad(angA)
+                                   , kute::deg2rad(angB)
+                                   , kute::deg2rad(angC));
   r.SetRotation(q);
   BRepBuilderAPI_Transform trans(r);
 
@@ -550,80 +558,84 @@ TopoDS_Shape Util3D::loadStep(const QString& fileName) {
   }
 
 
-TopoDS_Shape Util3D::makeCube(const gp_Pnt& p0
-                            , const gp_Pnt& p1) {
-  gp_Pnt p[4];
-  Handle(Geom_TrimmedCurve) tc[4];
-  TopoDS_Edge e[4];
-  TopoDS_Wire w;
-  TopoDS_Face f;
+//TopoDS_Shape Util3D::makeCube(const gp_Pnt& p0
+//                            , const gp_Pnt& p1) {
+//#ifdef REDNOSE
+//  gp_Pnt p[4];
+//  Handle(Geom_TrimmedCurve) tc[4];
+//  TopoDS_Edge e[4];
+//  TopoDS_Wire w;
+//  TopoDS_Face f;
 
-  p[0] = p0;
-  p[1] = gp_Pnt(p1.X(), p0.Y(), p0.Z());
-  p[2] = gp_Pnt(p1.X(), p1.Y(), p0.Z());
-  p[3] = gp_Pnt(p0.X(), p1.Y(), p0.Z());
-  tc[ 0] = GC_MakeSegment(p[0], p[1]);
-  tc[ 1] = GC_MakeSegment(p[1], p[2]);
-  tc[ 2] = GC_MakeSegment(p[2], p[3]);
-  tc[ 3] = GC_MakeSegment(p[3], p[0]);
-  for (int i=0; i < 4; ++i)
-      e[i] = BRepBuilderAPI_MakeEdge(tc[i]);
-  w = BRepBuilderAPI_MakeWire(e[0], e[1], e[2],  e[3]);
-  f = BRepBuilderAPI_MakeFace(w);
-  gp_Vec       ev(0.0, 0.0, p1.Z() - p0.Z());
-  TopoDS_Shape cube = BRepPrimAPI_MakePrism(f, ev);
+//  p[0] = p0;
+//  p[1] = gp_Pnt(p1.X(), p0.Y(), p0.Z());
+//  p[2] = gp_Pnt(p1.X(), p1.Y(), p0.Z());
+//  p[3] = gp_Pnt(p0.X(), p1.Y(), p0.Z());
+//  tc[ 0] = GC_MakeSegment(p[0], p[1]);
+//  tc[ 1] = GC_MakeSegment(p[1], p[2]);
+//  tc[ 2] = GC_MakeSegment(p[2], p[3]);
+//  tc[ 3] = GC_MakeSegment(p[3], p[0]);
+//  for (int i=0; i < 4; ++i)
+//      e[i] = BRepBuilderAPI_MakeEdge(tc[i]);
+//  w = BRepBuilderAPI_MakeWire(e[0], e[1], e[2],  e[3]);
+//  f = BRepBuilderAPI_MakeFace(w);
+//  gp_Vec       ev(0.0, 0.0, p1.Z() - p0.Z());
+//  TopoDS_Shape cube = BRepPrimAPI_MakePrism(f, ev);
 
-  return cube;
-  }
+//  return cube;
+//#else
+//  return BRepPrimAPI_MakeBox(p0, p1);
+//#endif
+//  }
 
 
-TopoDS_Shape Util3D::makeCube(const Standard_Real width
-                            , const Standard_Real height
-                            , const Standard_Real depth) {
-  // define points
-  gp_Pnt pt1(-width / 2.0, 0.0, 0.0 );
-  gp_Pnt pt2(-width / 2.0, -depth / 2.0, 0.0 );
-  gp_Pnt pt3(width / 2.0, -depth / 2.0, 0.0 );
-  gp_Pnt pt4(width /2.0, 0.0, 0.0 );
+//TopoDS_Shape Util3D::makeCube(const Standard_Real width
+//                            , const Standard_Real height
+//                            , const Standard_Real depth) {
+//  // define points
+//  gp_Pnt pt1(-width / 2.0, 0.0, 0.0 );
+//  gp_Pnt pt2(-width / 2.0, -depth / 2.0, 0.0 );
+//  gp_Pnt pt3(width / 2.0, -depth / 2.0, 0.0 );
+//  gp_Pnt pt4(width /2.0, 0.0, 0.0 );
 
-  // define segments
-  Handle_Geom_TrimmedCurve seg1 = GC_MakeSegment(pt1, pt2);
-  Handle_Geom_TrimmedCurve seg2 = GC_MakeSegment(pt2, pt3);
-  Handle_Geom_TrimmedCurve seg3 = GC_MakeSegment(pt3, pt4);
+//  // define segments
+//  Handle_Geom_TrimmedCurve seg1 = GC_MakeSegment(pt1, pt2);
+//  Handle_Geom_TrimmedCurve seg2 = GC_MakeSegment(pt2, pt3);
+//  Handle_Geom_TrimmedCurve seg3 = GC_MakeSegment(pt3, pt4);
 
-  // make edge
-  TopoDS_Edge edge1 = BRepBuilderAPI_MakeEdge(seg1);
-  TopoDS_Edge edge2 = BRepBuilderAPI_MakeEdge(seg2);
-  TopoDS_Edge edge3 = BRepBuilderAPI_MakeEdge(seg3);
+//  // make edge
+//  TopoDS_Edge edge1 = BRepBuilderAPI_MakeEdge(seg1);
+//  TopoDS_Edge edge2 = BRepBuilderAPI_MakeEdge(seg2);
+//  TopoDS_Edge edge3 = BRepBuilderAPI_MakeEdge(seg3);
 
-  // make wire
-  TopoDS_Wire wire1 = BRepBuilderAPI_MakeWire(edge1, edge2, edge3);
+//  // make wire
+//  TopoDS_Wire wire1 = BRepBuilderAPI_MakeWire(edge1, edge2, edge3);
 
-  //Complete Profile
-  gp_Ax1  xAxis = gp::OX();
-  gp_Trsf transfer;
+//  //Complete Profile
+//  gp_Ax1  xAxis = gp::OX();
+//  gp_Trsf transfer;
 
-  transfer.SetMirror(xAxis);
+//  transfer.SetMirror(xAxis);
 
-  BRepBuilderAPI_Transform aBRepTrsf(wire1, transfer);
-  TopoDS_Shape mirroredShape = aBRepTrsf.Shape();
-  TopoDS_Wire mirroredWire1 = TopoDS::Wire(mirroredShape);
+//  BRepBuilderAPI_Transform aBRepTrsf(wire1, transfer);
+//  TopoDS_Shape mirroredShape = aBRepTrsf.Shape();
+//  TopoDS_Wire mirroredWire1 = TopoDS::Wire(mirroredShape);
 
-  BRepBuilderAPI_MakeWire mkWire;
+//  BRepBuilderAPI_MakeWire mkWire;
 
-  mkWire.Add(wire1);
-  mkWire.Add(mirroredWire1);
+//  mkWire.Add(wire1);
+//  mkWire.Add(mirroredWire1);
 
-  TopoDS_Wire wireProfile = mkWire.Wire();
+//  TopoDS_Wire wireProfile = mkWire.Wire();
 
-  //Body : Prism the Profile
-  TopoDS_Face faceProfile = BRepBuilderAPI_MakeFace(wireProfile);
-  gp_Vec prismVec(0.0, 0.0, height);
+//  //Body : Prism the Profile
+//  TopoDS_Face faceProfile = BRepBuilderAPI_MakeFace(wireProfile);
+//  gp_Vec prismVec(0.0, 0.0, height);
 
-  TopoDS_Shape cube = BRepPrimAPI_MakePrism(faceProfile, prismVec);
+//  TopoDS_Shape cube = BRepPrimAPI_MakePrism(faceProfile, prismVec);
 
-  return cube;
-  }
+//  return cube;
+//  }
 
 
 gp_Vec Util3D::normalOfFace(const TopoDS_Shape& face) {
@@ -675,9 +687,9 @@ GraphicObject* Util3D::toGraphicObject(TopoDS_Edge edge) {
      rv = new GOLine(p0, p1);
      }
   else if (c->DynamicType() == STANDARD_TYPE(Geom_Circle)) {
-     gp_Pnt pM = c->Value((param0 + param1) / 2);
+     Handle(Geom_Circle) hc = Handle(Geom_Circle)::DownCast(c);
 
-     rv = new GOCircle(p0, p1, pM);
+     rv = new GOCircle(hc, param0, param1);
      }
   else {
      throw std::domain_error("unsupported Geom-Type!");

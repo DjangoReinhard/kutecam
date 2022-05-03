@@ -30,7 +30,7 @@
 #include <cmath>
 
 
-
+namespace kute {
 int getDominantAxis(const gp_Dir& dir);
 int relPos(const gp_Pnt& reference, const gp_Pnt& other);
 
@@ -42,4 +42,5 @@ inline double deg2rad(double deg) {
 inline double rad2deg(double rad) {
   return rad * 180.0 / M_PI;
   }
+}
 #endif // KUTECAM_H

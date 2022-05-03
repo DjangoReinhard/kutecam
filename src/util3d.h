@@ -66,6 +66,7 @@ public:
   gp_Pnt                         centerOf(const Bnd_Box& bb);
   TopoDS_Edge                    createArc(const gp_Pnt& from, const gp_Pnt& to, double radius, bool ccw = false);
   Handle(AIS_Shape)              createArc(const gp_Pnt& from, const gp_Pnt& to, const gp_Pnt& center, bool ccw = false);
+  Handle(AIS_Shape)              createBox(const gp_Pnt& from, const gp_Pnt& to);
   Handle(AIS_Shape)              createLine(const gp_Pnt& from, const gp_Pnt& to);
   Handle(AIS_Shape)              cut(const TopoDS_Shape& src, const TopoDS_Shape& tool);
   double                         deburr(double v);

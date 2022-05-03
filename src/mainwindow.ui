@@ -480,9 +480,17 @@
      <property name="title">
       <string>&amp;New</string>
      </property>
+     <addaction name="actionClamping_Plug"/>
      <addaction name="actionContourNew"/>
      <addaction name="actionDrillNew"/>
      <addaction name="actionSweepNew"/>
+    </widget>
+    <widget class="QMenu" name="menuSelection">
+     <property name="title">
+      <string>&amp;Selection</string>
+     </property>
+     <addaction name="actionSelection2Vertical"/>
+     <addaction name="actionSelection2Horizontal"/>
     </widget>
     <addaction name="menu_New"/>
     <addaction name="actionSelReprocess"/>
@@ -490,6 +498,9 @@
     <addaction name="actionGenerate_GCode"/>
     <addaction name="separator"/>
     <addaction name="actionRemove"/>
+    <addaction name="separator"/>
+    <addaction name="menuSelection"/>
+    <addaction name="actionTest"/>
    </widget>
    <widget class="QMenu" name="menuSetup">
     <property name="title">
@@ -695,12 +706,27 @@
   </action>
   <action name="actionTest">
    <property name="text">
-    <string>Test</string>
+    <string>Blub</string>
    </property>
   </action>
   <action name="actionSelReprocess">
    <property name="text">
     <string>&amp;Reprocess Selection</string>
+   </property>
+  </action>
+  <action name="actionClamping_Plug">
+   <property name="text">
+    <string>Clamping &amp;Plug</string>
+   </property>
+  </action>
+  <action name="actionSelection2Vertical">
+   <property name="text">
+    <string>&amp;vertical</string>
+   </property>
+  </action>
+  <action name="actionSelection2Horizontal">
+   <property name="text">
+    <string>&amp;horizontal</string>
    </property>
   </action>
  </widget>

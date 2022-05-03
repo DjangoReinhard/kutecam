@@ -96,8 +96,9 @@ void SetupPage::createClamping() {
 
 
 void SetupPage::createVise() {
-  Bnd_Box cBounds = clampingPlug->BoundingBox();
+  Bnd_Box cBounds = Core().workData()->clampingPlug->BoundingBox();
 
+  if (ui->cOnTop->isChecked()) cBounds = Core().workData()->workPiece->BoundingBox();
   ui->xVL->setValue(cBounds.CornerMin().X());
   ui->xVM->setValue(cBounds.CornerMin().X() + (cBounds.CornerMax().X() - cBounds.CornerMin().X()) / 2);
   ui->xVR->setValue(cBounds.CornerMax().X());
@@ -195,6 +196,7 @@ void SetupPage::enableClamping(bool enabled) {
      connect(ui->yPosClamp, &QDoubleSpinBox::valueChanged, this, &SetupPage::updateClampingPlug);
      connect(ui->zNegClamp, &QDoubleSpinBox::valueChanged, this, &SetupPage::updateClampingPlug);
      connect(ui->pbCSet,    &QPushButton::clicked,         this, &SetupPage::fixClamping);
+     connect(ui->cOnTop,    &QCheckBox::toggled,           this, &SetupPage::onTopToggle);
      }
   else {
      disconnect(ui->xNegClamp, &QDoubleSpinBox::valueChanged, this, &SetupPage::updateClampingPlug);
@@ -203,6 +205,7 @@ void SetupPage::enableClamping(bool enabled) {
      disconnect(ui->yPosClamp, &QDoubleSpinBox::valueChanged, this, &SetupPage::updateClampingPlug);
      disconnect(ui->zNegClamp, &QDoubleSpinBox::valueChanged, this, &SetupPage::updateClampingPlug);
      disconnect(ui->pbCSet,    &QPushButton::clicked,         this, &SetupPage::fixClamping);
+     disconnect(ui->cOnTop,    &QCheckBox::toggled,           this, &SetupPage::onTopToggle);
      }
   }
 
@@ -319,36 +322,35 @@ void SetupPage::exploreModel(const TopoDS_Shape& shape) {
          break;
          }
       }
-//  BRepAdaptor_Surface aSurface(Core().workData()->baseFace);
-//  gp_Pln              p = aSurface.Plane();
-//  gp_Dir              baseDir = p.Axis().Direction();
-
   Core().view3D()->showShape(Core().view3D()->baseFace());
   Core().view3D()->fitAll();
   }
 
 
 void SetupPage::fixClamping() {
-  gp_Trsf             t    = clampingPlug->Transformation();
-  const TopoDS_Shape& base = clampingPlug->Shape();
+  Work*               work = Core().workData();
+  gp_Trsf             t    = work->clampingPlug->Transformation();
+  const TopoDS_Shape& base = work->clampingPlug->Shape();
   TopoDS_Shape        nCP  = base.Located(TopLoc_Location(t));
 
   qDebug() << "model fixed?!?";
 
   Core().projectFile()->beginGroup("Setup");
+  Core().projectFile()->setValue("clamping-onTop", ui->cOnTop->isChecked());
   Core().projectFile()->setValue("clamping-min", QVector3D(ui->xNegClamp->value()
                                        , ui->yNegClamp->value()
                                        , ui->zNegClamp->value()));
   Core().projectFile()->setValue("clamping-max", QVector3D(ui->xPosClamp->value()
                                        , ui->yPosClamp->value()
-                                       , 0));
+                                       , ui->zPosClamp->value()));
   Core().projectFile()->endGroup();
-  Core().view3D()->removeShape(clampingPlug);
-  clampingPlug = new AIS_Shape(nCP);
-  clampingPlug->SetColor(Quantity_NOC_BLUE);
-  clampingPlug->SetTransparency(0.7);
-  Core().view3D()->showShape(clampingPlug, false);
-  Core().view3D()->removeShape(Core().workData()->model);
+  Core().view3D()->removeShape(Core().workData()->clampingPlug);
+  work->clampingPlug = new AIS_Shape(nCP);
+  work->clampingPlug->SetColor(Quantity_NOC_BLUE);
+  work->clampingPlug->SetTransparency(0.7);
+  work->cpOnTop = ui->cOnTop->isChecked();
+  Core().view3D()->showShape(work->clampingPlug, false);
+  Core().view3D()->removeShape(work->model);
   enableClamping(false);
   createVise();
   }
@@ -399,12 +401,13 @@ void SetupPage::fixModel() {
 
 
 void SetupPage::fixVise() {
-  Bnd_Box cBounds = clampingPlug->BoundingBox();
   Work*   work = Core().workData();
+  Bnd_Box cBounds = work->clampingPlug->BoundingBox();
   gp_Trsf tVL = work->vl->Transformation();
   gp_Trsf tVR = work->vr->Transformation();
   gp_Trsf mVL, mVM, mVR;
 
+  if (ui->cOnTop->isChecked()) cBounds = work->workPiece->BoundingBox();
   mVL.SetTranslation({0, 0, 0}, {cBounds.CornerMin().X()
                                , ui->yVL->value()
                                , ui->zVL->value()});
@@ -525,9 +528,9 @@ void SetupPage::loadProject(ProjectFile* pf, const TopoDS_Shape& mShape) {
   gp_Trsf       t;
 
   q.SetEulerAngles(gp_Intrinsic_XYZ
-                 , deg2rad(qrot.x())
-                 , deg2rad(qrot.y())
-                 , deg2rad(qrot.z()));
+                 , kute::deg2rad(qrot.x())
+                 , kute::deg2rad(qrot.y())
+                 , kute::deg2rad(qrot.z()));
   t.SetTransformation(q, {qloc.x(), qloc.y(), qloc.z()});
   BRepBuilderAPI_Transform trans(t);
 
@@ -572,12 +575,21 @@ void SetupPage::loadProject(ProjectFile* pf, const TopoDS_Shape& mShape) {
   p0.SetY(p0.Y() + qloc.y());
   p1.SetX(p1.X() + qrot.x());
   p1.SetY(p1.Y() + qrot.y());
-  p1.SetZ(p0.Z() + qloc.z());
+  if (pf->value("clamping-onTop").toBool()) {
+     work->cpOnTop = true;
+     p0.SetZ(p1.Z());
+     p1.SetZ(p1.Z() + qrot.z());
+     }
+  else {
+     work->cpOnTop = false;
+     p0.SetZ(p0.Z());
+     p1.SetZ(p0.Z() + qloc.z());
+     }
   tmp = BRepPrimAPI_MakeBox(p0, p1).Shape();
-  clampingPlug = new AIS_Shape(tmp);
-  clampingPlug->SetColor(Quantity_NOC_BLUE);
-  clampingPlug->SetTransparency(0.7);
-  view3D->showShape(clampingPlug, false);
+  work->clampingPlug = new AIS_Shape(tmp);
+  work->clampingPlug->SetColor(Quantity_NOC_BLUE);
+  work->clampingPlug->SetTransparency(0.7);
+  view3D->showShape(work->clampingPlug, false);
   QString    viseName = pf->value("vise-type").toString();
   ViseEntry* ve       = vises->find(viseName);
   assert(ve != nullptr);
@@ -612,7 +624,7 @@ void SetupPage::loadProject(ProjectFile* pf, const TopoDS_Shape& mShape) {
   view3D->showShape(work->vl, false);
   view3D->showShape(work->vr, false);
   bb = work->vl->BoundingBox();
-  bb.Add(work->vm->BoundingBox());
+  if (!work->vm.IsNull()) bb.Add(work->vm->BoundingBox());
   bb.Add(work->vr->BoundingBox());
   work->vise = new AIS_Shape(BRepPrimAPI_MakeBox(bb.CornerMin(), bb.CornerMax()).Shape());
   QFile tfn = pf->value("Tool-file").toString();
@@ -623,6 +635,23 @@ void SetupPage::loadProject(ProjectFile* pf, const TopoDS_Shape& mShape) {
   enableModel(false);
   view3D->iso1View();
   pf->endGroup();
+  }
+
+
+void SetupPage::onTopToggle() {
+  if (ui->cOnTop->isChecked()) {
+     ui->zNegClamp->setEnabled(false);
+     ui->zPosClamp->setEnabled(true);
+     ui->zNegClamp->setValue(0);
+     ui->zPosClamp->setValue(10);
+     }
+  else {
+     ui->zNegClamp->setEnabled(true);
+     ui->zPosClamp->setEnabled(false);
+     ui->zPosClamp->setValue(0);
+     ui->zNegClamp->setValue(-10);
+     }
+  updateClampingPlug();
   }
 
 
@@ -640,9 +669,9 @@ void SetupPage::transformModel() {
                                           << "\tand move:" << x  << " / " << y  << " / " << z;
 
   q.SetEulerAngles(gp_Intrinsic_XYZ
-                 , deg2rad(dA)
-                 , deg2rad(dB)
-                 , deg2rad(dC));
+                 , kute::deg2rad(dA)
+                 , kute::deg2rad(dB)
+                 , kute::deg2rad(dC));
   trans.SetTransformation(q, {x, y, z});
 
   Core().workData()->model->SetLocalTransformation(trans);
@@ -679,21 +708,33 @@ void SetupPage::updateClampingPlug() {
   double yNeg = ui->yNegClamp->value();
   double yPos = ui->yPosClamp->value();
   double zNeg = ui->zNegClamp->value();
+  double zPos = ui->zPosClamp->value();
   OcctQtViewer* view3D = Core().view3D();
   gp_Pnt p0 = xt.CornerMin();
   gp_Pnt p1 = xt.CornerMax();
 
-  p0.SetX(p0.X() + xNeg);
-  p0.SetY(p0.Y() + yNeg);
-  p1.SetX(p1.X() + xPos);
-  p1.SetY(p1.Y() + yPos);
-  p1.SetZ(p0.Z() + zNeg);
+  if (ui->cOnTop->isChecked()) {
+     p0.SetX(p0.X() + xNeg);
+     p0.SetY(p0.Y() + yNeg);
+     p0.SetZ(p1.Z());
+     p1.SetX(p1.X() + xPos);
+     p1.SetY(p1.Y() + yPos);
+     p1.SetZ(p1.Z() + zPos);
+     }
+  else {
+     p0.SetX(p0.X() + xNeg);
+     p0.SetY(p0.Y() + yNeg);
+     p0.SetZ(p0.Z());
+     p1.SetX(p1.X() + xPos);
+     p1.SetY(p1.Y() + yPos);
+     p1.SetZ(p0.Z() + zNeg);
+     }
 
   TopoDS_Shape box = BRepPrimAPI_MakeBox(p0, p1).Shape();
 
-  if (!clampingPlug.IsNull()) view3D->removeShape(clampingPlug);
-  clampingPlug = new AIS_Shape(box);
-  view3D->showShape(clampingPlug, false);
+  if (!Core().workData()->clampingPlug.IsNull()) view3D->removeShape(Core().workData()->clampingPlug);
+  Core().workData()->clampingPlug = new AIS_Shape(box);
+  view3D->showShape(Core().workData()->clampingPlug, false);
   view3D->refresh();
   }
 

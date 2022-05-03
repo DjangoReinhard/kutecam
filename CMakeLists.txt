@@ -122,4 +122,3 @@ target_link_libraries(IFStandard
                       INTERFACE util
                       )
 add_subdirectory(src)
-add_subdirectory(test)

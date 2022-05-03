@@ -175,10 +175,10 @@ int WPCutter::checkLIntersection(const gp_Pnt& p0, const gp_Pnt& p1) {
 int WPCutter::clipRegion(const gp_Pnt& p) {
   int rv = Inside;
 
-  if      (p.X() < bbWP.CornerMin().X()) rv = Left;
-  else if (p.X() > bbWP.CornerMax().X()) rv = Right;
-  if      (p.Y() < bbWP.CornerMin().Y()) rv = Bottom;
-  else if (p.Y() > bbWP.CornerMax().Y()) rv = Top;
+  if      (p.X() < bbWP.CornerMin().X()) rv |= Left;
+  else if (p.X() > bbWP.CornerMax().X()) rv |= Right;
+  if      (p.Y() < bbWP.CornerMin().Y()) rv |= Bottom;
+  else if (p.Y() > bbWP.CornerMax().Y()) rv |= Top;
 
   return rv;
   }

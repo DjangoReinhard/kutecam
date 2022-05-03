@@ -40,7 +40,9 @@
 #include "core.h"
 #include "util3d.h"
 #include "work.h"
+#include "workstep.h"
 #include "wpcutter.h"
+#include "wsarc.h"
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepOffsetAPI_MakeOffset.hxx>
 #include <BRepAlgoAPI_Section.hxx>
@@ -84,6 +86,28 @@ void SubOPContour::processSelection() {
 
 
 void SubOPContour::showToolPath() {
+  if (!curOP->workSteps().size()) return;
+  Handle(AIS_Shape) as;
+
+  for (auto ws : curOP->workSteps()) {
+      ws->dump();
+      switch (ws->type()) {
+        case WTTraverse:
+             curOP->toolPaths.push_back(Core().helper3D()->genFastMove(ws->startPos(), ws->endPos()));
+             break;
+        case WTStraightMove:
+             curOP->toolPaths.push_back(Core().helper3D()->genWorkLine(ws->startPos(), ws->endPos()));
+             break;
+        case WTArc: {
+             WSArc* wa = static_cast<WSArc*>(ws);
+
+             curOP->toolPaths.push_back(Core().helper3D()->genWorkArc(ws->startPos(), ws->endPos(), wa->centerPos(), wa->isCCW()));
+             } break;
+        default: break;
+        }
+      }
+  Core().view3D()->showShapes(curOP->toolPaths);
+  Core().view3D()->refresh();
   }
 
 
@@ -97,6 +121,9 @@ void SubOPContour::toolPath() {
   GOContour* contour = new GOContour(center);
 
   contour->setContour(Core().workData()->modCut->Shape());
+
+  qDebug() << "water line contour:";
+  qDebug() << contour->toString();
   if (!curOP->targets.size()) {
      ContourTargetDefinition* ctd = new ContourTargetDefinition(Core().helper3D()->centerOf(curOP->wpBounds));
 
@@ -112,7 +139,7 @@ void SubOPContour::toolPath() {
   curOP->workSteps() = pathBuilder->genToolPath(curOP, curOP->cutPart);
 
   // curOP->waterlineDepth()
-//  WPCutter cutAlg(curOP->workPiece);
+//  WPCutter cutAlgo(curOP->workPiece);
 
 //  std::vector<GOContour*> cutParts = cutAlgo.processShape(aw->Shape(), center);
 //  for (auto cp : cutParts)
@@ -123,6 +150,14 @@ void SubOPContour::toolPath() {
 //  std::vector<GOPocket*>         pool     = splitCurves(clippedCurves);
 //  std::vector<Handle(AIS_Shape)> toolPath = path4Pockets(pool);
 //  Core().view3D()->showShapes(toolPath);
+
+  Core().view3D()->showShapes(curOP->toolPaths, false);
+  curOP->cutPart->SetColor(Quantity_NOC_CYAN);
+  curOP->cutPart->SetTransparency(0.7);
+  Core().view3D()->showShape(curOP->cutPart);
+  if (curOP->showCutParts) Core().view3D()->showShapes(curOP->cShapes, false);
+  Core().view3D()->refresh();
+  showToolPath();
   }
 
 

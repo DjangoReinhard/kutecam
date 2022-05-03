@@ -8,6 +8,7 @@ add_executable(kuteCAM
     configpage.cpp
     contourtargetdefinition.cpp
     core.cpp
+    cctargetdefinition.cpp
     cuttingparameters.cpp
     cutparamlistmodel.cpp
     drilltargetdefinition.cpp
@@ -36,6 +37,7 @@ add_executable(kuteCAM
     shapelistmodel.cpp
     kuteCAM.cpp
     stringlistmodel.cpp
+    subopclampingplug.cpp
     subopcontour.cpp
     subopdrill.cpp
     subopsweep.cpp
@@ -60,6 +62,16 @@ add_executable(kuteCAM
     wstraverse.cpp
     xmltoolreader.cpp
     xmltoolwriter.cpp
+    mainwindow.ui
+    misc.ui
+    opContour.ui
+    opDrill.ui
+    operations.ui
+    opSub.ui
+    preview.ui
+    setup.ui
+    status.ui
+    tool.ui
     ../kuteCAM.qrc
     )
 set(TS_FILES

@@ -35,7 +35,7 @@
 class GOContour : public GraphicObject
 {
 public:
-  explicit GOContour(const gp_Pnt& center);
+  explicit GOContour(const gp_Pnt& center, int order = 0);
   virtual ~GOContour() = default;
 
   virtual GraphicObject*    extendStart(double length) override;
@@ -50,11 +50,14 @@ public:
   bool                         add(GOContour* other);
   double                       angStart() const;
   double                       angEnd() const;
+  double                       distStart() const;
+  double                       distEnd() const;
   GraphicObject&               extendBy(double length);
+  int                          order() const;
   int                          size() const;
   std::vector<GraphicObject*>& segments();
   void                         setContour(TopoDS_Shape contour);
-  std::vector<GraphicObject*>& simplify(double z);
+  std::vector<GraphicObject*>& simplify(double z, bool cw = true);
 
 protected:
   explicit GOContour(const QString& source);
@@ -62,6 +65,7 @@ protected:
 private:
   std::vector<GraphicObject*> segs;
   gp_Pnt                      center;
+  int                         level;
 
   friend class Util3D;
   };

@@ -26,6 +26,8 @@
 #include "kuteCAM.h"
 
 
+namespace kute {
+
 int getDominantAxis(const gp_Dir& dir) {
   int rv = 0;
 
@@ -56,3 +58,4 @@ int relPos(const gp_Pnt& reference, const gp_Pnt& other) {
   if (d > 0) return 1;
   return 0;
   }
+}

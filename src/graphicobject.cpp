@@ -26,6 +26,7 @@
  */
 #include "graphicobject.h"
 #include "core.h"
+#include "kuteCAM.h"
 #include "util3d.h"
 #include <ElCLib.hxx>
 #include <TopoDS_Edge.hxx>
@@ -36,37 +37,45 @@
 GraphicObject::GraphicObject(GraphicType gt, const gp_Pnt& from, const gp_Pnt& to)
  : gType(gt)
  , fromPnt(from)
- , toPnt(to) {
+ , toPnt(to)
+ , relPos(kute::relPos(from, to))
+ , relStart(from.X() + from.Y())
+ , relEnd(to.X() + to.Y()) {
   }
 
 
 GraphicObject::GraphicObject(GraphicType gt, const QString& source)
- : gType(gt) {
+ : gType(gt)
+ , relPos(0) {
   QStringList sl    = source.split(";");
   bool        ok    = false;
   int         type  = sl.at(0).toInt(&ok);
 
   if (type != gt) throw std::domain_error("invalid call! - source type does not match");
   QStringList subSL = sl.at(1).split("/");
-  double      v     = subSL.at(0).toDouble(&ok);
+  double      x, y, z;
 
-  if (ok) fromPnt.SetX(v);
-  v = subSL.at(1).toDouble(&ok);
-  if (ok) fromPnt.SetY(v);
-  v = subSL.at(2).toDouble(&ok);
-  if (ok) fromPnt.SetZ(v);
+
+  x = subSL.at(0).toDouble(&ok);
+//  if (ok) fromPnt.SetX(v);
+  y = subSL.at(1).toDouble(&ok);
+//  if (ok) fromPnt.SetY(v);
+  z = subSL.at(2).toDouble(&ok);
+//  if (ok) fromPnt.SetZ(v);
+  setStartPoint(gp_Pnt(x, y, z));
 
   subSL = sl.at(2).split("/");
   int n = subSL.at(2).indexOf("|");
 
   if (n) subSL[2] = subSL.at(2).mid(0, n);
 
-  v = subSL.at(0).toDouble(&ok);
-  if (ok) toPnt.SetX(v);
-  v = subSL.at(1).toDouble(&ok);
-  if (ok) toPnt.SetY(v);
-  v = subSL.at(2).toDouble(&ok);
-  if (ok) toPnt.SetZ(v);
+  x = subSL.at(0).toDouble(&ok);
+//  if (ok) toPnt.SetX(v);
+  y = subSL.at(1).toDouble(&ok);
+//  if (ok) toPnt.SetY(v);
+  z = subSL.at(2).toDouble(&ok);
+//  if (ok) toPnt.SetZ(v);
+  setEndPoint(gp_Pnt(x, y, z));
   }
 
 
@@ -83,8 +92,10 @@ gp_Pnt GraphicObject::endPoint() const {
 void GraphicObject::swapEndPoints() {
   gp_Pnt tmp = fromPnt;
 
-  fromPnt = toPnt;
-  toPnt   = tmp;
+//  fromPnt = toPnt;
+//  toPnt   = tmp;
+  setStartPoint(toPnt);
+  setEndPoint(tmp);
   }
 
 
@@ -93,7 +104,9 @@ void GraphicObject::setStartPoint(const gp_Pnt &p) {
 
   if (!line.IsNull())
      p0 = ElCLib::Parameter(line->Lin(), p);
-  fromPnt = p;
+  fromPnt  = p;
+  relPos   = kute::relPos(fromPnt, toPnt);
+  relStart = fromPnt.X() + fromPnt.Y();
   }
 
 
@@ -103,6 +116,8 @@ void GraphicObject::setEndPoint(const gp_Pnt &p) {
   if (!line.IsNull())
      p1 = ElCLib::Parameter(line->Lin(), p);
   toPnt = p;
+  relPos = kute::relPos(fromPnt, toPnt);
+  relEnd = toPnt.X() + toPnt.Y();
   }
 
 
