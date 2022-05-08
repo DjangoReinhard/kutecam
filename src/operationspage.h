@@ -65,7 +65,6 @@ public slots:
   void addOperation(Operation* op);
   void cutDepthChanged(double v);
   void genGCode();
-  void opTest();
   void reSelect();
   void sel2Horizontal();
   void sel2Vertical();

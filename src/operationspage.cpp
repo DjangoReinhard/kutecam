@@ -93,7 +93,6 @@ OperationsPage::OperationsPage(QWidget *parent)
   connect(Core().uiMainWin()->actionGenerate_GCode, &QAction::triggered, this, &OperationsPage::genGCode);
   connect(Core().uiMainWin()->actionSelection2Horizontal, &QAction::triggered, this, &OperationsPage::sel2Horizontal);
   connect(Core().uiMainWin()->actionSelection2Vertical, &QAction::triggered, this, &OperationsPage::sel2Vertical);
-  connect(Core().uiMainWin()->actionTest, &QAction::triggered, this, &OperationsPage::opTest);
   connect(ui->lstOperations->selectionModel(),  &QItemSelectionModel::selectionChanged, this, &OperationsPage::opSelected);
   connect(Core().view3D(), &OcctQtViewer::shapeSelected,  this, &OperationsPage::shapeSelected);
   connect(this,      &OperationsPage::raiseMessage, Core().mainWin(), &MainWindow::setStatusMessage);
