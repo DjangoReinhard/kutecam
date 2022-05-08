@@ -27,7 +27,16 @@
 #include "postprocessor.h"
 
 
-PostProcessor::PostProcessor() {
+PostProcessor::PostProcessor()
+ : x(0)
+ , y(0)
+ , z(0)
+ , a(0)
+ , b(0)
+ , c(0)
+ , u(0)
+ , v(0)
+ , w(0) {
   }
 
 

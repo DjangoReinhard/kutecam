@@ -27,6 +27,7 @@
 #ifndef GOCONTOUR_H
 #define GOCONTOUR_H
 #include "graphicobject.h"
+#include "kuteCAM.h"
 #include <TopoDS_Shape.hxx>
 #include <TopoDS_Wire.hxx>
 #include <vector>
@@ -38,6 +39,7 @@ public:
   explicit GOContour(const gp_Pnt& center, int order = 0);
   virtual ~GOContour() = default;
 
+  virtual void              dump() const override;
   virtual GraphicObject*    extendStart(double length) override;
   virtual GraphicObject*    extendEnd(double length) override;
   virtual GraphicObject*    invert() override;
@@ -45,11 +47,13 @@ public:
   virtual QString           toString() const override;
   TopoDS_Shape              toWire(double z = 0);
 
-  GraphicObject*               add(TopoDS_Shape s);
+  GraphicObject*               add(TopoDS_Shape s, double gap = kute::MinDelta);
   bool                         add(GraphicObject* o);
   bool                         add(GOContour* other);
-  double                       angStart() const;
-  double                       angEnd() const;
+  double                       a0() const;
+  double                       a1() const;
+  gp_Pnt                       centerPoint() const;
+  gp_Pnt                       changeStart2Close(const gp_Pnt& p);
   double                       distStart() const;
   double                       distEnd() const;
   GraphicObject&               extendBy(double length);

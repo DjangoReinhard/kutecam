@@ -44,6 +44,7 @@ class Util3D;
 class Work;
 class QListView;
 class QListWidget;
+class QSplitter;
 class QStackedWidget;
 class QTabWidget;
 
@@ -60,6 +61,7 @@ public:
   void            addPage(QWidget* page);
   void            clearStatus();
   void            closeEvent(QCloseEvent* e) override;
+  void            restore();
   void            setPage(QWidget* page);
 
 public slots:
@@ -80,6 +82,7 @@ protected:
 private:
   Ui::MainWindow* ui;
   QStackedWidget* stack;
+  QSplitter*      sp;
   QTimer*         timer;
   Preview3D*      preview;
   Bnd_Box*        bbModel;

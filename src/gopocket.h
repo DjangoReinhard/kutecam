@@ -35,13 +35,14 @@ class GOPocket : public GraphicObject
 {
 public:
 //  GOPocket(double from, double to);
-  GOPocket(const gp_Pnt& start, const gp_Pnt& endd);
+  GOPocket(const gp_Pnt& start, const gp_Pnt& end, const gp_Pnt& center);
 
   double a0() const;
   double a1() const;
 
   const std::vector<GOContour*>& contours() const;
   virtual bool                   add(GOContour* c);
+  virtual void                   dump() const override;
   virtual GraphicObject*         extendBy(double length);
   virtual GraphicObject*         extendStart(double length) override;
   virtual GraphicObject*         extendEnd(double length) override;
@@ -52,6 +53,7 @@ protected:
 
 private:
   std::vector<GOContour*> pool;
+  gp_Pnt center;
 
   friend class Util3D;
   };

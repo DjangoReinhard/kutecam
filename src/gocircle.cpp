@@ -26,6 +26,7 @@
  */
 #include "gocircle.h"
 #include "core.h"
+#include "kuteCAM.h"
 #include "util3d.h"
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRep_Tool.hxx>
@@ -185,6 +186,24 @@ void GOCircle::setZ(double z) {
   }
 
 
+void GOCircle::setEndPoint(const gp_Pnt &p) {
+  Handle(Geom_Circle) circle = Handle(Geom_Circle)::DownCast(curve);
+
+  if (!circle.IsNull())
+     p1 = ElCLib::Parameter(circle->Circ(), p);
+  GraphicObject::setEndPoint(p);
+  }
+
+
+void GOCircle::setStartPoint(const gp_Pnt &p) {
+  Handle(Geom_Circle) circle = Handle(Geom_Circle)::DownCast(curve);
+
+  if (!circle.IsNull())
+     p0 = ElCLib::Parameter(circle->Circ(), p);
+  GraphicObject::setStartPoint(p);
+  }
+
+
 Handle(Geom_Curve) GOCircle::startTangent(double length, double* param0, double* param1) const {
   gp_Circ     rawCircle(gp_Ax2(centerPnt, axis), r);
   TopoDS_Edge eRad = BRepBuilderAPI_MakeEdge(startPoint(), centerPnt);
@@ -208,7 +227,7 @@ Handle(Geom_Curve) GOCircle::startTangent(double length, double* param0, double*
 
 
 Handle(AIS_Shape) GOCircle::toShape(double z) {
-  if (!Core().helper3D()->isEqual(abs(z), 0))
+  if (!kute::isEqual(abs(z), 0))
      centerPnt.SetZ(z);
   gp_Circ     rawCircle(gp_Ax2(centerPnt, axis), r);
   TopoDS_Edge edge;
@@ -219,7 +238,7 @@ Handle(AIS_Shape) GOCircle::toShape(double z) {
   else {
      gp_Pnt start(startPoint());
      gp_Pnt end(endPoint());
-     if (Core().helper3D()->isEqual(abs(z), 0)) {
+     if (kute::isEqual(abs(z), 0)) {
         start.SetZ(z);
         end.SetZ(z);
         }

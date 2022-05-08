@@ -55,5 +55,16 @@ public:
   virtual QString genStraightMove(const gp_Pnt& lastPos, const gp_Pnt& nxtPos, double feed) = 0;
   virtual QString genPrepareTool(ToolEntry* tool) = 0;
   virtual QString genTraverse(const gp_Pnt& lastPos, const gp_Pnt& nxtPos, int lastCode) = 0;
+
+protected:
+  double x;
+  double y;
+  double z;
+  double a;
+  double b;
+  double c;
+  double u;
+  double v;
+  double w;
   };
 #endif // POSTPROCESSOR_H

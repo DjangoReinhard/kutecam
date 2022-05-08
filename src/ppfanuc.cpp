@@ -42,15 +42,19 @@ QString PPFanuc::genArc(const gp_Pnt& lastPos, const gp_Pnt& nxtPos, const gp_Pn
   double  deltaX = center.X() - lastPos.X();
   double  deltaY = center.Y() - lastPos.Y();
   double  deltaZ = center.Z() - lastPos.Z();
-  QString cmd    = QString("G%1 X%2 Y%3 Z%4").arg(ccw ? 3 : 2)
-                                             .arg(nxtPos.X(), 0, 'f', Decimals)
-                                             .arg(nxtPos.Y(), 0, 'f', Decimals)
-                                             .arg(nxtPos.Z(), 0, 'f', Decimals);
+  QString cmd    = QString("G%1").arg(ccw ? 3 : 2);
+
+  if (nxtPos.X() != x) {
+
+     }
+  QString("X%2").arg(nxtPos.X(), 0, 'f', Decimals);
+  QString("Y%3").arg(nxtPos.Y(), 0, 'f', Decimals);
+  QString("Z%4").arg(nxtPos.Z(), 0, 'f', Decimals);
 
   if (abs(deltaX) > MinDelta) cmd += QString(" I%1").arg(deltaX, 0, 'f', Decimals);
   if (abs(deltaY) > MinDelta) cmd += QString(" J%1").arg(deltaY, 0, 'f', Decimals);
   if (abs(deltaZ) > MinDelta) cmd += QString(" K%1").arg(deltaZ, 0, 'f', Decimals);
-  cmd += QString(" F%1").arg(feed, 0, 'f', 0);
+  if (feed)                   cmd += QString(" F%1").arg(feed, 0, 'f', 0);
 
   return cmd;
   }
@@ -170,10 +174,17 @@ QString PPFanuc::genRotation(double a, double b, double c) {
 
 
 QString PPFanuc::genStraightMove(const gp_Pnt &lastPos, const gp_Pnt &nxtPos, double feed) {
-  return QString("G1 X%1 Y%2 Z%3 F%4").arg(nxtPos.X(), 0, 'f', Decimals)
-                                      .arg(nxtPos.Y(), 0, 'f', Decimals)
-                                      .arg(nxtPos.Z(), 0, 'f', Decimals)
-                                      .arg(feed, 0, 'f', 0);
+  if (feed) {
+     return QString("G1 X%1 Y%2 Z%3 F%4").arg(nxtPos.X(), 0, 'f', Decimals)
+                                         .arg(nxtPos.Y(), 0, 'f', Decimals)
+                                         .arg(nxtPos.Z(), 0, 'f', Decimals)
+                                         .arg(feed, 0, 'f', 0);
+     }
+  else {
+     return QString("G1 X%1 Y%2 Z%3").arg(nxtPos.X(), 0, 'f', Decimals)
+                                     .arg(nxtPos.Y(), 0, 'f', Decimals)
+                                     .arg(nxtPos.Z(), 0, 'f', Decimals);
+     }
   }
 
 

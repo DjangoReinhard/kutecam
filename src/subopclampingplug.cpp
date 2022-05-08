@@ -102,10 +102,9 @@ void SubOPClampingPlug::processSelection() {
   GOContour* c = new GOContour(Core().helper3D()->centerOf(bbCP));
   gp_Pnt p0, p1;
 
-//  cp has corners   -16  /  -50  /   55    and    74  /  50  /  65
-//  cp has workpiece -61  /  -55  /  -95    and    79  /  55  /  55
   qDebug() << "cp has corners" << bbCP.CornerMin().X() << " / " << bbCP.CornerMin().Y() << " / " << bbCP.CornerMin().Z()
            << "   and   "   << bbCP.CornerMax().X() << " / " << bbCP.CornerMax().Y() << " / " << bbCP.CornerMax().Z();
+
   p0 = gp_Pnt(bbCP.CornerMax().X(), bbCP.CornerMin().Y(), bbCP.CornerMin().Z());
   p1 = gp_Pnt(bbCP.CornerMin().X(), bbCP.CornerMin().Y(), bbCP.CornerMin().Z());
   c->add(new GOLine(p0, p1));
@@ -138,38 +137,13 @@ void SubOPClampingPlug::processTargets() {
   p1.SetZ(ctd->zMax());
 
   curOP->cutPart = Core().helper3D()->createBox(p0, p1);
-
-  curOP->cutPart->SetColor(Quantity_NOC_CYAN);
-  curOP->cutPart->SetTransparency(0.8);
-  curOP->cShapes.push_back(curOP->cutPart);
-  Core().view3D()->showShapes(curOP->cShapes);
-  Core().view3D()->refresh();
-
-#ifdef REDNOSE
-  //  cp has corners   -16  /  -50  /   55    and    74  /  50  /  65
-  //  cp has workpiece -61  /  -55  /  -95    and    79  /  55  /  55
-  //
-  //  cp has corners   -16  /  -38  /   55    and    68  /  33  /  65
-  //  cp has workpiece -61  /  -55  /  -95    and    79  /  55  /  55
-  qDebug() << "cp has workpiece" << bbWP.CornerMin().X() << " / " << bbWP.CornerMin().Y() << " / " << bbWP.CornerMin().Z()
-           << "   and   "   << bbWP.CornerMax().X() << " / " << bbWP.CornerMax().Y() << " / " << bbWP.CornerMax().Z();
-
-  double d0 = ctd->cornerMin().Y() - bbWP.CornerMin().Y();
-  double d1 = bbWP.CornerMax().X() - ctd->cornerMax().X();
-  double d2 = bbWP.CornerMax().Y() - ctd->cornerMax().Y();
-  double d3 = ctd->cornerMin().X() - bbWP.CornerMin().X();
-  int    s0 = 1 + d0 / curOP->cutWidth();
-  int    s1 = 1 + d1 / curOP->cutWidth();
-  int    s2 = 1 + d2 / curOP->cutWidth();
-  int    s3 = 1 + d3 / curOP->cutWidth();
-
-//             start with region 3 steps: 1  *  1  *  1  *  9
-//
-//             start with region 3 steps: 4  *  3  *  5  *  9
-  int region = findMax(s0, s1, s2, s3);
-
-  qDebug() << "start with region" << region << "steps:" << s0 << " * " << s1 << " * " << s2 << " * " << s3;
-#endif
+  if (curOP->showCutParts) {
+     curOP->cutPart->SetColor(Quantity_NOC_CYAN);
+     curOP->cutPart->SetTransparency(0.8);
+     curOP->cShapes.push_back(curOP->cutPart);
+     Core().view3D()->showShapes(curOP->cShapes, false);
+     Core().view3D()->refresh();
+     }
   }
 
 
@@ -204,7 +178,7 @@ void SubOPClampingPlug::showToolPath() {
 void SubOPClampingPlug::toolPath() {
   if (!curOP->cutDepth()) return;
   processTargets();
-  curOP->workSteps() = pathBuilder->genToolPath(curOP, curOP->cutPart);
+  curOP->workSteps() = pathBuilder->genToolPath(curOP, curOP->cutPart, false);
   Core().view3D()->showShapes(curOP->toolPaths, false);
   if (curOP->showCutParts) Core().view3D()->showShapes(curOP->cShapes, false);
   Core().view3D()->refresh();

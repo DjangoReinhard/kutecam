@@ -33,6 +33,7 @@
 #include "occtviewer.h"
 #include "core.h"
 #include "cuttingparameters.h"
+#include "kuteCAM.h"
 #include "pathbuilder.h"
 #include "selectionhandler.h"
 #include "sweeptargetdefinition.h"
@@ -114,7 +115,7 @@ std::vector<Handle(AIS_Shape)> SubOPSweep::createCutPlanes(Operation* op) {
         curOP->cShapes.push_back(wc);
         curZ -= op->cutDepth();
         }
-  if (!Core().helper3D()->isEqual(curZ, lastZ)) {
+  if (!kute::isEqual(curZ, lastZ)) {
      qDebug() << "last cut depth is" << lastZ;
      pos.SetZ(lastZ);
      plane = gp_Pln(pos, dir);
@@ -166,8 +167,8 @@ void SubOPSweep::createHorizontalToolpaths(const std::vector<Handle(AIS_Shape)>&
                to   = gp_Pnt(startX, curY, bb.CornerMin().Z());
                from = gp_Pnt(endX,   curY, bb.CornerMin().Z());
                }
-            if (Core().helper3D()->isEqual(endX,   lastTO.X())
-             || Core().helper3D()->isEqual(startX, lastTO.X())) {
+            if (kute::isEqual(endX,   lastTO.X())
+             || kute::isEqual(startX, lastTO.X())) {
                curOP->workSteps().push_back(new WSTraverse(lastTO, from));
                }
             curOP->workSteps().push_back(new WSStraightMove(from, to));
@@ -194,8 +195,8 @@ void SubOPSweep::createHorizontalToolpaths(const std::vector<Handle(AIS_Shape)>&
                to   = gp_Pnt(curX, startY, bb.CornerMin().Z());
                from = gp_Pnt(curX, endY,   bb.CornerMin().Z());
                }
-            if (Core().helper3D()->isEqual(endY, lastTO.Y())
-             || Core().helper3D()->isEqual(startY, lastTO.Y())) {
+            if (kute::isEqual(endY, lastTO.Y())
+             || kute::isEqual(startY, lastTO.Y())) {
               curOP->workSteps().push_back(new WSTraverse(lastTO, from));
               }
             curOP->workSteps().push_back(new WSStraightMove(from, to));
@@ -253,9 +254,16 @@ void SubOPSweep::processSelection() {
      aw->SetWidth(3);
 
      if (!curOP->workPiece.IsNull()) {
-        TopoDS_Shape master = BRepAlgoAPI_Common(contour->toWire(), curOP->workPiece->Shape());
+        TopoDS_Shape master = BRepAlgoAPI_Common(contour->toWire(0), curOP->workPiece->Shape());
+        Handle(AIS_Shape) asM = new AIS_Shape(master);
+
+        asM->SetColor(Quantity_NOC_ORANGE);
+        asM->SetWidth(3);
+
+        Core().view3D()->showShape(asM);
         //TODO: replace contour!
         contour->setContour(master);
+        qDebug() << "contour of selection: " << contour->toString();
         }
      std = new SweepTargetDefinition(contour);
      curOP->setVertical(true);
@@ -278,7 +286,7 @@ void SubOPSweep::processSelection() {
         gp_Dir dir = Core().helper3D()->deburr(pln.Axis().Direction());
 
         // vertical plane (limited by spDepth)
-        if (Core().helper3D()->isEqual(dir.Z(), 0)) {
+        if (kute::isEqual(dir.Z(), 0)) {
            cutPart = Core().selectionHandler()->createCutPart(mf.Shape(), curOP);
            bbCP    = cutPart->BoundingBox();
            contour = Core().selectionHandler()->createContourFromSelection(curOP);
@@ -292,7 +300,7 @@ void SubOPSweep::processSelection() {
            ui->spDepth->setValue(curOP->finalDepth());
            }
         // horizontal plane (possibly limited by base face)
-        else if (Core().helper3D()->isEqual(dir.Z(), 1)) {
+        else if (kute::isEqual(dir.Z(), 1)) {
            TopoDS_Shape master = Core().selectionHandler()->createBaseContour(pos, dir, curOP);
 
            contour = new GOContour(Core().helper3D()->centerOf(bbSel));
@@ -353,6 +361,9 @@ void SubOPSweep::processSelection() {
   }
 
 
+// "3;50.0000/-77.7558/-17.3484;-50.0000/-77.7558/-17.3484;0.0000/-15.2976/15.7157;0|1;50.0000/-77.7558/-17.3484;50.0000/5.0000/-17.3484|1;50.0000/5.0000/-17.3484;25.0000/30.0000/-17.3484|1;25.0000/30.0000/-17.3484;-25.0000/30.0000/-17.3484|1;-25.0000/30.0000/-17.3484;-50.0000/5.0000/-17.3484|1;-50.0000/5.0000/-17.3484;-50.0000/-77.7558/-17.3484"
+// "3;50.0000/-87.7558/90.1355;-50.0000/-87.7558/90.1355;0.0000/-15.2976/15.7157;0|1;50.0000/-87.7558/90.1355;50.0000/5.0000/90.1355|1;50.0000/5.0000/90.1355;25.0000/30.0000/90.1355|1;25.0000/30.0000/90.1355;-25.0000/30.0000/90.1355|1;-25.0000/30.0000/90.1355;-50.0000/5.0000/90.1355|1;-50.0000/5.0000/90.1355;-50.0000/-87.7558/90.1355"
+//
 void SubOPSweep::processTargets() {
   if (!tdModel->rowCount()) return;
   //sweep operations shall have one target definition only!
@@ -367,10 +378,19 @@ void SubOPSweep::processTargets() {
   else {
      if (std->contour()) {
         // cutWire is border, cutPart the part to remove
+        qDebug() << "reloaded cut contour:" << std->contour()->toString();
         TopoDS_Shape cutWire = std->contour()->toShape(-100)->Shape();
+        Handle(AIS_Shape) aw = new AIS_Shape(cutWire);
         gp_Vec       prismVec(0, 0, 500);
         TopoDS_Shape cuttingFace = BRepPrimAPI_MakePrism(cutWire, prismVec);
+        Handle(AIS_Shape) aCF         = new AIS_Shape(cuttingFace);
 
+        aCF->SetColor(Quantity_NOC_CYAN);
+        aCF->SetTransparency(0.8);
+        aw->SetColor(Quantity_NOC_ORANGE);
+        aw->SetWidth(3);
+        curOP->cShapes.push_back(aw);
+        curOP->cShapes.push_back(aCF);
         curOP->cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP);
         }
      else {
@@ -384,7 +404,7 @@ void SubOPSweep::processTargets() {
      curOP->cutPart->SetColor(Quantity_NOC_CYAN);
      curOP->cutPart->SetTransparency(0.8);
      curOP->cShapes.push_back(curOP->cutPart);
-     Core().view3D()->showShapes(curOP->cShapes);
+     Core().view3D()->showShapes(curOP->cShapes, false);
      }
   Core().view3D()->refresh();
   }
@@ -550,7 +570,7 @@ void SubOPSweep::toolPath() {
   processTargets();
   if (curOP->isVertical()) {
      qDebug() << "OP sweep - gonna create VERTICAL toolpath ...";
-     curOP->workSteps() = pathBuilder->genToolPath(curOP, curOP->cutPart);
+     curOP->workSteps() = pathBuilder->genToolPath(curOP, curOP->cutPart, false);
      }
   else {
      if (Core().workData()->roundWorkPiece) {
@@ -566,7 +586,7 @@ void SubOPSweep::toolPath() {
            SweepTargetDefinition* std = static_cast<SweepTargetDefinition*>(curOP->targets.at(0));
 
            if (std->contour()) {
-              curOP->workSteps() = pathBuilder->genToolPath(curOP, curOP->cutPart);
+              curOP->workSteps() = pathBuilder->genToolPath(curOP, curOP->cutPart, false);
               }
            }
         if (!curOP->workSteps().size()) {

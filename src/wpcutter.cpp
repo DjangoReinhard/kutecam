@@ -27,6 +27,7 @@
 #include "wpcutter.h"
 #include "core.h"
 #include "gocontour.h"
+#include "kuteCAM.h"
 #include "occtviewer.h"
 #include "util3d.h"
 
@@ -129,7 +130,7 @@ int WPCutter::checkCIntersection(const gp_Pnt& center, double radius) {
      if (wantDebug) qDebug() << "check center:" << center.X() << " / " << center.Y() << " / " << center.Z() << "R:" << radius
                              << "master:" << cMaster.X() << " / " << cMaster.Y() << " / " << cMaster.Z() << "R:" << rMaster;
 
-     if (Core().helper3D()->isEqual(d, 0)) {        // segment circle has same center than cutShape
+     if (kute::isEqual(d, 0)) {        // segment circle has same center than cutShape
         if (radius > rMaster) return -1;
         else return 1;
         }
@@ -224,7 +225,7 @@ TopoDS_Edge WPCutter::cutCircleCircle(Handle(Geom_Curve) c, double first, double
   if (pr0 >= first && pr0 <= last) {
      if (wantDebug) qDebug() << "<<< first cutpoint is part of line segment ==> "
                              << first << " <> "  << pr0 << " <> " << " <> " << last << "orientation:" << orientation;
-     if (Core().helper3D()->isEqual(endPoint, p1) || d1 < d0) {
+     if (kute::isEqual(endPoint, p1) || d1 < d0) {
         if (wantDebug) qDebug() << "\tsecond part is part of interest";
         edge = BRepBuilderAPI_MakeEdge(c, {cP0.X(), cP0.Y(), p0.Z()}, p1);
         }
@@ -236,7 +237,7 @@ TopoDS_Edge WPCutter::cutCircleCircle(Handle(Geom_Curve) c, double first, double
   else if (pr1 >= first && pr1 <= last) {
      if (wantDebug) qDebug() << ">>> second cutpoint is part of line segment ==> "
                              << first << " <> "  << pr1 << " <> " << last << "orientation:" << orientation;
-     if (Core().helper3D()->isEqual(endPoint, p1) || d1 < d0) {
+     if (kute::isEqual(endPoint, p1) || d1 < d0) {
         if (wantDebug) qDebug() << "\tsecond part is part of interest";
         edge = BRepBuilderAPI_MakeEdge(c, {cP1.X(), cP1.Y(), p0.Z()}, p1);
         }
@@ -489,7 +490,7 @@ std::vector<GOContour*> WPCutter::processShape(TopoDS_Shape curve, const gp_Pnt&
         contour->invert();
 
      // last cut-sequence may be part of first cut-sequence ...
-     if (contours.size() && Core().helper3D()->isEqual(contour->endPoint(), contours.at(0)->startPoint())) {
+     if (contours.size() && kute::isEqual(contour->endPoint(), contours.at(0)->startPoint())) {
         contours.at(0)->add(contour);
         }
      else {

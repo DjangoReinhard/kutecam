@@ -30,6 +30,7 @@
 #include "operationlistmodel.h"
 #include "core.h"
 #include "cuttingparameters.h"
+#include "kuteCAM.h"
 #include "projectfile.h"
 #include "drilltargetdefinition.h"
 #include "targetdeflistmodel.h"
@@ -98,7 +99,7 @@ void SubOPDrill::processSelection() {
                const gp_Dir&       dir    = circle->Position().Direction();
                double              radius = circle->Radius();
 
-               if (Core().helper3D()->isVertical(dir)) {
+               if (kute::isVertical(dir)) {
                   // OK, circle is valid location for drill OP
                   // if selection is circle, it should be the topmost circle of the hole
                   // final depth will be held in operation { finalDepth() }
@@ -126,7 +127,7 @@ void SubOPDrill::processSelection() {
                       const gp_Dir&       dir    = circle->Position().Direction();
                       double              radius = circle->Radius();
 
-                      if (Core().helper3D()->isVertical(dir)) {
+                      if (kute::isVertical(dir)) {
                          // OK, circle is valid location for drill OP
                          // if selection is circle, it should be the topmost circle of the hole
                          // final depth will be held in operation { finalDepth() }
@@ -155,7 +156,7 @@ void SubOPDrill::processSelection() {
                       const gp_Dir&       dir    = circle->Position().Direction();
                       double              radius = circle->Radius();
 
-                      if (Core().helper3D()->isVertical(dir)) {
+                      if (kute::isVertical(dir)) {
                          // OK, first circle will do
                          tdModel->append(new DrillTargetDefinition(pos, dir, radius));
                          break; // don't care for rest of edges
@@ -269,8 +270,8 @@ bool SubOPDrill::validateDrillTargets() {
   for (TargetDefinition* td: tdModel->itemList()) {
       DrillTargetDefinition* dtd = static_cast<DrillTargetDefinition*>(td);
 
-      if (Core().helper3D()->isEqual(oldR, 0)) oldR = dtd->radius();
-      if (!Core().helper3D()->isEqual(oldR, dtd->radius()))
+      if (kute::isEqual(oldR, 0)) oldR = dtd->radius();
+      if (!kute::isEqual(oldR, dtd->radius()))
          seenDifferentRadius = true;
       oldR = dtd->radius();
       }

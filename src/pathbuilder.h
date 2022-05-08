@@ -43,22 +43,26 @@ public:
 
   double                               calcAdditionalOffset(SweepTargetDefinition* std, GOContour* c);
   int                                  calcMainDir(const gp_Pnt& startPoint, const gp_Pnt& endPoint, const Bnd_Box& workBounds, double extend);
-  int                                  calcRegion(const gp_Pnt& p, const Bnd_Box& bb, double xtend);
-  int                                  calcSafeOffsets(double& safeX, double& safeY, const gp_Dir& baseNorm, Operation* op, double xtend);
-  gp_Pnt                               genInterMove(std::vector<Workstep*>& toolPath, const gp_Pnt& e, const gp_Pnt& s, const Bnd_Box& workBounds, double extend);
-  std::vector<Workstep*>               genToolPath(Operation* op);
-  std::vector<Workstep*>               genToolPath(Operation* op, Handle(AIS_Shape) cutPart);
-  std::vector<Workstep*>               genPath4Pockets(Operation* op, const Bnd_Box& bb, const gp_Dir& baseNorm, const std::vector<std::vector<GOPocket*>>& pool, double xtend);
+  void                                 cleanup(std::vector<Workstep*>& tp);
+  std::vector<Workstep*>               genFlatPaths(Operation* op, std::vector<Handle(AIS_Shape)> cutPlanes, std::vector<std::vector<std::vector<GOContour*>>> clippedParts, double curZ, double xtend);
+  gp_Pnt                               genInterMove(std::vector<Workstep*>& toolPath, const gp_Pnt& e, const gp_Pnt& s, const gp_Pnt& center, const Bnd_Box& workBounds, double extend);
+  gp_Pnt                               genRoundInterMove(std::vector<Workstep*>& ws, const gp_Pnt& from, const gp_Pnt& to, const Bnd_Box& bb, double xtend);
+  std::vector<Workstep*>               genToolPath(Operation* op, Handle(AIS_Shape) cutPart, bool wantPockets);
+  std::vector<Workstep*>               genPath4Pockets(Operation* op, const Bnd_Box& bb, const gp_Dir& baseNorm, const std::vector<std::vector<GOPocket*>>& pool, double curZ, double xtend);
   std::vector<Workstep*>               genRoundToolpaths(Operation* op, const std::vector<Handle(AIS_Shape)>& cutPlanes);
   gp_Pnt                               genXTraverse(std::vector<Workstep*>& ws, int dir, const gp_Pnt& startPos, const gp_Pnt& endPos, const Bnd_Box& bb, double xtend);
   gp_Pnt                               genYTraverse(std::vector<Workstep*>& ws, int dir, const gp_Pnt& startPos, const gp_Pnt& endPos, const Bnd_Box& bb, double xtend);
   void                                 processContour(std::vector<Workstep*>& toolPath, GOContour* c);
   std::vector<std::vector<GOContour*>> processCurve(Operation* op, GOContour* curve, bool curveIsBorder, const gp_Pnt& center, double extend, double firstOffset, double curZ);
+  int                                  quadrant(const gp_Pnt& p, const gp_Pnt& center = {0,0,0}) const;
   int                                  region(const gp_Pnt& p, const Bnd_Box& bb) const;
-  std::vector<std::vector<GOPocket*>>  splitCurves(const std::vector<std::vector<std::vector<GOContour*>>>& pool);
+  void                                 simplify(std::vector<GOContour*>& pool);
+  std::vector<std::vector<GOPocket*>>  splitCurves(const Operation* op, const std::vector<std::vector<std::vector<GOContour*>>>& pool);
   void                                 stripPath(GOContour* firstContour, GOContour* masterContour);
 
 protected:
+  void drawDebugContour(Operation* op, GOContour* c, double z);
+
   static const int Inside;
   static const int Left;
   static const int Right;

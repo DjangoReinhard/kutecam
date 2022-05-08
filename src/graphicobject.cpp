@@ -37,16 +37,13 @@
 GraphicObject::GraphicObject(GraphicType gt, const gp_Pnt& from, const gp_Pnt& to)
  : gType(gt)
  , fromPnt(from)
- , toPnt(to)
- , relPos(kute::relPos(from, to))
- , relStart(from.X() + from.Y())
- , relEnd(to.X() + to.Y()) {
+ , toPnt(to) {
   }
 
 
 GraphicObject::GraphicObject(GraphicType gt, const QString& source)
- : gType(gt)
- , relPos(0) {
+ : gType(gt) {
+// , relPos(0) {
   QStringList sl    = source.split(";");
   bool        ok    = false;
   int         type  = sl.at(0).toInt(&ok);
@@ -62,7 +59,7 @@ GraphicObject::GraphicObject(GraphicType gt, const QString& source)
 //  if (ok) fromPnt.SetY(v);
   z = subSL.at(2).toDouble(&ok);
 //  if (ok) fromPnt.SetZ(v);
-  setStartPoint(gp_Pnt(x, y, z));
+  fromPnt = gp_Pnt(x, y, z);
 
   subSL = sl.at(2).split("/");
   int n = subSL.at(2).indexOf("|");
@@ -75,7 +72,7 @@ GraphicObject::GraphicObject(GraphicType gt, const QString& source)
 //  if (ok) toPnt.SetY(v);
   z = subSL.at(2).toDouble(&ok);
 //  if (ok) toPnt.SetZ(v);
-  setEndPoint(gp_Pnt(x, y, z));
+  toPnt = gp_Pnt(x, y, z);
   }
 
 
@@ -84,40 +81,44 @@ gp_Pnt GraphicObject::startPoint() const {
   }
 
 
+void GraphicObject::dump() const {
+  qDebug() << sType() << " from: " << startPoint().X() << " / " << startPoint().Y()
+           << "   to   "  << endPoint().X() << " / " << endPoint().Y();
+  }
+
 gp_Pnt GraphicObject::endPoint() const {
   return toPnt;
+  }
+
+
+Handle(Geom_Curve) GraphicObject::geomCurve() const {
+  return curve;
   }
 
 
 void GraphicObject::swapEndPoints() {
   gp_Pnt tmp = fromPnt;
 
-//  fromPnt = toPnt;
-//  toPnt   = tmp;
   setStartPoint(toPnt);
   setEndPoint(tmp);
   }
 
 
 void GraphicObject::setStartPoint(const gp_Pnt &p) {
-  Handle(Geom_Line) line = Handle(Geom_Line)::DownCast(curve);
+//  Handle(Geom_Line) line = Handle(Geom_Line)::DownCast(curve);
 
-  if (!line.IsNull())
-     p0 = ElCLib::Parameter(line->Lin(), p);
+//  if (!line.IsNull())
+//     p0 = ElCLib::Parameter(line->Lin(), p);
   fromPnt  = p;
-  relPos   = kute::relPos(fromPnt, toPnt);
-  relStart = fromPnt.X() + fromPnt.Y();
   }
 
 
 void GraphicObject::setEndPoint(const gp_Pnt &p) {
-  Handle(Geom_Line) line = Handle(Geom_Line)::DownCast(curve);
+//  Handle(Geom_Line) line = Handle(Geom_Line)::DownCast(curve);
 
-  if (!line.IsNull())
-     p1 = ElCLib::Parameter(line->Lin(), p);
+//  if (!line.IsNull())
+//     p1 = ElCLib::Parameter(line->Lin(), p);
   toPnt = p;
-  relPos = kute::relPos(fromPnt, toPnt);
-  relEnd = toPnt.X() + toPnt.Y();
   }
 
 
@@ -147,8 +148,8 @@ Handle(AIS_Shape) GraphicObject::toShape(double z) {
   gp_Pnt start(fromPnt);
   gp_Pnt end(toPnt);
 
-  if (Core().helper3D()->isEqual(fromPnt, end)) end.SetX(end.X() + 0.001);
-  if (!Core().helper3D()->isEqual(z, 0)) {
+  if (kute::isEqual(fromPnt, end)) end.SetX(end.X() + 0.001);
+  if (!kute::isEqual(z, 0)) {
      start.SetZ(z);
      end.SetZ(z);
      }

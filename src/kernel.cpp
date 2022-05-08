@@ -50,6 +50,7 @@
 #include <QCloseEvent>
 #include <QDebug>
 #include <QMap>
+#include <QSplitter>
 
 
 Kernel::Kernel(QApplication& app, MainWindow& win)
@@ -103,6 +104,7 @@ void Kernel::initialize() {
   win.addPage(operations);
   win.addPage(tools);
   win.addPage(config);
+  win.restore();
 
   connect(view3D, &OcctQtViewer::clearCurves, this, &Kernel::clearCurves);
   configData.setValue("what", "nope");
@@ -265,4 +267,10 @@ void Kernel::onShutdown(QCloseEvent* ce) {
         i.value()->closeEvent(ce);
         ++i;
         }
+  configData.beginGroup("MainWindow");
+  configData.setValue("geometry",    win.saveGeometry());
+  configData.setValue("windowState", win.saveState());
+  configData.setValue("spGeom", win.sp->saveGeometry());
+  configData.setValue("spState", win.sp->saveState());
+  configData.endGroup();
   }

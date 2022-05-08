@@ -1,27 +1,27 @@
-/*
+/* 
  * **************************************************************************
- *
+ * 
  *  file:       operationspage.cpp
  *  project:    kuteCAM
  *  subproject: main application
  *  purpose:    create a graphical application, that assists in identify
- *              and process model elements
+ *              and process model elements                        
  *  created:    23.4.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
+ * 
+ *  This program is free software: you can redistribute it and/or modify 
+ *  it under the terms of the GNU General Public License as published by 
+ *  the Free Software Foundation, either version 2 of the License, or 
+ *  (at your option) any later version. 
+ *   
+ *  This program is distributed in the hope that it will be useful, 
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ *  GNU General Public License for more details. 
+ *   
+ *  You should have received a copy of the GNU General Public License 
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- *
+ * 
  * **************************************************************************
  */
 #include "operationspage.h"
@@ -85,7 +85,7 @@ OperationsPage::OperationsPage(QWidget *parent)
  , opStack(new QStackedLayout())
  , subPage(nullptr)
  , tdModel(new TargetDefListModel(&dummy)) {
-  ui->setupUi(this);
+  ui->setupUi(this);  
   ui->Operation->setLayout(opStack);
   ui->lstOperations->setModel(olm);
   connect(Core().uiMainWin()->actionToolPath, &QAction::triggered, this, &OperationsPage::toolPath);
@@ -93,6 +93,7 @@ OperationsPage::OperationsPage(QWidget *parent)
   connect(Core().uiMainWin()->actionGenerate_GCode, &QAction::triggered, this, &OperationsPage::genGCode);
   connect(Core().uiMainWin()->actionSelection2Horizontal, &QAction::triggered, this, &OperationsPage::sel2Horizontal);
   connect(Core().uiMainWin()->actionSelection2Vertical, &QAction::triggered, this, &OperationsPage::sel2Vertical);
+  connect(Core().uiMainWin()->actionTest, &QAction::triggered, this, &OperationsPage::opTest);
   connect(ui->lstOperations->selectionModel(),  &QItemSelectionModel::selectionChanged, this, &OperationsPage::opSelected);
   connect(Core().view3D(), &OcctQtViewer::shapeSelected,  this, &OperationsPage::shapeSelected);
   connect(this,      &OperationsPage::raiseMessage, Core().mainWin(), &MainWindow::setStatusMessage);
@@ -114,7 +115,7 @@ OperationsPage::OperationsPage(QWidget *parent)
      ; ++i) {
     opStack->addWidget(i.value());
     connect(i.value(), &OperationSubPage::opCreated, this, &OperationsPage::addOperation);
-    }
+    }  
   }
 
 
@@ -158,25 +159,27 @@ void OperationsPage::cutDepthChanged(double d) {
 
 
 void OperationsPage::closeEvent(QCloseEvent* e) {
-  ProjectFile* pf = Core().projectFile();
+  if (currentOperation) {
+     ProjectFile* pf = Core().projectFile();
 
-  switch (currentOperation->kind()) {
-    case ContourOperation: subPage = pages["Contour"]; break;
-    case DrillOperation:   subPage = pages["Drill"];   break;
-    case SweepOperation:   subPage = pages["Sweep"];   break;
-    }
-  subPage->closeEvent(e);
-  pf->beginGroup("Work");
-  pf->beginWriteArray("Operations");
-  for (int i=0; i < olm->rowCount(); ++i) {
-      Operation* op = olm->operation(i);
+     switch (currentOperation->kind()) {
+       case ContourOperation: subPage = pages["Contour"]; break;
+       case DrillOperation:   subPage = pages["Drill"];   break;
+       case SweepOperation:   subPage = pages["Sweep"];   break;
+       }
+     subPage->closeEvent(e);
+     pf->beginGroup("Work");
+     pf->beginWriteArray("Operations");
+     for (int i=0; i < olm->rowCount(); ++i) {
+         Operation* op = olm->operation(i);
 
-      pf->setArrayIndex(i);
-      op->store(pf->settings());
-      }
-  pf->endArray();
-  pf->endGroup();
-  pf->sync();
+         pf->setArrayIndex(i);
+         op->store(pf->settings());
+         }
+     pf->endArray();
+     pf->endGroup();
+     pf->sync();
+     }
   }
 
 
@@ -365,17 +368,17 @@ void OperationsPage::sel2Horizontal() {
   qDebug() << "selected face has normal:" << dir.X() << " / " << dir.Y() << " / " << dir.Z();
 
 
-  if (!Core().helper3D()->isEqual(dir.X(), 0)) {
+  if (!kute::isEqual(dir.X(), 0)) {
      v = gp_Vec(dir.X(), 0, 0);
      a = v.Angle({0, 0, 1});
      ui->spA->setValue(kute::rad2deg(a));
     }
-  if (!Core().helper3D()->isEqual(dir.Y(), 0)) {
+  if (!kute::isEqual(dir.Y(), 0)) {
      v = gp_Vec(0, dir.Y(), 0);
      a = v.Angle({0, 0, 1});
      ui->spB->setValue(kute::rad2deg(a));
      }
-  if (!Core().helper3D()->isEqual(dir.Z(), 1)) {
+  if (!kute::isEqual(dir.Z(), 1)) {
      v = gp_Vec(0, 0, dir.Z());
      a = v.Angle({0, 0, 1});
      ui->spC->setValue(kute::rad2deg(a));
@@ -421,7 +424,7 @@ void OperationsPage::shapeSelected(const TopoDS_Shape &shape) {
 
 
 void OperationsPage::toolPath() {
-  if (!subPage) return;
+  if (!currentOperation) return;
   if (currentOperation->toolPaths.size()) {
      Core().view3D()->removeShapes(currentOperation->toolPaths);
      currentOperation->toolPaths.clear();
@@ -431,6 +434,8 @@ void OperationsPage::toolPath() {
      currentOperation->cShapes.clear();
      }
   if (currentOperation->workSteps().size()) currentOperation->workSteps().clear();
-  subPage->fixit();
-  subPage->toolPath();
+  if (subPage) {
+     subPage->fixit();
+     subPage->toolPath();
+     }
   }

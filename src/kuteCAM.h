@@ -32,7 +32,36 @@
 
 namespace kute {
 int getDominantAxis(const gp_Dir& dir);
-int relPos(const gp_Pnt& reference, const gp_Pnt& other);
+//int relPos(const gp_Pnt& reference, const gp_Pnt& other);
+const double MinDelta = 0.001;
+
+
+inline bool isEqual(double a, double b, double minDelta = kute::MinDelta) {
+  if (abs(abs(a) - abs(b)) < minDelta) return true;
+  return false;
+  }
+
+
+inline bool isEqual(const gp_Pnt& a, const gp_Pnt& b) {
+  return a.Distance(b) < kute::MinDelta;
+  }
+
+
+inline bool isVertical(const gp_Dir& d) {
+  if (abs(d.X()) < kute::MinDelta
+   && abs(d.Y()) < kute::MinDelta
+   && 1 - abs(d.Z()) < kute::MinDelta) return true;
+  return false;
+  }
+
+
+inline bool isVertical(const gp_Vec& v) {
+  if (abs(v.X()) < kute::MinDelta
+   && abs(v.Y()) < kute::MinDelta
+   && 1 - abs(v.Z()) < kute::MinDelta) return true;
+  return false;
+  }
+
 
 inline double deg2rad(double deg) {
   return deg * M_PI / 180.0;

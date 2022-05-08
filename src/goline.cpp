@@ -27,6 +27,7 @@
 #include "goline.h"
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRep_Tool.hxx>
+#include <ElCLib.hxx>
 #include <Geom_Line.hxx>
 #include <QDebug>
 
@@ -82,6 +83,24 @@ GraphicObject* GOLine::invert() {
   createLine();
 
   return this;
+  }
+
+
+void GOLine::setEndPoint(const gp_Pnt &p) {
+  Handle(Geom_Line) line = Handle(Geom_Line)::DownCast(curve);
+
+  if (!line.IsNull())
+     p1 = ElCLib::Parameter(line->Lin(), p);
+  GraphicObject::setEndPoint(p);
+  }
+
+
+void GOLine::setStartPoint(const gp_Pnt &p) {
+  Handle(Geom_Line) line = Handle(Geom_Line)::DownCast(curve);
+
+  if (!line.IsNull())
+     p0 = ElCLib::Parameter(line->Lin(), p);
+  GraphicObject::setStartPoint(p);
   }
 
 

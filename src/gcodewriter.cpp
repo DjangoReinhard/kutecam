@@ -141,11 +141,6 @@ int GCodeWriter::processOperations(const QString& fileName, const Bnd_Box& wpBou
   }
 
 
-//void GCodeWriter::processContourTargets(QTextStream& out, const Operation* op, ToolEntry* curTool) {
-//  writeLine(out, pp->genProminentComment("contour-target - NOT IMPLEMENTED YET!"));
-//  }
-
-
 void GCodeWriter::processDrillTargets(QTextStream& out, const Operation* op, int, ToolEntry* curTool) {
   double ss   = op->speed() * 1000 / M_PI / curTool->fluteDiameter();
   double feed = ss * curTool->numFlutes() * op->feedPerTooth();
@@ -187,11 +182,11 @@ void GCodeWriter::processPathTargets(QTextStream& out, const Operation* op, int 
              lastMove = WTTraverse;
              break;
         case WTStraightMove:
-             cmd = pp->genStraightMove(wm->startPos(), wm->endPos(), feed);
+             cmd = pp->genStraightMove(wm->startPos(), wm->endPos(), i == first ? feed : 0);
              lastMove = WTStraightMove;
              break;
         case WTArc:
-             cmd = pp->genArc(wa->startPos(), wa->endPos(), wa->centerPos(), wa->isCCW(), feed);
+             cmd = pp->genArc(wa->startPos(), wa->endPos(), wa->centerPos(), wa->isCCW(), i == first ? feed : 0);
              lastMove = WTArc;
              break;
         default: break;

@@ -28,6 +28,7 @@
 #include "gocircle.h"
 #include "goline.h"
 #include "core.h"
+#include "kuteCAM.h"
 #include "util3d.h"
 #include <BRep_Builder.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
@@ -71,6 +72,24 @@ GOContour::GOContour(const QString& s)
   }
 
 
+double GOContour::a0() const {
+  double rv = atan2(startPoint().Y() - center.Y(), startPoint().X() - center.X());
+
+  while (rv < 0) rv += M_PI * 2;
+
+  return rv;
+  }
+
+
+double GOContour::a1() const {
+  double rv = atan2(endPoint().Y() - center.Y(), endPoint().X() - center.X());
+
+  while (rv < 0) rv += M_PI * 2;
+
+  return rv;
+  }
+
+
 bool GOContour::add(GraphicObject* o) {
   if (!o) return false;
   if (!segs.size()) {
@@ -80,17 +99,17 @@ bool GOContour::add(GraphicObject* o) {
 
      return true;
      }
-  if (Core().helper3D()->isEqual(o->endPoint(), endPoint())
-   || Core().helper3D()->isEqual(o->startPoint(), startPoint()))
+  if (kute::isEqual(o->endPoint(), endPoint())
+   || kute::isEqual(o->startPoint(), startPoint()))
      o->invert();
 
-  if (Core().helper3D()->isEqual(o->startPoint(), endPoint())) {
+  if (kute::isEqual(o->startPoint(), endPoint())) {
      segs.push_back(o);
      setEndPoint(o->endPoint());
 
      return true;
      }
-  if (Core().helper3D()->isEqual(o->endPoint(), startPoint())) {
+  if (kute::isEqual(o->endPoint(), startPoint())) {
      segs.insert(segs.begin(), o);
      setStartPoint(o->startPoint());
 
@@ -102,7 +121,7 @@ bool GOContour::add(GraphicObject* o) {
 
 bool GOContour::add(GOContour *other) {
   if (!other) return false;
-  if (Core().helper3D()->isEqual(other->startPoint(), startPoint())) {
+  if (kute::isEqual(other->startPoint(), startPoint())) {
      auto& v = other->segments();
 
      for (auto i = v.rbegin(); i != v.rend(); ++i)
@@ -111,7 +130,7 @@ bool GOContour::add(GOContour *other) {
 
      return true;
      }
-  else if (Core().helper3D()->isEqual(other->startPoint(), endPoint())) {
+  else if (kute::isEqual(other->startPoint(), endPoint())) {
      auto& v = other->segments();
 
      for (auto i = v.begin(); i != v.end(); ++i)
@@ -120,7 +139,7 @@ bool GOContour::add(GOContour *other) {
 
      return true;
      }
-  else if (Core().helper3D()->isEqual(other->endPoint(), startPoint())) {
+  else if (kute::isEqual(other->endPoint(), startPoint())) {
      const auto& v = other->segments();
 
      for (auto i = v.rbegin(); i != v.rend(); ++i)
@@ -129,7 +148,7 @@ bool GOContour::add(GOContour *other) {
 
      return true;
      }
-  else if (Core().helper3D()->isEqual(other->endPoint(), endPoint())) {
+  else if (kute::isEqual(other->endPoint(), endPoint())) {
      auto& v = other->segments();
 
      for (auto i = v.begin(); i != v.end(); ++i)
@@ -142,7 +161,7 @@ bool GOContour::add(GOContour *other) {
   }
 
 
-GraphicObject* GOContour::add(TopoDS_Shape s) {
+GraphicObject* GOContour::add(TopoDS_Shape s, double gap) {
   const TopoDS_Edge e  = TopoDS::Edge(s);
   GraphicObject*    rv = nullptr;
 
@@ -178,13 +197,13 @@ GraphicObject* GOContour::add(TopoDS_Shape s) {
            return nullptr;
            }
         else {
-           if (Core().helper3D()->isEqual(endPoint(), rv->startPoint())) {
+           if (kute::isEqual(endPoint(), rv->startPoint())) {
               segs.push_back(rv);
               setEndPoint(rv->endPoint());
 
               return nullptr;
               }
-           else if (Core().helper3D()->isEqual(endPoint(), rv->endPoint())) {
+           else if (kute::isEqual(endPoint(), rv->endPoint())) {
               rv->invert();
               segs.push_back(rv);
               setEndPoint(rv->endPoint());
@@ -192,14 +211,14 @@ GraphicObject* GOContour::add(TopoDS_Shape s) {
               return nullptr;
               }
            else {
-              if (Core().helper3D()->isEqual(startPoint(), rv->startPoint())) {
+              if (kute::isEqual(startPoint(), rv->startPoint())) {
                  rv->invert();
                  segs.insert(segs.begin(), rv);
                  setStartPoint(rv->startPoint());
 
                  return nullptr;
                  }
-              else if (Core().helper3D()->isEqual(startPoint(), rv->endPoint())) {
+              else if (kute::isEqual(startPoint(), rv->endPoint())) {
                  segs.insert(segs.begin(), rv);
                  setStartPoint(rv->startPoint());
 
@@ -216,13 +235,14 @@ GraphicObject* GOContour::add(TopoDS_Shape s) {
   }
 
 
-double GOContour::angEnd() const {
-  return atan2(endPoint().Y() - center.Y(), endPoint().X() - center.X());
+gp_Pnt GOContour::centerPoint() const {
+  return center;
   }
 
 
-double GOContour::angStart() const {
-  return atan2(startPoint().Y() - center.Y(), startPoint().X() - center.X());
+bool compContour(GOContour* left, GOContour* right) {
+  if (!left || !right) return false;
+  return left->a0() < right->a1();
   }
 
 
@@ -236,9 +256,23 @@ double GOContour::distEnd() const {
   }
 
 
+void GOContour::dump() const {
+  qDebug() << "<< ================ dump contour segs =======================";
+  qDebug() << "contour from:" << startPoint().X() << " / " << startPoint().Y()
+           << "   to   "      << endPoint().X() << " / " << endPoint().Y()
+           << "   with center: " << centerPoint().X() << " / " << centerPoint().Y();
+  for (int i=0; i < segs.size(); ++i) {
+      GraphicObject* go = segs.at(i);
+
+      go->dump();
+      }
+  qDebug() << "<< ================ dump contour segs =======================";
+  }
+
+
 //TODO: check and ignore closed contours!
 GraphicObject& GOContour::extendBy(double length) {
-  if (Core().helper3D()->isEqual(startPoint(), endPoint())) return *this;
+  if (kute::isEqual(startPoint(), endPoint())) return *this;
   extendStart(length);
   extendEnd(length);
 
@@ -292,6 +326,37 @@ GraphicObject* GOContour::extendStart(double length) {
   }
 
 
+gp_Pnt GOContour::changeStart2Close(const gp_Pnt &p) {
+  gp_Pnt ls = startPoint();
+  double d  = p.Distance(ls);
+  int    n  = 0;
+
+  // ensure that contour is closed
+  if (!kute::isEqual(startPoint(), endPoint())) return p;
+  for (int i=1; i < segs.size(); ++i) {
+      GraphicObject* go = segs.at(i);
+      double ds = p.Distance(go->startPoint());
+
+      if (ds < d) {
+         n  = i;
+         ls = go->startPoint();
+         d  = ds;
+         }
+      }
+  for (int i=0; i < n; ++i) {
+      GraphicObject* go = segs.at(i);
+
+      segs.push_back(go);
+      }
+  for (int i=0; i < n; ++i) segs.erase(segs.begin());
+
+  setStartPoint(segs.at(0)->startPoint());
+  setEndPoint(segs.at(segs.size() - 1)->endPoint());
+
+  return endPoint();
+  }
+
+
 GraphicObject* GOContour::invert() {
   auto first = segs.begin();
   auto last  = segs.end();
@@ -328,25 +393,41 @@ void GOContour::setContour(TopoDS_Shape contour) {
   TopoDS_Shape                      offWire  = Core().helper3D()->allEdgesWithin(contour, edgePool);
   std::vector<TopoDS_Edge>          segments = Core().helper3D()->allEdgesWithin(offWire);
 
-  for (auto s : segments) add(s);
+  if (segments.size()) {
+     segs.clear();
+     for (auto s : segments) add(s);
+     }
   }
 
 
 std::vector<GraphicObject*>& GOContour::simplify(double z, bool cw) {
-  int    mx = segs.size();
-  double a0 = angStart();
-  double a1 = angEnd();
+//  double a0 = angStart();
+//  double a1 = angEnd();
 
-  while (a0 < 0) a0 += 2*M_PI;
-  while (a1 < 0) a1 += 2*M_PI;
+//  while (a0 < 0) a0 += 2*M_PI;
+//  while (a1 < 0) a1 += 2*M_PI;
 
-  if (cw && a0 < a1)       invert();
-  else if (!cw && a1 < a0) invert();
+//  if (kute::isEqual(startPoint(), endPoint()) && segs.size() > 1) {
+//     GraphicObject* go = segs.at(0);
+
+//     a0 = atan2(go->startPoint().Y() - center.Y(), go->startPoint().X() - center.X());
+//     a1 = atan2(go->endPoint().Y()   - center.Y(), go->endPoint().X()   - center.X());
+//     if (cw && a0 < a1)       invert();
+//     else if (!cw && a1 < a0) invert();
+//     }
+//  else {
+//     if (cw && a0 < a1)       invert();
+//     else if (!cw && a1 < a0) invert();
+//     }
   if (segs.size() > 2) {
-     for (int i=0; i < mx; ++i) {
+     for (int i=0; i < segs.size(); ++i) {
          GraphicObject* o0 = segs.at(i);
-         GraphicObject* o1 = segs.at((i+1) < mx ? (i+1) : 0);
+         GraphicObject* o1 = segs.at((i+1) < segs.size() ? (i+1) : 0);
 
+         if (kute::isEqual(o0->startPoint(), o0->endPoint())) {
+            segs.erase(segs.begin() + i--);
+            continue;
+            }
          if (o0->type() == GTLine && o1->type() == GTLine) {
             GOLine* l0 = static_cast<GOLine*>(o0);
             GOLine* l1 = static_cast<GOLine*>(o1);
@@ -355,9 +436,9 @@ std::vector<GraphicObject*>& GOContour::simplify(double z, bool cw) {
             l1->setZ(z);
             double  p2 = l0->p1 + (l1->p1 - l1->p0);
 
-            if (Core().helper3D()->isEqual(l0->curve->Value(p2), l1->endPoint())) {
+            if (kute::isEqual(l0->curve->Value(p2), l1->endPoint())) {
                l0->extendEnd(l1->p1 - l1->p0);
-               if ((i+1) < mx) {
+               if ((i+1) < segs.size()) {
                   segs.erase(segs.begin() + i + 1);
                   }
                else {
@@ -365,7 +446,6 @@ std::vector<GraphicObject*>& GOContour::simplify(double z, bool cw) {
                   segs.erase(segs.begin());
                   setStartPoint(segs.at(0)->startPoint());
                   }
-               mx = segs.size();
                }
             }
          else o0->setZ(z);
@@ -398,7 +478,7 @@ TopoDS_Shape GOContour::toWire(double z) {
       auto go = segs.at(n);
       TopoDS_Shape s = go->toShape(z)->Shape();
 
-      Core().shapeFix().SetTolerance(s, Core().MinDelta);
+      Core().shapeFix().SetTolerance(s, kute::MinDelta);
       wireBuilder.Add(TopoDS::Edge(s));
       if (wireBuilder.Error()) break;
       }
@@ -416,7 +496,7 @@ Handle(AIS_Shape) GOContour::toShape(double z) {
       auto         go = segs.at(n);
       TopoDS_Shape s  = go->toShape(z)->Shape();
 
-      Core().shapeFix().SetTolerance(s, Core().MinDelta);
+      Core().shapeFix().SetTolerance(s, kute::MinDelta);
       b.Add(c, s);
       }
   return new AIS_Shape(c);
@@ -435,10 +515,4 @@ QString GOContour::toString() const {
       rv += s->toString();
       }
   return rv;
-  }
-
-
-bool compContour(GOContour* left, GOContour* right) {
-  if (!left || !right) return false;
-  return left->angStart() < right->angStart();
   }

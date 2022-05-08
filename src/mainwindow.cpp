@@ -39,6 +39,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QSettings>
 #include <QSplitter>
 #include <QSpinBox>
 #include <QStackedWidget>
@@ -105,8 +106,8 @@ void MainWindow::initialize() {
   ui->setupUi(this);
   preview = new Preview3D();
   QVBoxLayout* bl = new QVBoxLayout();
-  QSplitter*   sp = new QSplitter(Qt::Horizontal);
 
+  sp = new QSplitter(Qt::Horizontal);
   sp->addWidget(stack);
   sp->addWidget(preview);
   bl->setContentsMargins(0, 0, 0, 0);
@@ -163,15 +164,13 @@ void MainWindow::refresh(const Bnd_Box& bb) {
   }
 
 
-void MainWindow::update() {
-  if (!bbModel) return;
-  ui->xMin->setNum(Core().helper3D()->deburr(bbModel->CornerMin().X()));
-  ui->yMin->setNum(Core().helper3D()->deburr(bbModel->CornerMin().Y()));
-  ui->zMin->setNum(Core().helper3D()->deburr(bbModel->CornerMin().Z()));
-  ui->xMax->setNum(Core().helper3D()->deburr(bbModel->CornerMax().X()));
-  ui->yMax->setNum(Core().helper3D()->deburr(bbModel->CornerMax().Y()));
-  ui->zMax->setNum(Core().helper3D()->deburr(bbModel->CornerMax().Z()));
-  ui->material->setText(Core().workData()->material);
+void MainWindow::restore() {
+  Core().cfg().beginGroup("MainWindow");
+  restoreGeometry(Core().cfg().value("geometry").toByteArray());
+  restoreState(Core().cfg().value("windowState").toByteArray());
+  sp->restoreState(Core().cfg().value("spState").toByteArray());
+  sp->restoreGeometry(Core().cfg().value("spGeom").toByteArray());
+  Core().cfg().endGroup();
   }
 
 
@@ -245,6 +244,18 @@ void MainWindow::startTimer() {
 
 Ui::MainWindow* MainWindow::UI() {
   return ui;
+  }
+
+
+void MainWindow::update() {
+  if (!bbModel) return;
+  ui->xMin->setNum(Core().helper3D()->deburr(bbModel->CornerMin().X()));
+  ui->yMin->setNum(Core().helper3D()->deburr(bbModel->CornerMin().Y()));
+  ui->zMin->setNum(Core().helper3D()->deburr(bbModel->CornerMin().Z()));
+  ui->xMax->setNum(Core().helper3D()->deburr(bbModel->CornerMax().X()));
+  ui->yMax->setNum(Core().helper3D()->deburr(bbModel->CornerMax().Y()));
+  ui->zMax->setNum(Core().helper3D()->deburr(bbModel->CornerMax().Z()));
+  ui->material->setText(Core().workData()->material);
   }
 
 

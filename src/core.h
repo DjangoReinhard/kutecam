@@ -61,7 +61,7 @@ public:
   static const QString PgConfig;
   static const QString PgOperations;
   static const QString PgTools;
-  static const double  MinDelta;
+//  static const double  MinDelta;
 
 
   explicit Core();

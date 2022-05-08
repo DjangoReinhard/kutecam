@@ -29,6 +29,7 @@
 #include "ui_mainwindow.h"
 #include "cuttingparameters.h"
 #include "gocontour.h"
+#include "kuteCAM.h"
 #include "operationlistmodel.h"
 #include "occtviewer.h"
 #include "contourtargetdefinition.h"
@@ -88,9 +89,16 @@ void SubOPContour::processSelection() {
 void SubOPContour::showToolPath() {
   if (!curOP->workSteps().size()) return;
   Handle(AIS_Shape) as;
+  gp_Pnt lastPos = curOP->workSteps().at(0)->startPos();
 
-  for (auto ws : curOP->workSteps()) {
-      ws->dump();
+  for (int i=0; i < curOP->workSteps().size(); ++i) {
+      Workstep* ws = curOP->workSteps().at(i);
+
+      if (!kute::isEqual(ws->startPos(), lastPos)) {
+         qDebug() << "found wrong serial at #" << i;
+         ws->dump();
+//         throw std::domain_error("invalid sequence!");
+         }
       switch (ws->type()) {
         case WTTraverse:
              curOP->toolPaths.push_back(Core().helper3D()->genFastMove(ws->startPos(), ws->endPos()));
@@ -105,6 +113,7 @@ void SubOPContour::showToolPath() {
              } break;
         default: break;
         }
+      lastPos = ws->endPos();
       }
   Core().view3D()->showShapes(curOP->toolPaths);
   Core().view3D()->refresh();
@@ -135,26 +144,11 @@ void SubOPContour::toolPath() {
   gp_Pln cutPlane({center.X(), center.Y(), curOP->finalDepth()}, {0, 0, 1});
   BRepBuilderAPI_MakeFace mf(cutPlane, -500, 500, -500, 500);
   curOP->cutPart = Core().selectionHandler()->createCutPart(mf.Shape(), curOP);
-
-  curOP->workSteps() = pathBuilder->genToolPath(curOP, curOP->cutPart);
-
-  // curOP->waterlineDepth()
-//  WPCutter cutAlgo(curOP->workPiece);
-
-//  std::vector<GOContour*> cutParts = cutAlgo.processShape(aw->Shape(), center);
-//  for (auto cp : cutParts)
-//      cp->extendBy(10);
-//  clippedCurves.push_back(cutParts);
-//  Core().view3D()->showShape(aw);
-
-//  std::vector<GOPocket*>         pool     = splitCurves(clippedCurves);
-//  std::vector<Handle(AIS_Shape)> toolPath = path4Pockets(pool);
-//  Core().view3D()->showShapes(toolPath);
-
-  Core().view3D()->showShapes(curOP->toolPaths, false);
+  curOP->workSteps() = pathBuilder->genToolPath(curOP, curOP->cutPart, true);
+//  Core().view3D()->showShapes(curOP->toolPaths, false);
   curOP->cutPart->SetColor(Quantity_NOC_CYAN);
-  curOP->cutPart->SetTransparency(0.7);
-  Core().view3D()->showShape(curOP->cutPart);
+  curOP->cutPart->SetTransparency(0.8);
+  Core().view3D()->showShape(curOP->cutPart, false);
   if (curOP->showCutParts) Core().view3D()->showShapes(curOP->cShapes, false);
   Core().view3D()->refresh();
   showToolPath();

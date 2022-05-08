@@ -314,7 +314,7 @@ void SetupPage::exploreModel(const TopoDS_Shape& shape) {
       for (auto c : corners) {
           qDebug() << "    c:" << c.X() << " / " << c.Y() << " / " << c.Z();
 
-          if (Core().helper3D()->isEqual(c.Z(), bb.CornerMin().Z()))
+          if (kute::isEqual(c.Z(), bb.CornerMin().Z()))
              ++found;
           }
       if (found == corners.size()) {

@@ -90,11 +90,12 @@ TopoDS_Shape Util3D::allEdgesWithin(const TopoDS_Shape& shape, Handle(TopTools_H
   ShapeAnalysis_FreeBounds          fb;
   Handle(TopTools_HSequenceOfShape) wires;
 
-  fb.ConnectEdgesToWires(v, Core::MinDelta, false, wires);
+  fb.ConnectEdgesToWires(v, kute::MinDelta, false, wires);
 
-  qDebug() << wires->Size();
-  if (wires->Size()) rv = wires->First();
-
+  if (!wires.IsNull()) {
+     qDebug() << wires->Size();
+     if (wires->Size()) rv = wires->First();
+     }
   return rv;
   }
 
@@ -268,7 +269,7 @@ Handle(AIS_Shape) Util3D::createArc(const gp_Pnt& from, const gp_Pnt& to, const 
   double r0 = center.Distance(from);
   double r1 = center.Distance(to);
 
-  assert(abs(r0 - r1) < Core::MinDelta);
+  assert(abs(r0 - r1) < kute::MinDelta);
 
   gp_Dir       dir(0, 0, ccw ? 1 : -1);
   gp_Circ      rawCircle(gp_Ax2(center, dir), r0);
@@ -329,8 +330,8 @@ Handle(AIS_Shape) Util3D::cut(const TopoDS_Shape& src, const TopoDS_Shape& tool)
 
 
 double Util3D::deburr(double v) {
-  if (abs(v) < Core::MinDelta)     return 0;
-  if (abs(1 - v) < Core::MinDelta) return 1;
+  if (abs(v) < kute::MinDelta)     return 0;
+  if (abs(1 - v) < kute::MinDelta) return 1;
   return v;
   }
 
@@ -511,31 +512,31 @@ TopoDS_Shape Util3D::intersect(const TopoDS_Shape& src, const TopoDS_Shape& tool
   }
 
 
-bool Util3D::isEqual(double a, double b, double minDelta) {
-  if (abs(abs(a) - abs(b)) < minDelta) return true;
-  return false;
-  }
+//bool Util3D::isEqual(double a, double b, double minDelta) {
+//  if (abs(abs(a) - abs(b)) < minDelta) return true;
+//  return false;
+//  }
 
 
-bool Util3D::isEqual(const gp_Pnt& a, const gp_Pnt& b) {
-  return a.Distance(b) < Core::MinDelta;
-  }
+//bool Util3D::isEqual(const gp_Pnt& a, const gp_Pnt& b) {
+//  return a.Distance(b) < kute::MinDelta;
+//  }
 
 
-bool Util3D::isVertical(const gp_Dir& d) const {
-  if (abs(d.X()) < Core::MinDelta
-   && abs(d.Y()) < Core::MinDelta
-   && 1 - abs(d.Z()) < Core::MinDelta) return true;
-  return false;
-  }
+//bool Util3D::isVertical(const gp_Dir& d) const {
+//  if (abs(d.X()) < kute::MinDelta
+//   && abs(d.Y()) < kute::MinDelta
+//   && 1 - abs(d.Z()) < kute::MinDelta) return true;
+//  return false;
+//  }
 
 
-bool Util3D::isVertical(const gp_Vec& v) const {
-  if (abs(v.X()) < Core::MinDelta
-   && abs(v.Y()) < Core::MinDelta
-   && 1 - abs(v.Z()) < Core::MinDelta) return true;
-  return false;
-  }
+//bool Util3D::isVertical(const gp_Vec& v) const {
+//  if (abs(v.X()) < kute::MinDelta
+//   && abs(v.Y()) < kute::MinDelta
+//   && 1 - abs(v.Z()) < kute::MinDelta) return true;
+//  return false;
+//  }
 
 
 TopoDS_Shape Util3D::loadBRep(const QString& fileName) {

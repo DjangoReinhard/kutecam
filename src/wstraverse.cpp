@@ -26,13 +26,14 @@
  */
 #include "wstraverse.h"
 #include "core.h"
+#include "kuteCAM.h"
 #include "util3d.h"
 #include <QSettings>
 
 
 WSTraverse::WSTraverse(const gp_Pnt& from, const gp_Pnt& to, QObject* parent)
  : Workstep(WTTraverse, from, to, parent) {
-  if (Core().helper3D()->isEqual(from, to)) throw new std::domain_error("startpoint and endpoint may not be the same!");
+  if (kute::isEqual(from, to)) throw std::domain_error("startpoint and endpoint may not be the same!");
   }
 
 

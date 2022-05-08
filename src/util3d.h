@@ -82,10 +82,10 @@ public:
   Handle(AIS_Shape)              genWorkArc(const gp_Pnt& from, const gp_Pnt& to, const gp_Pnt& center, bool ccw);
   Handle(AIS_Shape)              genWorkLine(const gp_Pnt& from, const gp_Pnt& to);
   TopoDS_Shape                   intersect(const TopoDS_Shape& src, const TopoDS_Shape& tls);
-  bool                           isEqual(double a, double b, double minDelta = Core::MinDelta);
-  bool                           isEqual(const gp_Pnt& a, const gp_Pnt& b);
-  bool                           isVertical(const gp_Dir& d) const;
-  bool                           isVertical(const gp_Vec& d) const;
+//  bool                           isEqual(double a, double b, double minDelta = Core::MinDelta);
+//  bool                           isEqual(const gp_Pnt& a, const gp_Pnt& b);
+//  bool                           isVertical(const gp_Dir& d) const;
+//  bool                           isVertical(const gp_Vec& d) const;
   TopoDS_Shape                   loadBRep(const QString& fileName);
   TopoDS_Shape                   loadStep(const QString& fileName);
   TopoDS_Shape                   makeCube(const Standard_Real width, const Standard_Real height, const Standard_Real depth);

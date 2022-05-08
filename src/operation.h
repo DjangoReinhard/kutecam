@@ -79,10 +79,6 @@ class Operation : public QObject
 {
   Q_OBJECT
 public:
-//  static QString OPSweep;
-//  static QString OPContour;
-//  static QString OPClampingPlug;
-//  static QString OPDrill;
   static QString OTRoughing;
   static QString OTFinish;
   explicit Operation(int id, OperationType ot, QObject* parent = nullptr);

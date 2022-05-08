@@ -29,6 +29,7 @@
 #include "ui_opSub.h"
 #include "core.h"
 #include "cuttingparameters.h"
+#include "kuteCAM.h"
 #include "occtviewer.h"
 #include "pathbuilder.h"
 #include "targetdeflistmodel.h"
@@ -36,6 +37,7 @@
 #include "toollistmodel.h"
 #include "util3d.h"
 #include "work.h"
+#include "workstep.h"
 #include <BRepAdaptor_Surface.hxx>
 #include <QStringListModel>
 #include <QDebug>
@@ -325,7 +327,7 @@ void OperationSubPage::toolChanged(const QVariant &i) {
 
   if (!activeTool) return;
   curOP->setToolNum(activeTool->toolNumber());
-  if (Core().helper3D()->isEqual(curOP->speed(), 0)) {
+  if (kute::isEqual(curOP->speed(), 0)) {
      CuttingParameters* cp = activeTool->cutParameter(Core().workData()->material);
 
      if (!cp) return;

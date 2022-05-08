@@ -50,14 +50,19 @@ public:
   explicit GraphicObject(GraphicType gt, const gp_Pnt& from, const gp_Pnt& to);
   virtual ~GraphicObject() = default;
 
-  gp_Pnt  startPoint() const;
   gp_Pnt  endPoint()   const;
+  gp_Pnt  startPoint() const;
   QString sType()      const;
   int     type()       const;
 
+  Handle(Geom_Curve) geomCurve() const;
+
+  virtual void              dump() const;
   virtual GraphicObject*    extendStart(double length) = 0;
   virtual GraphicObject*    extendEnd(double length)   = 0;
   virtual GraphicObject*    invert()                   = 0;
+  virtual void              setStartPoint(const gp_Pnt& p);
+  virtual void              setEndPoint(const gp_Pnt& p);
   virtual void              setZ(double z);
   virtual GraphicObject*    split();
   virtual Handle(AIS_Shape) toShape(double z = 0);
@@ -66,8 +71,6 @@ public:
 protected:
   explicit GraphicObject(GraphicType gt, const QString& source);
 
-  void setStartPoint(const gp_Pnt& p);
-  void setEndPoint(const gp_Pnt& p);
   void swapEndPoints();
 
   TopoDS_Edge        edge;
@@ -78,8 +81,5 @@ private:
   GraphicType gType;
   gp_Pnt      fromPnt;
   gp_Pnt      toPnt;
-  int         relPos;
-  int         relStart;
-  int         relEnd;
   };
 #endif // GRAPHICOBJECT_H

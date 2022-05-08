@@ -74,7 +74,7 @@ GOContour* SelectionHandler::createContourFromSelection(Operation* op) {
 
       if (!curZ) curZ = (bb.CornerMax().Z() - bb.CornerMin().Z()) / 2 + bb.CornerMin().Z();
       gp_Pnt pos = Core().helper3D()->deburr(bb.CornerMin());
-      if (!Core().helper3D()->isEqual(op->waterlineDepth(), 0))
+      if (!kute::isEqual(op->waterlineDepth(), 0))
          curZ = op->waterlineDepth();
       pos.SetZ(curZ);
       gp_Pln                   cutPlane(pos, {0, 0, 1});
@@ -85,7 +85,7 @@ GOContour* SelectionHandler::createContourFromSelection(Operation* op) {
       if (!ce.size()) return nullptr;
       ss->Append(ce.at(0));
       }
-  fb.ConnectEdgesToWires(ss, Core::MinDelta, false, wires);
+  fb.ConnectEdgesToWires(ss, kute::MinDelta, false, wires);
   GOContour* contour = new GOContour(center);
   std::vector<TopoDS_Edge> edges = Core().helper3D()->allEdgesWithin(wires->First());
 
@@ -133,7 +133,7 @@ Handle(AIS_Shape) SelectionHandler::createCutPart(TopoDS_Shape cf, Operation* op
   splitter.SetArguments(splitArgs);
   splitter.SetTools(splitTools);
   splitter.SetNonDestructive(Standard_True);
-  splitter.SetFuzzyValue(Core::MinDelta);
+  splitter.SetFuzzyValue(kute::MinDelta);
   splitter.Build();
 
   if (splitter.IsDone()) {
@@ -166,7 +166,7 @@ Handle(AIS_Shape) SelectionHandler::createCutPart(Operation* op, SweepTargetDefi
   gp_Pnt cutPos = std->pos();
 
   if (op->isVertical()) {
-     if (Core().helper3D()->isVertical(dir)) dir = gp_Dir(1, 1, 0);
+     if (kute::isVertical(dir)) dir = gp_Dir(1, 1, 0);
      cutPos.SetZ(std->zMin() + (std->zMax() - std->zMin()) / 2);
      }
   Work*                   work  = Core().workData();
@@ -188,7 +188,7 @@ Handle(AIS_Shape) SelectionHandler::createCutPart(Operation* op, SweepTargetDefi
   splitter.SetTools(splitTools);
 
   splitter.SetNonDestructive(Standard_True);
-  splitter.SetFuzzyValue(Core::MinDelta);
+  splitter.SetFuzzyValue(kute::MinDelta);
   splitter.Build();
 
   if (splitter.IsDone()) {
@@ -226,11 +226,11 @@ Handle(AIS_Shape) SelectionHandler::createCutPart(Operation* op, SweepTargetDefi
                }
             break;
        case 3:  // z is dominant
-            if (Core().helper3D()->isEqual(cutPos.Z(), bb0.CornerMin().Z())
+            if (kute::isEqual(cutPos.Z(), bb0.CornerMin().Z())
             && (bb0.CornerMax().Z() > cutPos.Z())) {
                rv = as0;
                }
-            else if (Core().helper3D()->isEqual(cutPos.Z(), bb1.CornerMin().Z())
+            else if (kute::isEqual(cutPos.Z(), bb1.CornerMin().Z())
                  && (bb0.CornerMax().Z() > cutPos.Z())) {
                rv = as1;
                }

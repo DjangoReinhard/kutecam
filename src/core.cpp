@@ -230,4 +230,4 @@ const QString Core::PgInfo         = tr("Info");
 const QString Core::PgConfig       = tr("Config");
 const QString Core::PgOperations   = tr("Operations");
 const QString Core::PgTools        = tr("Tools");
-const double  Core::MinDelta       = 0.001;
+//const double  Core::MinDelta       = 0.001;
