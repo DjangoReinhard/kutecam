@@ -240,9 +240,9 @@ void SubOPSweep::processSelection() {
      contour = Core().selectionHandler()->createContourFromSelection(curOP);
      if (!contour) return;
      contour->extendBy(50);
-     TopoDS_Shape      cutWire = contour->toShape(-100)->Shape();
+     TopoDS_Shape      cutWire = contour->toShape(-500)->Shape();
      Handle(AIS_Shape) aw      = new AIS_Shape(cutWire);
-     gp_Vec            prismVec(0, 0, 500);
+     gp_Vec            prismVec(0, 0, 1000);
      TopoDS_Shape      cuttingFace = BRepPrimAPI_MakePrism(cutWire, prismVec);
      Handle(AIS_Shape) aCF         = new AIS_Shape(cuttingFace);
 
@@ -410,30 +410,30 @@ void SubOPSweep::processTargets() {
   }
 
 
-void SubOPSweep::showToolPath() {
-  if (!curOP->workSteps().size()) return;
-  Handle(AIS_Shape) as;
+//void SubOPSweep::showToolPath() {
+//  if (!curOP->workSteps().size()) return;
+//  Handle(AIS_Shape) as;
 
-  for (auto ws : curOP->workSteps()) {
-      ws->dump();
-      switch (ws->type()) {
-        case WTTraverse:
-             curOP->toolPaths.push_back(Core().helper3D()->genFastMove(ws->startPos(), ws->endPos()));
-             break;
-        case WTStraightMove:
-             curOP->toolPaths.push_back(Core().helper3D()->genWorkLine(ws->startPos(), ws->endPos()));
-             break;
-        case WTArc: {
-             WSArc* wa = static_cast<WSArc*>(ws);
+//  for (auto ws : curOP->workSteps()) {
+//      ws->dump();
+//      switch (ws->type()) {
+//        case WTTraverse:
+//             curOP->toolPaths.push_back(Core().helper3D()->genFastMove(ws->startPos(), ws->endPos()));
+//             break;
+//        case WTStraightMove:
+//             curOP->toolPaths.push_back(Core().helper3D()->genWorkLine(ws->startPos(), ws->endPos()));
+//             break;
+//        case WTArc: {
+//             WSArc* wa = static_cast<WSArc*>(ws);
 
-             curOP->toolPaths.push_back(Core().helper3D()->genWorkArc(ws->startPos(), ws->endPos(), wa->centerPos(), wa->isCCW()));
-             } break;
-        default: break;
-        }
-      }
-  Core().view3D()->showShapes(curOP->toolPaths);
-  Core().view3D()->refresh();
-  }
+//             curOP->toolPaths.push_back(Core().helper3D()->genWorkArc(ws->startPos(), ws->endPos(), wa->centerPos(), wa->isCCW()));
+//             } break;
+//        default: break;
+//        }
+//      }
+//  Core().view3D()->showShapes(curOP->toolPaths);
+//  Core().view3D()->refresh();
+//  }
 
 
 gp_Pnt SubOPSweep::sweepBigClockwise(const Bnd_Box& bb, const gp_Pnt& lastTO) {

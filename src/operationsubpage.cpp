@@ -38,6 +38,7 @@
 #include "util3d.h"
 #include "work.h"
 #include "workstep.h"
+#include "wsarc.h"
 #include <BRepAdaptor_Surface.hxx>
 #include <QStringListModel>
 #include <QDebug>
@@ -336,6 +337,40 @@ void OperationSubPage::toolChanged(const QVariant &i) {
      ui->spAe->setValue(cp->widthOfCut());
      ui->spAp->setValue(cp->depthOfCut());
      }
+  }
+
+
+void OperationSubPage::showToolPath() {
+  if (!curOP->workSteps().size()) return;
+  Handle(AIS_Shape) as;
+  gp_Pnt lastPos = curOP->workSteps().at(0)->startPos();
+
+  for (int i=0; i < curOP->workSteps().size(); ++i) {
+      Workstep* ws = curOP->workSteps().at(i);
+
+      if (!kute::isEqual(ws->startPos(), lastPos)) {
+         qDebug() << "found wrong serial at #" << i;
+         ws->dump();
+//         throw std::domain_error("invalid sequence!");
+         }
+      switch (ws->type()) {
+        case WTTraverse:
+             curOP->toolPaths.push_back(Core().helper3D()->genFastMove(ws->startPos(), ws->endPos()));
+             break;
+        case WTStraightMove:
+             curOP->toolPaths.push_back(Core().helper3D()->genWorkLine(ws->startPos(), ws->endPos()));
+             break;
+        case WTArc: {
+             WSArc* wa = static_cast<WSArc*>(ws);
+
+             curOP->toolPaths.push_back(Core().helper3D()->genWorkArc(ws->startPos(), ws->endPos(), wa->centerPos(), wa->isCCW()));
+             } break;
+        default: break;
+        }
+      lastPos = ws->endPos();
+      }
+  Core().view3D()->showShapes(curOP->toolPaths);
+  Core().view3D()->refresh();
   }
 
 

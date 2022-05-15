@@ -26,48 +26,50 @@
  */
 #ifndef TOOLEDITOR_H
 #define TOOLEDITOR_H
+#include "toolentry.h"
 #include <QWidget>
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class ToolEditor;
 }
 QT_END_NAMESPACE
-class QVariant;
+class CutParmToolEditor;
+class DimToolEditor;
 class ToolEntry;
 class CutParamListModel;
 class CuttingParameters;
 class StringListModel;
+class ToolListModel;
 class QItemSelection;
 class QLineEdit;
+class QVariant;
 
 
 class ToolEditor : public QWidget
 {
   Q_OBJECT
 public:
-  explicit ToolEditor(StringListModel* matModel, QWidget *parent = nullptr);
+  explicit ToolEditor(StringListModel* matModel, ToolListModel* tools, QWidget *parent = nullptr);
 
+  void initialize();
   void saveTool(ToolEntry* tool);
   void setTool(ToolEntry* tool);
 
 public slots:
-  void addMaterial();
-  void delMaterial();
-  void cutParamChanged(const QItemSelection &selected, const QItemSelection &deselected);
-  void docChanged(const QVariant& v);
-  void wocChanged(const QVariant& v);
-  void speedChanged(const QVariant& v);
-  void feedChanged(const QVariant& v);
+  void toolSelected(const QItemSelection &selected, const QItemSelection &deselected);
 
 protected:
-  void   calcSpeed();
   double readDouble(QLineEdit* edit);
 
 private:
   Ui::ToolEditor*    ui;
+  ToolEntry          toolEntry;
   CutParamListModel* model;
   StringListModel*   matModel;
   ToolEntry*         curTool;
   CuttingParameters* curCutParams;
+  ToolListModel*     tools;
+  DimToolEditor*     edDim;
+  CutParmToolEditor* edCP;
   };
 #endif // TOOLEDITOR_H

@@ -61,6 +61,7 @@ public:
   virtual GraphicObject*    extendStart(double length) = 0;
   virtual GraphicObject*    extendEnd(double length)   = 0;
   virtual GraphicObject*    invert()                   = 0;
+  virtual gp_Pnt            midPoint() const           = 0;
   virtual void              setStartPoint(const gp_Pnt& p);
   virtual void              setEndPoint(const gp_Pnt& p);
   virtual void              setZ(double z);

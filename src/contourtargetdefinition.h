@@ -32,7 +32,7 @@
 class ContourTargetDefinition : public TargetDefinition
 {
 public:
-  explicit ContourTargetDefinition(const gp_Pnt& pos, QObject* parent = nullptr);
+  explicit ContourTargetDefinition(const gp_Pnt& pos, double radius = 0, QObject* parent = nullptr);
   explicit ContourTargetDefinition(QSettings& settings, QObject* parent = nullptr);
   virtual ~ContourTargetDefinition() = default;
 

@@ -44,6 +44,7 @@ public:
   void       endArray();
   void       endGroup();
   QString    fileName() const;
+  void       remove(const QString& key);
   QSettings& settings();
   void       setArrayIndex(int i);
   void       setValue(const QString& key, const QVariant& value);

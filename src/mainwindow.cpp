@@ -78,14 +78,13 @@ void MainWindow::createConnections() {
   connect(ui->actionFileOpen,    &QAction::triggered, this,  &MainWindow::chooseFile);
   connect(ui->actionProjectOpen, &QAction::triggered, this,  &MainWindow::openProject);
   connect(ui->actionProjectSave, &QAction::triggered, this,  &MainWindow::saveProject);
-  connect(ui->actionHideModel,   &QAction::triggered, this,  &MainWindow::showModel);
   connect(ui->actionExit,        &QAction::triggered, this,  &QWidget::close);
 
+  connect(ui->actionHideModel,   &QAction::triggered, this,  &MainWindow::showModel);
+
   connect(ui->actionModelSetup,      &QAction::triggered, this, [=](){ Core().switchPage(Core::PgWorkPiece); });
-  connect(ui->actionSetupInfo,       &QAction::triggered, this, [=](){ Core().switchPage(Core::PgInfo); });
   connect(ui->actionOperationsSetup, &QAction::triggered, this, [=](){ Core().switchPage(Core::PgOperations); });
-  connect(ui->actionToolsSetup,      &QAction::triggered, this, [=](){ Core().switchPage(Core::PgTools); });
-  connect(ui->actionMiscSetup,       &QAction::triggered, this, [=](){ Core().switchPage(Core::PgConfig); });
+  connect(ui->actionPreferences,     &QAction::triggered, this, [=](){ Core().switchPage(Core::PgConfig); });
   }
 
 

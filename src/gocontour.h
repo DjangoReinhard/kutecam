@@ -43,11 +43,12 @@ public:
   virtual GraphicObject*    extendStart(double length) override;
   virtual GraphicObject*    extendEnd(double length) override;
   virtual GraphicObject*    invert() override;
+  virtual gp_Pnt            midPoint() const override;
   virtual Handle(AIS_Shape) toShape(double z = 0) override;
   virtual QString           toString() const override;
   TopoDS_Shape              toWire(double z = 0);
 
-  GraphicObject*               add(TopoDS_Shape s, double gap = kute::MinDelta);
+//  GraphicObject*               add(TopoDS_Shape s, double gap = kute::MinDelta);
   bool                         add(GraphicObject* o);
   bool                         add(GOContour* other);
   double                       a0() const;
@@ -62,6 +63,8 @@ public:
   std::vector<GraphicObject*>& segments();
   void                         setContour(TopoDS_Shape contour);
   std::vector<GraphicObject*>& simplify(double z, bool cw = true);
+
+  static GraphicObject*        occ2GO(TopoDS_Edge e, double defZ = 0);
 
 protected:
   explicit GOContour(const QString& source);

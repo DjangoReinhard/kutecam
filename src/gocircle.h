@@ -47,9 +47,11 @@ public:
   virtual GraphicObject*    extendStart(double length) override;
   virtual GraphicObject*    extendEnd(double length) override;
   virtual GraphicObject*    invert() override;
+  virtual gp_Pnt            midPoint() const override;
   virtual void              setEndPoint(const gp_Pnt& p) override;
   virtual void              setStartPoint(const gp_Pnt& p) override;
   virtual void              setZ(double z) override;
+  virtual GraphicObject*    split() override;
   virtual Handle(AIS_Shape) toShape(double z = 0) override;
   virtual QString           toString() const override;
 

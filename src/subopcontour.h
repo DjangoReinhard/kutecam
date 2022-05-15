@@ -37,7 +37,8 @@ public:
   virtual ~SubOPContour() = default;
 
   virtual void toolPath() override;
-  virtual void showToolPath() override;
+//  virtual void showToolPath() override;
+  virtual void processTargets() override;
 
 public slots:
   void createOP();

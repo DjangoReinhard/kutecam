@@ -28,8 +28,8 @@
 #include <QSettings>
 
 
-ContourTargetDefinition::ContourTargetDefinition(const gp_Pnt& pos, QObject* parent)
- : TargetDefinition(pos, 0, parent) {
+ContourTargetDefinition::ContourTargetDefinition(const gp_Pnt& pos, double radius, QObject* parent)
+ : TargetDefinition(pos, radius, parent) {
   }
 
 

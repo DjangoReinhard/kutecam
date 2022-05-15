@@ -47,6 +47,7 @@ public:
   virtual GraphicObject*         extendStart(double length) override;
   virtual GraphicObject*         extendEnd(double length) override;
   virtual GraphicObject*         invert() override;
+  virtual gp_Pnt                 midPoint() const override;
 
 protected:
   GOPocket(const QString& source);

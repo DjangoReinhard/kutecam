@@ -89,9 +89,9 @@ int GCodeWriter::processOperations(const QString& fileName, const Bnd_Box& wpBou
        || curOP->operationB() != rotB
        || curOP->operationC() != rotC) {        
          // rotation changed ...
-         rotA = Core().isAaxisTable() ? -curOP->operationA() : curOP->operationA();
-         rotB = Core().isBaxisTable() ? -curOP->operationB() : curOP->operationB();
-         rotC = Core().isCaxisTable() ? -curOP->operationC() : curOP->operationC();
+         rotA = Core().isAAxisTable() ? -curOP->operationA() : curOP->operationA();
+         rotB = Core().isBAxisTable() ? -curOP->operationB() : curOP->operationB();
+         rotC = Core().isCAxisTable() ? -curOP->operationC() : curOP->operationC();
 
          writeLine(out
                  , pp->genRotation(rotA, rotB, rotC));

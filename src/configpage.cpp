@@ -26,79 +26,52 @@
  */
 #include "configpage.h"
 #include "ui_misc.h"
+#include "ui_mainwindow.h"
+#include "cfggcode.h"
+#include "cfgmaterial.h"
+#include "cfgvise.h"
 #include "core.h"
 #include "stringlistmodel.h"
 #include "occtviewer.h"
+#include "projectfile.h"
+#include "tooleditor.h"
+#include "toollistmodel.h"
 #include "viseentry.h"
 #include "viselistmodel.h"
+#include "xmltoolwriter.h"
+#include <QAction>
 #include <QFileDialog>
 #include <QDir>
 #include <QKeyEvent>
+#include <QLabel>
 #include <QSettings>
 #include <QSortFilterProxyModel>
 #include <QStringListModel>
+#include <QToolBox>
 #include <QDebug>
 
 
-ConfigPage::ConfigPage(StringListModel* matModel, ViseListModel* vModel, QWidget *parent)
+ConfigPage::ConfigPage(StringListModel* matModel, ViseListModel* vises, QWidget *parent)
  : ApplicationWindow(parent)
- , ui(new Ui::MiscPage)
- , vModel(vModel)
- , matModel(matModel) {
-  ui->setupUi(this);
+ , pages(nullptr)
+ , tools(nullptr)
+ , matModel(matModel)
+ , vises(vises) {
+  QVBoxLayout* l = new QVBoxLayout(this);
 
-  connect(ui->pbLeftOpen,  &QPushButton::clicked, this, &ConfigPage::setLeftVise);
-  connect(ui->pbMidOpen,   &QPushButton::clicked, this, &ConfigPage::setMidVise);
-  connect(ui->pbRightOpen, &QPushButton::clicked, this, &ConfigPage::setRightVise);
-
-  connect(ui->pbMatAdd,    &QPushButton::clicked, this, &ConfigPage::addMaterial);
-  connect(ui->pbMatRemove, &QPushButton::clicked, this, &ConfigPage::delMaterial);
-
-  connect(ui->pbAddVise,    &QPushButton::clicked, this, &ConfigPage::addVise);
-  connect(ui->pbRemoveVise, &QPushButton::clicked, this, &ConfigPage::delVise);    
-
-  QSortFilterProxyModel* proxyModel = new QSortFilterProxyModel(this);
-
-  proxyModel->setSourceModel(matModel);
-  proxyModel->setDynamicSortFilter(true);
-  proxyModel->sort(0);
-  ui->lstMaterial->setModel(proxyModel);
-  ui->lstVise->setModel(vModel);
-  connect(ui->lstVise->selectionModel(),     &QItemSelectionModel::selectionChanged, this, &ConfigPage::viseSelected);
-  connect(ui->lstMaterial->selectionModel(), &QItemSelectionModel::selectionChanged, this, &ConfigPage::materialSelected);
-  ui->material->installEventFilter(this);
-  }
-
-
-void ConfigPage::addMaterial() {
-  if (!ui->material->text().isEmpty()) {
-     matModel->add(ui->material->text());
-     ui->material->clear();
-     ui->material->setFocus();
-     }
-  }
-
-
-void ConfigPage::addVise() {
-  ViseEntry* ve = new ViseEntry();
-
-  ve->setName(ui->viseName->text());
-  ve->setLeft(ui->leftVise->text());
-  ve->setMiddle(ui->middleVise->text());
-  ve->setRight(ui->rightVise->text());
-
-  vModel->add(ve);
-
-  ui->viseName->clear();
-  ui->leftVise->clear();
-  ui->middleVise->clear();
-  ui->rightVise->clear();
-  ui->viseName->setFocus();
+  pages = new QToolBox;
+  l->addWidget(pages);
+  setLayout(l);
+  connect(Core().uiMainWin()->actionToolsOpen, &QAction::triggered, this, &ConfigPage::loadTools);
+  connect(Core().uiMainWin()->actionToolsSave, &QAction::triggered, this, &ConfigPage::saveTools);
   }
 
 
 void ConfigPage::closeEvent(QCloseEvent *e) {
+  // GCode, Material and vises are loaded by kernel,
+  // but we have to store them!
   qDebug() << "config-page closeEvent ...";
+
   QSettings& cfg = Core().cfg();
   int mx = matModel->rowCount();
 
@@ -111,16 +84,18 @@ void ConfigPage::closeEvent(QCloseEvent *e) {
       cfg.setValue("Name", matModel->data(matModel->index(i, 0)));
       }
   cfg.endArray();
-  cfg.setValue("A-is-table", ui->cAisTable->isChecked());
-  cfg.setValue("B-is-table", ui->cBisTable->isChecked());
-  cfg.setValue("C-is-table", ui->cCisTable->isChecked());
+  cfg.setValue("A-is-table", Core().isAAxisTable());
+  cfg.setValue("B-is-table", Core().isBAxisTable());
+  cfg.setValue("C-is-table", Core().isCAxisTable());
+  cfg.setValue("opAllInOne", Core().isAllInOneOperation());
+  cfg.setValue("genSepToolChange", Core().isSepWithToolChange());
   cfg.beginWriteArray("Vises");
-  mx = vModel->rowCount();
+  mx = vises->rowCount();
   ViseEntry* ve;
 
   qDebug() << "write out " << mx << "vises";
   for (int i=0; i < mx; ++i) {
-      ve = vModel->vise(i);
+      ve = vises->vise(i);
 
       cfg.setArrayIndex(i);
       cfg.setValue("name",   ve->name());
@@ -134,107 +109,61 @@ void ConfigPage::closeEvent(QCloseEvent *e) {
   }
 
 
-void ConfigPage::delMaterial() {
-  QModelIndex mi = ui->lstMaterial->currentIndex();
+void ConfigPage::initialize() {
+  tools = Core().toolListModel();
+  ToolEditor* te = new ToolEditor(matModel, tools);
 
-  ui->lstMaterial->model()->removeRow(mi.row());
+  te->initialize();
+  pages->addItem(new CfgGCode(), tr("GCode-Settings"));
+  pages->addItem(new CfgMaterial(matModel), tr("Material"));
+  pages->addItem(te, tr("Tools"));
+  pages->addItem(new CfgVise(vises), tr("Vises"));
   }
 
 
-void ConfigPage::delVise() {
-  QModelIndex mi = ui->lstVise->currentIndex();
+void ConfigPage::loadTools() {
+  QString     fileName;
+  QFileDialog dialog(this
+                   , tr("QFileDialog::getOpenFileName()")
+                   , "/media/Scratch"
+                   , tr("XML-Documents (*.xml)"));
 
-  vModel->removeRow(mi.row());
-  }
+  dialog.setSupportedSchemes(QStringList(QStringLiteral("file")));
+  dialog.setFileMode(QFileDialog::ExistingFile);
+  dialog.setOption(QFileDialog::DontUseNativeDialog);
 
+  if (dialog.exec() != QDialog::Accepted) return;
+  fileName = dialog.selectedUrls().value(0).toLocalFile();
 
-bool ConfigPage::eventFilter(QObject* o, QEvent* event) {
-  if (event->type() == QEvent::KeyPress) {
-     QKeyEvent* e = static_cast<QKeyEvent*>(event);
+  if (Core().loadTools(fileName)) {
+     ProjectFile* pf = Core().projectFile();
 
-     switch (e->key()) {
-       case Qt::Key_Enter:
-       case Qt::Key_Return:
-            if (o == ui->material) {
-               ui->pbMatAdd->click();
-               return true;
-               }
-       }
+     if (pf) {
+        pf->beginGroup("Setup");
+        pf->setValue("Tool-file", fileName);
+        pf->endGroup();
+        }
      }
-  return false;
   }
 
 
-void ConfigPage::materialSelected(const QItemSelection &selected, const QItemSelection &deselected) {
-  QModelIndex     mi = ui->lstMaterial->currentIndex();
-  const QVariant& v  = ui->lstMaterial->model()->data(mi);
+void ConfigPage::saveTools() {
+  QString     fileName;
+  QFileDialog dialog(this
+                   , tr("QFileDialog::getSaveFileName()")
+                   , "/media/Scratch"
+                   , tr("XML-Documents (*.xml)"));
 
-  ui->material->setText(v.toString());
-  }
+  dialog.setSupportedSchemes(QStringList(QStringLiteral("file")));
+  dialog.setOption(QFileDialog::DontUseNativeDialog);
+  dialog.setAcceptMode(QFileDialog::AcceptSave);
+  if (dialog.exec() != QDialog::Accepted) return;
+  fileName = dialog.selectedUrls().value(0).toLocalFile();
+  if (!fileName.endsWith(".xml")) fileName += ".xml";
 
+  qDebug() << "save tools to:" << fileName;
 
-void ConfigPage::setLeftVise() {
-  ui->leftVise->setText(Core().chooseCADFile());
-  }
+  XmlToolWriter xtw;
 
-
-void ConfigPage::setMidVise() {
-  ui->middleVise->setText(Core().chooseCADFile());
-  }
-
-
-void ConfigPage::setRightVise() {
-  ui->rightVise->setText(Core().chooseCADFile());
-  }
-
-
-void ConfigPage::showEvent(QShowEvent *event) {
-  if (ui && ui->material) ui->material->setFocus();
-  }
-
-
-void ConfigPage::viseSelected(const QItemSelection &selected, const QItemSelection &deselected) {
-  QModelIndex   mi = ui->lstVise->currentIndex();
-  ViseEntry*    ve = vModel->vise(mi.row());
-  OcctQtViewer* view = Core().view3D();
-  gp_Trsf       mL, mM, mR;
-  Bnd_Box       bb;
-
-  if (!leftVise.IsNull())  view->removeShape(leftVise);
-  if (!midVise.IsNull())   view->removeShape(midVise);
-  if (!rightVise.IsNull()) view->removeShape(rightVise);
-  ui->viseName->setText(ve->name());
-  ui->leftVise->setText(ve->left());
-  ui->middleVise->setText(ve->middle());
-  ui->rightVise->setText(ve->right());
-  Core().loadVise(ve, leftVise, midVise, rightVise);
-
-  mL.SetTranslation({0, 0, 0}, {-25, 0, 100});
-  mM.SetTranslation({0, 0, 0}, {  0, 0, 100});
-  mR.SetTranslation({0, 0, 0}, { 25, 0, 100});
-  if (!leftVise.IsNull()) {
-     leftVise->SetLocalTransformation(mL);
-     bb.Add(leftVise->BoundingBox());
-     if (midVise.IsNull()) leftVise->SetColor(Quantity_NOC_LIGHTSTEELBLUE1);
-     else                  leftVise->SetColor(Quantity_NOC_ALICEBLUE);
-     view->showShape(leftVise,  false);
-     }
-  if (!midVise.IsNull()) {
-     midVise->SetLocalTransformation(mM);
-     bb.Add(midVise->BoundingBox());
-     midVise->SetColor(Quantity_NOC_LIGHTSTEELBLUE1);
-     view->showShape(midVise,   false);
-     }
-  if (!rightVise.IsNull()) {
-     rightVise->SetLocalTransformation(mR);
-     bb.Add(rightVise->BoundingBox());
-     rightVise->SetColor(Quantity_NOC_ALICEBLUE);
-     view->showShape(rightVise, false);
-     }
-  bb.Update(0, 0, 170);
-  qDebug() << "vise bounds:" << bb.CornerMin().X() << " / " << bb.CornerMin().Y() << " / " << bb.CornerMin().Z()
-                 << "\tto\t" << bb.CornerMax().X() << " / " << bb.CornerMax().Y() << " / " << bb.CornerMax().Z();
-  view->setBounds(bb);
-  view->fitAll();
-  view->refresh();
+  xtw.write(fileName, Core().toolListModel()->tools());
   }

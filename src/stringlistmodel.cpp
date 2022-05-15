@@ -77,10 +77,13 @@ QModelIndex StringListModel::parent(const QModelIndex &index) const {
 
 
 bool StringListModel::removeRow(int row, const QModelIndex& parent) {
+  int os = sList.size();
+
   beginRemoveRows(QModelIndex(), row, row);
   sList.removeAt(row);
   endRemoveRows();
-  return false;
+
+  return sList.size() < os;
   }
 
 

@@ -40,7 +40,7 @@
 #include "subopdrill.h"
 #include "subopsweep.h"
 #include "sweeptargetdefinition.h"
-#include "ppfanuc.h"
+#include "postprocessor.h"
 #include "projectfile.h"
 #include "targetdefinition.h"
 #include "targetdeflistmodel.h"
@@ -241,7 +241,11 @@ bool OperationsPage::eventFilter(QObject *obj, QEvent *event) {
                   qDebug() << "\tshould delete operation #" << ui->lstOperations->currentIndex();
 
                   //TODO: handle currentOperation and reselection!
+//                  Operation* someOP = olm->operation(ui->lstOperations->currentIndex().row());
                   olm->removeRow(ui->lstOperations->currentIndex().row());
+                  ProjectFile* pf = Core().projectFile();
+
+                  pf->remove("Operations");
 
                   return true;
                   }
@@ -269,11 +273,11 @@ void OperationsPage::genGCode() {
      }
   fileName = dialog.selectedUrls().value(0).toLocalFile();
 
-  qDebug() << "save gcode to:" << fileName;
-  GCodeWriter gcw(new PPFanuc());
-  Bnd_Box     wpBounds = Core().workData()->workPiece->BoundingBox();
+//  qDebug() << "save gcode to:" << fileName;
+//  GCodeWriter gcw(new PPFanuc());
+//  Bnd_Box     wpBounds = Core().workData()->workPiece->BoundingBox();
 
-  gcw.processOperations(fileName, wpBounds, olm->operations());
+//  gcw.processOperations(fileName, wpBounds, olm->operations());
   }
 
 
@@ -305,7 +309,7 @@ void OperationsPage::loadOperation(Operation* op) { // don't touch old operation
 
   ui->dsCut->setValue(op->waterlineDepth());
   if (currentOperation) {
-     if (currentOperation->cShapes.size())     Core().view3D()->showShapes(currentOperation->cShapes);
+     if (currentOperation->cShapes.size())     Core().view3D()->showShapes(currentOperation->cShapes, false);
      if (currentOperation->workSteps().size()) subPage->showToolPath();
      Core().view3D()->refresh();
      }
@@ -341,6 +345,8 @@ void OperationsPage::reSelect() {
      }
   subPage->fixit();
   subPage->processSelection();
+  if (currentOperation && currentOperation->cShapes.size())
+     Core().view3D()->showShapes(currentOperation->cShapes, false);
   }
 
 

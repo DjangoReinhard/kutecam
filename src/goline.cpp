@@ -86,6 +86,11 @@ GraphicObject* GOLine::invert() {
   }
 
 
+gp_Pnt GOLine::midPoint() const {
+  return curve->Value((p1 - p0) / 2);
+  }
+
+
 void GOLine::setEndPoint(const gp_Pnt &p) {
   Handle(Geom_Line) line = Handle(Geom_Line)::DownCast(curve);
 

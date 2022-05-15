@@ -65,7 +65,6 @@ Kernel::Kernel(QApplication& app, MainWindow& win)
  , operations(nullptr)
  , config(nullptr)
  , setupPage(nullptr)
- , tools(nullptr)
  , tdFactory(new TDFactory)
  , wsFactory(new WSFactory)
  , matModel(new StringListModel(QStringList()))
@@ -88,21 +87,20 @@ void Kernel::initialize() {
   view3D     = win.viewer3D();
   config     = new ConfigPage(matModel, viseListModel);
   setupPage  = new SetupPage(matModel, viseListModel);
-  tools      = new ToolPage(matModel);
   operations = new OperationsPage();
   helper     = new Util3D();
   selHdr     = new SelectionHandler();
   work       = new Work();
 
+  config->initialize();
+
   pages[Core::PgWorkPiece]  = setupPage;
   pages[Core::PgConfig]     = config;
   pages[Core::PgOperations] = operations;
-  pages[Core::PgTools]      = tools;
 
   win.setWindowTitle(QString("- %1 -").arg(app.applicationName()));
   win.addPage(setupPage);
   win.addPage(operations);
-  win.addPage(tools);
   win.addPage(config);
   win.restore();
 
@@ -114,9 +112,13 @@ void Kernel::initialize() {
 bool Kernel::loadConfig() {
   bool rv = loadMaterials();
 
+  configData.beginGroup("Work");
   AisTable = configData.value("A-is-table").toBool();
   BisTable = configData.value("B-is-table").toBool();
   CisTable = configData.value("C-is-table").toBool();
+  opAllInOne = configData.value("opAllInOne").toBool();
+  genSepWithToolChange = configData.value("genSepToolChange").toBool();
+  configData.endGroup();
   if (rv) rv = loadViseList();
 
   return rv;
@@ -124,7 +126,7 @@ bool Kernel::loadConfig() {
 
 
 bool Kernel::loadModelFile(const QString &fileName) {
-  win.setWindowTitle(QString("- %1 -- %2 -").arg(app.applicationName()).arg(fileName));
+  win.setWindowTitle(QString("- %1 -- %2 -").arg(app.applicationName(), fileName));
 
   if (fileName.endsWith(".brep"))     topShape = helper->loadBRep(fileName);
   else if (fileName.endsWith(".step")

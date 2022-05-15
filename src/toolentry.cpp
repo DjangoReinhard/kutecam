@@ -48,7 +48,7 @@ ToolEntry::ToolEntry(QObject* parent)
   }
 
 
-int     ToolEntry::collet() const {
+int ToolEntry::collet() const {
   return cColl;
   }
 
@@ -83,7 +83,7 @@ const QVector<CuttingParameters*>& ToolEntry::cutParameters() const {
   }
 
 
-double  ToolEntry::cuttingDepth() const {
+double ToolEntry::cuttingDepth() const {
   return cutDepth;
   }
 
@@ -108,17 +108,17 @@ void ToolEntry::dump() const {
   }
 
 
-double  ToolEntry::fluteDiameter() const {
+double ToolEntry::fluteDiameter() const {
   return flDiam;
   }
 
 
-double  ToolEntry::fluteLength() const {
+double ToolEntry::fluteLength() const {
   return flLen;
   }
 
 
-double  ToolEntry::freeLength() const {
+double ToolEntry::freeLength() const {
   return freeLen;
   }
 
@@ -131,42 +131,42 @@ bool ToolEntry::hasMaterial(const QString &material) const {
   }
 
 
-double  ToolEntry::numFlutes() const {
+int ToolEntry::numFlutes() const {
   return cFlutes;
   }
 
 
-void    ToolEntry::setCollet(int collet) {
+void ToolEntry::setCollet(int collet) {
   cColl = collet;
   }
 
 
-void    ToolEntry::setFluteDiameter(double diam) {
+void ToolEntry::setFluteDiameter(double diam) {
   flDiam = diam;
   }
 
 
-void    ToolEntry::setFluteLength(double len) {
+void ToolEntry::setFluteLength(double len) {
   flLen = len;
   }
 
 
-void    ToolEntry::setCuttingDepth(double depth) {
+void ToolEntry::setCuttingDepth(double depth) {
   cutDepth = depth;
   }
 
 
-void    ToolEntry::setShankDiameter(double diam) {
+void ToolEntry::setShankDiameter(double diam) {
   shankDiam = diam;
   }
 
 
-void    ToolEntry::setFreeLength(double len) {
+void ToolEntry::setFreeLength(double len) {
   freeLen = len;
   }
 
 
-void    ToolEntry::setNumFlutes(double num) {
+void ToolEntry::setNumFlutes(int num) {
   cFlutes = num;
   }
 
@@ -181,7 +181,7 @@ void ToolEntry::setToolName(const QString &name) {
   }
 
 
-double  ToolEntry::shankDiameter() const {
+double ToolEntry::shankDiameter() const {
   return shankDiam;
   }
 

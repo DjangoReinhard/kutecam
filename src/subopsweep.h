@@ -54,7 +54,7 @@ protected:
 //  Handle(AIS_Shape) genPathOffset(TopoDS_Wire wire, double off);
   void processSelection() override;
   void processTargets() override;
-  void showToolPath() override;
+//  void showToolPath() override;
   gp_Pnt sweepBigClockwise(const Bnd_Box& bb, const gp_Pnt& lastTO);
   gp_Pnt sweepBigCounterClockwise(const Bnd_Box& bb, const gp_Pnt& lastTO);
   };

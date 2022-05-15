@@ -33,6 +33,9 @@
 #include <BRep_Builder.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRep_Tool.hxx>
+#include <ElCLib.hxx>
+#include <gp_Ax2.hxx>
+#include <gp_Circ.hxx>
 #include <ShapeAnalysis_FreeBounds.hxx>
 #include <ShapeFix_ShapeTolerance.hxx>
 #include <TopoDS.hxx>
@@ -161,82 +164,136 @@ bool GOContour::add(GOContour *other) {
   }
 
 
-GraphicObject* GOContour::add(TopoDS_Shape s, double gap) {
-  const TopoDS_Edge e  = TopoDS::Edge(s);
-  GraphicObject*    rv = nullptr;
+//GraphicObject* GOContour::add(TopoDS_Shape s, double gap) {
+//  const TopoDS_Edge e   = TopoDS::Edge(s);
+//  GraphicObject*    rv  = nullptr;
+//  GraphicObject*    xrv = nullptr;
 
-  if (!e.IsNull()) {
-     double             param0, param1;
-     Handle(Geom_Curve) c = BRep_Tool::Curve(e, param0, param1);
-     gp_Pnt             p0, p1;
+//  if (!e.IsNull()) {
+//     double             param0, param1;
+//     Handle(Geom_Curve) c = BRep_Tool::Curve(e, param0, param1);
+//     gp_Pnt             p0, p1;
 
-     p0 = c->Value(param0);
-     p1 = c->Value(param1);
+//     p0 = c->Value(param0);
+//     p1 = c->Value(param1);
 
-     if (c->DynamicType() == STANDARD_TYPE(Geom_Line)) {
-//        qDebug() << "segment is LINE from" << p0.X() << " / " << p0.Y() << " / " << p0.Z()
-//                 << " to "                 << p1.X() << " / " << p1.Y() << " / " << p1.Z();
-        rv = new GOLine(p0, p1);
-        }
-     else if (c->DynamicType() == STANDARD_TYPE(Geom_Circle)) {
+//     if (c->DynamicType() == STANDARD_TYPE(Geom_Line)) {
+////        qDebug() << "segment is LINE from" << p0.X() << " / " << p0.Y() << " / " << p0.Z()
+////                 << " to "                 << p1.X() << " / " << p1.Y() << " / " << p1.Z();
+//        p0.SetZ(center.Z());
+//        p1.SetZ(center.Z());
+//        rv = new GOLine(p0, p1);
+//        }
+//     else if (c->DynamicType() == STANDARD_TYPE(Geom_Circle)) {
+//        Handle(Geom_Circle) hc = Handle(Geom_Circle)::DownCast(c);
+//        gp_Pnt              cc = hc->Circ().Location(); cc.SetZ(center.Z());
+//        gp_Circ             circle(gp_Ax2(cc, hc->Circ().Axis().Direction()), hc->Radius());
+
 //        qDebug() << "segment is CIRCLE from" << p0.X() << " / " << p0.Y() << " / " << p0.Z()
 //                 << " to "                   << p1.X() << " / " << p1.Y() << " / " << p1.Z();
-        Handle(Geom_Circle) hc = Handle(Geom_Circle)::DownCast(c);
 
-        rv = new GOCircle(hc, param0, param1);
-        }
-     else {
-        throw std::domain_error("unsupported Geom-Type!");
-        }
-     if (rv) {
-        if (!segs.size()) {
-           segs.push_back(rv);
-           setStartPoint(rv->startPoint());
-           setEndPoint(rv->endPoint());
+//        gp_Pnt pn0 = hc->Value(param0);
+//        gp_Pnt pn1 = hc->Value(param1);
 
-           return nullptr;
-           }
-        else {
-           if (kute::isEqual(endPoint(), rv->startPoint())) {
-              segs.push_back(rv);
-              setEndPoint(rv->endPoint());
+//        qDebug() << "check CIRCLE points: " << pn0.X() << " / " << pn0.Y() << " / " << pn0.Z()
+//                 << " to "                  << pn1.X() << " / " << pn1.Y() << " / " << pn1.Z();
 
-              return nullptr;
-              }
-           else if (kute::isEqual(endPoint(), rv->endPoint())) {
-              rv->invert();
-              segs.push_back(rv);
-              setEndPoint(rv->endPoint());
+//        if (kute::isEqual(p0, p1)) {    // need to split full circles!
+//           double p05 = (param1 - param0) / 2;
+//           gp_Pnt pm = hc->Value(p05);
 
-              return nullptr;
-              }
-           else {
-              if (kute::isEqual(startPoint(), rv->startPoint())) {
-                 rv->invert();
-                 segs.insert(segs.begin(), rv);
-                 setStartPoint(rv->startPoint());
+//           pm.SetZ(center.Z());
+//           rv  = new GOCircle(hc, param0, p05);
+//           xrv = new GOCircle(hc, p05, param1);
+//           }
+//        else
+//           rv = new GOCircle(hc, param0, param1);
+//        }
+//     else {
+//        throw std::domain_error("unsupported Geom-Type!");
+//        }
+//     while (rv) {
+//           if (!segs.size()) {
+//              segs.push_back(rv);
+//              setStartPoint(rv->startPoint());
+//              setEndPoint(rv->endPoint());
 
-                 return nullptr;
-                 }
-              else if (kute::isEqual(startPoint(), rv->endPoint())) {
-                 segs.insert(segs.begin(), rv);
-                 setStartPoint(rv->startPoint());
+//              break; // return nullptr;
+//              }
+//           else {
+//              if (kute::isEqual(endPoint(), rv->startPoint())) {
+//                 segs.push_back(rv);
+//                 setEndPoint(rv->endPoint());
 
-                 return nullptr;
-                 }
-              else {
-                 qDebug() << "given segment does not fit on either side of contour. append() rejected!";
-                 }
-              }
-           }
-        }
-     }
-  return rv;
-  }
+//                 break; //return nullptr;
+//                 }
+//              else if (kute::isEqual(endPoint(), rv->endPoint())) {
+//                 rv->invert();
+//                 segs.push_back(rv);
+//                 setEndPoint(rv->endPoint());
+
+//                 break; //return nullptr;
+//                 }
+//              else {
+//                 if (kute::isEqual(startPoint(), rv->startPoint())) {
+//                    rv->invert();
+//                    segs.insert(segs.begin(), rv);
+//                    setStartPoint(rv->startPoint());
+
+//                    break; //return nullptr;
+//                    }
+//                 else if (kute::isEqual(startPoint(), rv->endPoint())) {
+//                    segs.insert(segs.begin(), rv);
+//                    setStartPoint(rv->startPoint());
+
+//                    break; //return nullptr;
+//                    }
+//                 else {
+//                    qDebug() << "given segment does not fit on either side of contour. append() rejected!";
+//                    }
+//                 }
+//              }
+//           return rv;
+//           }
+//     return xrv;
+//     }
+//  return rv;
+//  }
 
 
 gp_Pnt GOContour::centerPoint() const {
   return center;
+  }
+
+
+gp_Pnt GOContour::changeStart2Close(const gp_Pnt &p) {
+  gp_Pnt ls = startPoint();
+  double d  = p.Distance(ls);
+  int    n  = 0;
+
+  // ensure that contour is closed
+  if (!kute::isEqual(startPoint(), endPoint())) return p;
+  for (int i=1; i < segs.size(); ++i) {
+      GraphicObject* go = segs.at(i);
+      double ds = p.Distance(go->startPoint());
+
+      if (ds < d) {
+         n  = i;
+         ls = go->startPoint();
+         d  = ds;
+         }
+      }
+  for (int i=0; i < n; ++i) {
+      GraphicObject* go = segs.at(i);
+
+      segs.push_back(go);
+      }
+  for (int i=0; i < n; ++i) segs.erase(segs.begin());
+
+  setStartPoint(segs.at(0)->startPoint());
+  setEndPoint(segs.at(segs.size() - 1)->endPoint());
+
+  return endPoint();
   }
 
 
@@ -326,37 +383,6 @@ GraphicObject* GOContour::extendStart(double length) {
   }
 
 
-gp_Pnt GOContour::changeStart2Close(const gp_Pnt &p) {
-  gp_Pnt ls = startPoint();
-  double d  = p.Distance(ls);
-  int    n  = 0;
-
-  // ensure that contour is closed
-  if (!kute::isEqual(startPoint(), endPoint())) return p;
-  for (int i=1; i < segs.size(); ++i) {
-      GraphicObject* go = segs.at(i);
-      double ds = p.Distance(go->startPoint());
-
-      if (ds < d) {
-         n  = i;
-         ls = go->startPoint();
-         d  = ds;
-         }
-      }
-  for (int i=0; i < n; ++i) {
-      GraphicObject* go = segs.at(i);
-
-      segs.push_back(go);
-      }
-  for (int i=0; i < n; ++i) segs.erase(segs.begin());
-
-  setStartPoint(segs.at(0)->startPoint());
-  setEndPoint(segs.at(segs.size() - 1)->endPoint());
-
-  return endPoint();
-  }
-
-
 GraphicObject* GOContour::invert() {
   auto first = segs.begin();
   auto last  = segs.end();
@@ -378,6 +404,56 @@ GraphicObject* GOContour::invert() {
   }
 
 
+gp_Pnt GOContour::midPoint() const {
+  if (!segs.size()) return center;
+  int n = segs.size() / 2;
+
+  return segs.at(n)->endPoint();
+  }
+
+
+GraphicObject* GOContour::occ2GO(const TopoDS_Edge e, double defZ) {
+  if (e.IsNull()) return nullptr;
+  GraphicObject*     rv  = nullptr;
+  GraphicObject*     xrv = nullptr;
+  double             param0, param1;
+  Handle(Geom_Curve) c = BRep_Tool::Curve(e, param0, param1);
+  gp_Pnt             p0, p1;
+
+  p0 = c->Value(param0);
+  p1 = c->Value(param1);
+
+  qDebug() << "occ2GO - curve parameters: " << param0 << " <> " << param1;
+
+  if (c->DynamicType() == STANDARD_TYPE(Geom_Line)) {
+     qDebug() << "segment is LINE from" << p0.X() << " / " << p0.Y() << " / " << p0.Z()
+              << " to "                 << p1.X() << " / " << p1.Y() << " / " << p1.Z();
+     rv = new GOLine(p0, p1);
+     }
+  else if (c->DynamicType() == STANDARD_TYPE(Geom_Circle)) {
+     qDebug() << "segment is CIRCLE from" << p0.X() << " / " << p0.Y() << " / " << p0.Z()
+              << " to "                   << p1.X() << " / " << p1.Y() << " / " << p1.Z();
+     Handle(Geom_Circle) hc = Handle(Geom_Circle)::DownCast(c);
+
+     //TODO: move splitting to caller!
+//     if (kute::isEqual(p0, p1)) {    // need to split full circles!
+//        double p05 = (param1 - param0) / 2;
+//        gp_Pnt pm = hc->Value(p05);
+
+//        if (!kute::isEqual(defZ, 0)) pm.SetZ(defZ);
+
+//        qDebug() << "splitted full circle at " << pm.X() << " / " << pm.Y() << " / " << pm.Z();
+
+//        rv  = new GOCircle(hc, param0, p05);
+//        xrv = new GOCircle(hc, p05, param1);
+//        }
+//     else
+       rv = new GOCircle(hc, param0, param1);
+     }
+  return rv;
+  }
+
+
 int GOContour::order() const {
   return level;
   }
@@ -395,30 +471,16 @@ void GOContour::setContour(TopoDS_Shape contour) {
 
   if (segments.size()) {
      segs.clear();
-     for (auto s : segments) add(s);
+     for (auto s : segments) {
+         GraphicObject* go = GOContour::occ2GO(s);
+
+         if (go) add(go);
+         }
      }
   }
 
 
 std::vector<GraphicObject*>& GOContour::simplify(double z, bool cw) {
-//  double a0 = angStart();
-//  double a1 = angEnd();
-
-//  while (a0 < 0) a0 += 2*M_PI;
-//  while (a1 < 0) a1 += 2*M_PI;
-
-//  if (kute::isEqual(startPoint(), endPoint()) && segs.size() > 1) {
-//     GraphicObject* go = segs.at(0);
-
-//     a0 = atan2(go->startPoint().Y() - center.Y(), go->startPoint().X() - center.X());
-//     a1 = atan2(go->endPoint().Y()   - center.Y(), go->endPoint().X()   - center.X());
-//     if (cw && a0 < a1)       invert();
-//     else if (!cw && a1 < a0) invert();
-//     }
-//  else {
-//     if (cw && a0 < a1)       invert();
-//     else if (!cw && a1 < a0) invert();
-//     }
   if (segs.size() > 2) {
      for (int i=0; i < segs.size(); ++i) {
          GraphicObject* o0 = segs.at(i);

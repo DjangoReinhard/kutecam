@@ -486,6 +486,9 @@
      <addaction name="actionSweepNew"/>
     </widget>
     <widget class="QMenu" name="menuSelection">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="title">
       <string>&amp;Selection</string>
      </property>
@@ -508,8 +511,8 @@
     </property>
     <addaction name="actionModelSetup"/>
     <addaction name="actionOperationsSetup"/>
-    <addaction name="actionToolsSetup"/>
-    <addaction name="actionMiscSetup"/>
+    <addaction name="separator"/>
+    <addaction name="actionPreferences"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuOperations"/>
@@ -622,7 +625,7 @@
   </action>
   <action name="actionToolsSetup">
    <property name="text">
-    <string>Tools</string>
+    <string>Preferences</string>
    </property>
   </action>
   <action name="actionToolsOpen">
@@ -720,6 +723,9 @@
    </property>
   </action>
   <action name="actionSelection2Vertical">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>&amp;vertical</string>
    </property>
@@ -727,6 +733,11 @@
   <action name="actionSelection2Horizontal">
    <property name="text">
     <string>&amp;horizontal</string>
+   </property>
+  </action>
+  <action name="actionPreferences">
+   <property name="text">
+    <string>Preferences</string>
    </property>
   </action>
  </widget>

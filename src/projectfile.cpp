@@ -79,6 +79,11 @@ QString ProjectFile::fileName() const {
   }
 
 
+void ProjectFile::remove(const QString &key) {
+  cfg->remove(key);
+  }
+
+
 void ProjectFile::setArrayIndex(int i) {
   cfg->setArrayIndex(i);
   }

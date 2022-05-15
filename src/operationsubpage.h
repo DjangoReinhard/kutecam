@@ -50,7 +50,7 @@ public:
 
   virtual void loadOP(Operation* op);
   virtual void processSelection() = 0;
-  virtual void showToolPath() = 0;
+  virtual void showToolPath();
   virtual void toolPath() = 0;
   virtual void closeEvent(QCloseEvent* e) override;
 

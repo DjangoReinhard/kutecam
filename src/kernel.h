@@ -46,7 +46,6 @@ class SelectionHandler;
 class SetupPage;
 class ShapeListModel;
 class TDFactory;
-class ToolPage;
 class ToolListModel;
 class ViseEntry;
 class ViseListModel;
@@ -94,8 +93,9 @@ private:
   bool                              AisTable;
   bool                              BisTable;
   bool                              CisTable;
+  bool                              genSepWithToolChange;
+  bool                              opAllInOne;
   SetupPage*                        setupPage;
-  ToolPage*                         tools;
   TDFactory*                        tdFactory;
   WSFactory*                        wsFactory;
   StringListModel*                  matModel;

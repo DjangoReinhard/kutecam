@@ -35,11 +35,13 @@
 #include "work.h"
 #include "kuteCAM.h"
 
-#include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepAlgoAPI_Common.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
 #include <BRepAlgoAPI_Section.hxx>
 #include <BRepAlgoAPI_Splitter.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
+#include <BRepBuilderAPI_MakeShell.hxx>
+#include <BRepOffsetAPI_Sewing.hxx>
 #include <BRep_Tool.hxx>
 #include <GeomAdaptor_Surface.hxx>
 #include <Geom_CylindricalSurface.hxx>
@@ -54,44 +56,78 @@ SelectionHandler::SelectionHandler() {
   }
 
 
-GOContour* SelectionHandler::createContourFromSelection(Operation* op) {
+GOContour* SelectionHandler::createContourFromSelection(Operation* op, Bnd_Box* pBB) {
   std::vector<TopoDS_Shape> selection = Core().view3D()->selection();
 
   if (!selection.size()) return nullptr;
   gp_Pnt center(op->wpBounds.CornerMin().X() + (op->wpBounds.CornerMax().X() - op->wpBounds.CornerMin().X()) / 2
               , op->wpBounds.CornerMin().Y() + (op->wpBounds.CornerMax().Y() - op->wpBounds.CornerMin().Y()) / 2
               , op->wpBounds.CornerMin().Z() + (op->wpBounds.CornerMax().Z() - op->wpBounds.CornerMin().Z()) / 2);
-  Handle(TopTools_HSequenceOfShape) ss = new TopTools_HSequenceOfShape;
-  Handle(TopTools_HSequenceOfShape) wires;
-  ShapeAnalysis_FreeBounds          fb;
-  double                            curZ = 0;
-
-  for (auto& s : selection) {
-      Handle(Geom_Surface) selectedFace = BRep_Tool::Surface(TopoDS::Face(s));
-      Handle(AIS_Shape)    asTmp = new AIS_Shape(s);
-      Bnd_Box              bb    = asTmp->BoundingBox();
-      GeomAdaptor_Surface  surf(selectedFace);
-
-      if (!curZ) curZ = (bb.CornerMax().Z() - bb.CornerMin().Z()) / 2 + bb.CornerMin().Z();
-      gp_Pnt pos = Core().helper3D()->deburr(bb.CornerMin());
-      if (!kute::isEqual(op->waterlineDepth(), 0))
-         curZ = op->waterlineDepth();
-      pos.SetZ(curZ);
-      gp_Pln                   cutPlane(pos, {0, 0, 1});
-      BRepBuilderAPI_MakeFace  mf(cutPlane, -500, 500, -500, 500);
-      TopoDS_Shape             cs = Core().helper3D()->intersect(s, mf.Shape());
-      std::vector<TopoDS_Edge> ce = Core().helper3D()->allEdgesWithin(cs);
-
-      if (!ce.size()) return nullptr;
-      ss->Append(ce.at(0));
-      }
-  fb.ConnectEdgesToWires(ss, kute::MinDelta, false, wires);
   GOContour* contour = new GOContour(center);
-  std::vector<TopoDS_Edge> edges = Core().helper3D()->allEdgesWithin(wires->First());
+  Bnd_Box    bbCut;
 
-  for (auto e : edges)
-      contour->add(e);
+  if (selection.at(0).ShapeType() == TopAbs_FACE) {
+     BRepOffsetAPI_Sewing ms;
+     double minZ = -999;
+     double maxZ =  999;
 
+     ms.SetTolerance(kute::MinDelta);
+     for (auto& s : selection) {
+         Handle(AIS_Shape) asTmp = new AIS_Shape(s);
+         Bnd_Box           bb    = asTmp->BoundingBox();
+
+         if (bb.CornerMin().Z() > minZ) minZ = bb.CornerMin().Z();
+         if (bb.CornerMax().Z() < maxZ) maxZ = bb.CornerMax().Z();
+         bbCut.Add(bb);
+         ms.Add(s);
+         }
+     if (pBB) *pBB = bbCut;
+     ms.Perform();
+     TopoDS_Shape                s = ms.SewedShape();
+     gp_Pln                      cutPlane({0, 0, minZ + (maxZ - minZ) / 2}, {0, 0, 1});
+     BRepBuilderAPI_MakeFace     mf(cutPlane, -500, 500, -500, 500);
+     std::vector<GraphicObject*> goSegs;
+     TopoDS_Shape                cs = Core().helper3D()->intersect(s, mf.Shape());
+     std::vector<TopoDS_Edge>    ce = Core().helper3D()->allEdgesWithin(cs);
+
+     qDebug() << "cut line contains " << ce.size() << "segments";
+
+     for (auto& s : ce) {
+         GraphicObject*    go = GOContour::occ2GO(s);
+
+         if (kute::isEqual(go->startPoint(), go->endPoint())) {
+            delete go;
+            continue;
+            }
+         contour->add(go);
+         Handle(AIS_Shape) as = new AIS_Shape(s);
+
+         as->SetColor(Quantity_NOC_ORANGE);
+         as->SetWidth(3);
+         op->cShapes.push_back(as);
+         }
+//     qDebug() << "check it out?!?";
+     }
+  else if (selection.at(0).ShapeType() == TopAbs_EDGE) {
+     qDebug() << "TODO: create a wire ...";
+     for (auto& s : selection) {
+         GraphicObject*    go = GOContour::occ2GO(TopoDS::Edge(s));
+
+         if (kute::isEqual(go->startPoint(), go->endPoint())) {
+            delete go;
+            continue;
+            }
+         contour->add(go);
+         Handle(AIS_Shape) as = new AIS_Shape(s);
+
+         as->SetColor(Quantity_NOC_ORANGE);
+         as->SetWidth(3);
+         op->cShapes.push_back(as);
+         }
+     }
+  else {
+     throw std::domain_error("SelectionHandler - invalid/unknown shape type!");
+     }
   return contour;
   }
 
@@ -132,7 +168,6 @@ Handle(AIS_Shape) SelectionHandler::createCutPart(TopoDS_Shape cf, Operation* op
   splitTools.Append(cf);
   splitter.SetArguments(splitArgs);
   splitter.SetTools(splitTools);
-  splitter.SetNonDestructive(Standard_True);
   splitter.SetFuzzyValue(kute::MinDelta);
   splitter.Build();
 
@@ -140,19 +175,22 @@ Handle(AIS_Shape) SelectionHandler::createCutPart(TopoDS_Shape cf, Operation* op
      splitter.SimplifyResult();
      TopoDS_Shape    result = splitter.Shape();
      TopoDS_Iterator it(result);
-     // first shape contains model, second shape is rest of workpiece
      TopoDS_Shape      s0  = it.Value(); it.Next();
      TopoDS_Shape      s1  = it.Value();
      Handle(AIS_Shape) as0 = new AIS_Shape(s0);
      Handle(AIS_Shape) as1 = new AIS_Shape(s1);
+     bool debug = false;
 
+     if (debug) {
+        as0->SetColor(Quantity_NOC_BLACK);
+        as1->SetColor(Quantity_NOC_WHITE);
+        as0->SetTransparency(0.7);
+        as1->SetTransparency(0.7);
+        op->cShapes.push_back(as0);
+        op->cShapes.push_back(as1);
+        }
      if (op->isOutside()) rv = as1;
      else                 rv = as0;
-     }
-  if (!rv.IsNull()) {
-     rv->SetColor(Quantity_NOC_CYAN);
-     rv->SetTransparency(0.8);
-     op->cShapes.push_back(rv);
      }
   return rv;
   }

@@ -50,7 +50,7 @@ public:
   double  shankDiameter() const;
   double  freeLength() const;
   bool    hasMaterial(const QString& material) const;
-  double  numFlutes() const;
+  int     numFlutes() const;
   void    setCollet(int collet);
   void    setFluteDiameter(double diam);
   void    setFluteLength(double len);
@@ -58,7 +58,7 @@ public:
   void    setShankDiameter(double diam);
   void    setFreeLength(double len);
   void    setToolName(const QString& name);
-  void    setNumFlutes(double num);
+  void    setNumFlutes(int num);
   QString toString() const;
   CuttingParameters* cutParameter(int row);
   CuttingParameters* cutParameter(const QString& material);
@@ -78,7 +78,7 @@ private:
   double  cutDepth;
   double  shankDiam;
   double  freeLen;
-  double  cFlutes;
+  int     cFlutes;
   QVector<CuttingParameters*> cutParams;
 
   friend class XmlToolReader;

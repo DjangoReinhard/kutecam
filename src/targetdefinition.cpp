@@ -42,7 +42,11 @@ TargetDefinition::TargetDefinition(const gp_Pnt& pos, double radius, QObject* pa
   }
 
 
-TargetDefinition::TargetDefinition(QSettings& s, QObject* parent) {
+TargetDefinition::TargetDefinition(QSettings& s, QObject* parent)
+ : QObject(parent)
+ , zmin(0)
+ , zmax(0)
+ , cc(nullptr) {
   tdPos.SetX(s.value("tdPosX").toDouble());
   tdPos.SetY(s.value("tdPosY").toDouble());
   tdPos.SetZ(s.value("tdPosZ").toDouble());

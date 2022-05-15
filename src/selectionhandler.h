@@ -39,7 +39,7 @@ public:
   SelectionHandler();
 
   TopoDS_Shape      createBaseContour(const gp_Pnt& pos, const gp_Dir& dir, Operation* op);
-  GOContour*        createContourFromSelection(Operation* op);
+  GOContour*        createContourFromSelection(Operation* op, Bnd_Box* pBB = nullptr);
   Handle(AIS_Shape) createCutPart(TopoDS_Shape cf, Operation* op);
   Handle(AIS_Shape) createCutPart(Operation* op);
   Handle(AIS_Shape) createCutPart(Operation* op, SweepTargetDefinition* std);

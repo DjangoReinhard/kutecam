@@ -162,6 +162,11 @@ GraphicObject* GOCircle::invert() {
   }
 
 
+gp_Pnt GOCircle::midPoint() const {
+  return curve->Value((p1 - p0) / 2);
+  }
+
+
 bool GOCircle::isCCW() const {
   return axis.Z() > 0;
   }
@@ -203,6 +208,17 @@ void GOCircle::setStartPoint(const gp_Pnt &p) {
   GraphicObject::setStartPoint(p);
   }
 
+
+GraphicObject* GOCircle::split() {
+  double px1   = p1;
+  double px0   = (p1 - p0) / 2;
+  gp_Pnt split = curve->Value(px0);
+
+  setEndPoint(split);
+  createCircle();
+
+  return new GOCircle(Handle(Geom_Circle)::DownCast(curve), px0, px1);
+  }
 
 Handle(Geom_Curve) GOCircle::startTangent(double length, double* param0, double* param1) const {
   gp_Circ     rawCircle(gp_Ax2(centerPnt, axis), r);

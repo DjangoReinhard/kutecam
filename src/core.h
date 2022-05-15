@@ -57,12 +57,8 @@ class Core : public QObject
   Q_OBJECT
 public:
   static const QString PgWorkPiece;
-  static const QString PgInfo;
   static const QString PgConfig;
   static const QString PgOperations;
-  static const QString PgTools;
-//  static const double  MinDelta;
-
 
   explicit Core();
   explicit Core(QApplication& app, MainWindow& win);
@@ -78,9 +74,11 @@ public:
   void                     clearCurves();
   Util3D*                  helper3D();
   bool                     hasModelLoaded() const;
-  bool                     isAaxisTable() const;
-  bool                     isBaxisTable() const;
-  bool                     isCaxisTable() const;
+  bool                     isAllInOneOperation() const;
+  bool                     isAAxisTable() const;
+  bool                     isBAxisTable() const;
+  bool                     isCAxisTable() const;
+  bool                     isSepWithToolChange() const;
   bool                     loadFile(const QString& fileName);
   std::vector<Operation*>  loadOperations(ProjectFile* pf);
   bool                     loadProject(const QString& fileName);
@@ -90,7 +88,12 @@ public:
   ProjectFile*             projectFile();
   ShapeFix_ShapeTolerance& shapeFix();
   SelectionHandler*        selectionHandler();
+  void                     setAllInOneOperation(bool value);
+  void                     setAAxisIsTable(bool value);
+  void                     setBAxisIsTable(bool value);
+  void                     setCAxisIsTable(bool value);
   void                     setProjectFile(ProjectFile* pf);
+  void                     setSepWithToolChange(bool value);
   void                     setWorkData(Work* data);
   void                     switchPage(const QString& page);
   TDFactory*               tdFactory();

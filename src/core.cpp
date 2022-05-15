@@ -25,14 +25,17 @@
  * **************************************************************************
  */
 #include "core.h"
+#include "applicationwindow.h"
 #include "kernel.h"
 #include "geomlistmodel.h"
 #include "shapelistmodel.h"
 #include "projectfile.h"
 #include "occtviewer.h"
 #include "mainwindow.h"
+#include "toollistmodel.h"
 #include "toolpage.h"
 #include "work.h"
+#include "xmltoolreader.h"
 #include <QApplication>
 #include <QFileDialog>
 #include <QDir>
@@ -101,20 +104,29 @@ void Core::clearCurves() {
   }
 
 
-bool Core::isAaxisTable() const {
+bool Core::isAllInOneOperation() const {
+  return k->opAllInOne;
+  }
+
+
+bool Core::isAAxisTable() const {
   return k->AisTable;
   }
 
 
-bool Core::isBaxisTable() const {
+bool Core::isBAxisTable() const {
   return k->BisTable;
   }
 
 
-bool Core::isCaxisTable() const {
+bool Core::isCAxisTable() const {
   return k->CisTable;
   }
 
+
+bool Core::isSepWithToolChange() const {
+  return k->genSepWithToolChange;
+  }
 
 bool Core::hasModelLoaded() const {
   return k->pf != nullptr;
@@ -141,7 +153,16 @@ bool Core::loadProject(const QString &fileName) {
 
 
 bool Core::loadTools(const QString &fileName) {
-  return k->tools->readTools(fileName);
+  QFile inFile(fileName);
+  XmlToolReader xtr;
+
+  if (inFile.exists()) {
+     k->toolListModel->setData(xtr.read(&inFile));
+     inFile.close();
+
+     return true;
+     }
+  return false;
   }
 
 
@@ -170,8 +191,33 @@ SelectionHandler* Core::selectionHandler() {
   }
 
 
+void Core::setAllInOneOperation(bool value) {
+  k->opAllInOne = value;
+  }
+
+
+void Core::setAAxisIsTable(bool value) {
+  k->AisTable = value;
+  }
+
+
+void Core::setBAxisIsTable(bool value) {
+  k->BisTable = value;
+  }
+
+
+void Core::setCAxisIsTable(bool value) {
+  k->CisTable = value;
+  }
+
+
 void Core::setProjectFile(ProjectFile *pf) {
   k->pf = pf;
+  }
+
+
+void Core::setSepWithToolChange(bool value) {
+  k->genSepWithToolChange = value;
   }
 
 
@@ -226,8 +272,5 @@ WSFactory* Core::wsFactory() {
 
 Kernel* Core::k = nullptr;
 const QString Core::PgWorkPiece    = tr("Workpiece");
-const QString Core::PgInfo         = tr("Info");
-const QString Core::PgConfig       = tr("Config");
+const QString Core::PgConfig       = tr("Preferences");
 const QString Core::PgOperations   = tr("Operations");
-const QString Core::PgTools        = tr("Tools");
-//const double  Core::MinDelta       = 0.001;

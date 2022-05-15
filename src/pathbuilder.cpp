@@ -820,14 +820,22 @@ std::vector<std::vector<GOContour*>> PathBuilder::processCurve(Operation* op, GO
             aw->SetColor(Quantity_NOC_ORANGE2);
             aw->SetWidth(2);
             op->cShapes.push_back(aw);
-            if (i > 5) break;
+            if (i > 3) break;
             continue;
             }
 
          if (!i && !curveIsBorder) {
             std::vector<TopoDS_Edge> segments = Core().helper3D()->allEdgesWithin(offWire);
 
-            for (auto s : segments) path->add(s);   // keep all segments for last workpath
+            for (auto s : segments) {
+                goSeg = GOContour::occ2GO(s);
+
+                if (kute::isEqual(goSeg->startPoint(), goSeg->endPoint())) {
+                   delete goSeg;
+                   continue;
+                   }
+                path->add(goSeg);   // keep all segments for last workpath
+                }
             path->simplify(curZ);
             stripPath(path, curve);
             path->extendBy(xtend);
@@ -836,13 +844,16 @@ std::vector<std::vector<GOContour*>> PathBuilder::processCurve(Operation* op, GO
          else {
             rawPath = BRepAlgoAPI_Common(offWire, op->cutPart->Shape());
             std::vector<TopoDS_Edge> segments = Core().helper3D()->allEdgesWithin(rawPath);
-            double gap = 0; //op->cutWidth();
 
             if (!segments.size()) break;
             for (int j=0; j < segments.size(); ++j) {
-                goSeg = path->add(segments.at(j), gap);
+                goSeg = GOContour::occ2GO(segments.at(j));
 
-                if (!goSeg) continue;
+                if (kute::isEqual(goSeg->startPoint(), goSeg->endPoint())) {
+                   delete goSeg;
+                   continue;
+                   }
+                if (path->add(goSeg)) continue;
                 if (path->size()) {
                    path->extendBy(xtend);
                    path->simplify(curZ);
@@ -965,9 +976,10 @@ std::vector<std::vector<GOPocket*>> PathBuilder::splitCurves(const Operation* op
                      match = true;
                      break;
                      }
+                  else qDebug() << "no match for pocket (" << ap0 << " <> " << ap1 << ")";
                   }
               if (!match) {
-                 qDebug() << "OUPS - lost contour";
+                 qDebug() << "OUPS - lost contour (" << ac0 << " <> " << ac1 << ")";
                  }
               }
           }
@@ -979,7 +991,7 @@ std::vector<std::vector<GOPocket*>> PathBuilder::splitCurves(const Operation* op
   }
 
 
-// dumb but fast
+// TODO: rebuild!
 void PathBuilder::stripPath(GOContour *firstContour, GOContour *masterContour) {
   if (!firstContour || !masterContour) return;
 
