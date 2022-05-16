@@ -43,7 +43,6 @@
 #include "util3d.h"
 #include "work.h"
 #include "workstep.h"
-#include "wpcutter.h"
 #include "wsarc.h"
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepOffsetAPI_MakeOffset.hxx>

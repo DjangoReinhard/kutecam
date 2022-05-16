@@ -33,7 +33,6 @@
 #include "occtviewer.h"
 #include "mainwindow.h"
 #include "toollistmodel.h"
-#include "toolpage.h"
 #include "work.h"
 #include "xmltoolreader.h"
 #include <QApplication>

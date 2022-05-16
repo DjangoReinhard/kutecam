@@ -41,7 +41,6 @@
 #include "shapelistmodel.h"
 #include "tdfactory.h"
 #include "toollistmodel.h"
-#include "toolpage.h"
 #include "viseentry.h"
 #include "viselistmodel.h"
 #include "wsfactory.h"
