@@ -1,12 +1,11 @@
 /* 
  * **************************************************************************
  * 
- *  file:       ppfanuc.h
+ *  file:       pluginlistmodel.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create a graphical application, that assists in identify
- *              and process model elements                        
- *  created:    11.4.2022 by Django Reinhard
+ *  purpose:    create gcode for toolpaths created from CAD models
+ *  created:    17.5.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
@@ -24,26 +23,25 @@
  * 
  * **************************************************************************
  */
-#ifndef PPFANUC_H
-#define PPFANUC_H
-#include <dinpostprocessor.h>
+#ifndef PLUGINLISTMODEL_H
+#define PLUGINLISTMODEL_H
+#include <QAbstractListModel>
 
 
-class PPFanuc : public DINPostProcessor
+class PluginListModel : public QAbstractListModel
 {
-  Q_OBJECT
-  Q_INTERFACES(PostProcessor)
-#ifdef USE_PLUGINS
-  Q_PLUGIN_METADATA(IID "PostProcessorPlugin_iid" FILE "ppFanuc.json")
-#endif
 public:
-  explicit PPFanuc(QObject* parent = nullptr);
-  virtual ~PPFanuc() = default;
+  explicit PluginListModel(QObject* parent = nullptr);
 
-  virtual QString fixtureID(int f) override;
-  virtual QString genDefineCycle(int c, double topZ, double r0, double r1, double depth, double qMin, double qMax, double retract, double dwell, int feed) override;
-  virtual QString genEndOfLine()  override;
-  virtual QString genEndCycle() override;
-  virtual QString getFileExtension() const override;
+  void               clear();
+  QVariant           data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+  QVariant           data(int row, int column, int role = Qt::DisplayRole) const;
+  int                rowCount(const QModelIndex &parent = QModelIndex()) const override;
+  void               setData(const QString& key, const QString& path);
+  QString            value(const QString& key);
+
+private:
+  QMap<QString, QString> plugins;
   };
-#endif // PPFANUC_H
+
+#endif // PLUGINLISTMODEL_H

@@ -1,11 +1,11 @@
 /* 
  * **************************************************************************
  * 
- *  file:       cfggcode.h
+ *  file:       pluginlistmodel.cpp
  *  project:    kuteCAM
  *  subproject: main application
  *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    15.5.2022 by Django Reinhard
+ *  created:    17.5.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
@@ -23,28 +23,48 @@
  * 
  * **************************************************************************
  */
-#ifndef CFGGCODE_H
-#define CFGGCODE_H
-#include <QWidget>
-QT_BEGIN_NAMESPACE
-namespace Ui {
-class GCodeConfig;
-}
-QT_END_NAMESPACE
-class QSortFilterProxyModel;
+#include "pluginlistmodel.h"
 
 
-class CfgGCode : public QWidget
-{
-  Q_OBJECT
-public:
-  explicit CfgGCode(QWidget *parent = nullptr);
+PluginListModel::PluginListModel(QObject* parent)
+ : QAbstractListModel(parent) {
+  }
 
-public slots:
-  void allInOneToggled(const QVariant& v);
 
-private:
-  Ui::GCodeConfig*       ui;
-  QSortFilterProxyModel* ppProxy;
-  };
-#endif // CFGGCODE_H
+void PluginListModel::clear() {
+  plugins.clear();
+  }
+
+
+QVariant PluginListModel::data(const QModelIndex& index, int role) const {
+  if (role != Qt::DisplayRole) return QVariant();
+  if (index.row() >= plugins.size()) return QVariant();
+  QString key = plugins.keys().at(index.row());
+
+  if (!index.column()) return key;
+  return plugins.value(key);
+  }
+
+
+QVariant PluginListModel::data(int row, int column, int role) const {
+  QModelIndex mi = createIndex(row, column);
+
+  return data(mi, role);
+  }
+
+
+int PluginListModel::rowCount(const QModelIndex& parent) const {
+  return plugins.size();
+  }
+
+
+void PluginListModel::setData(const QString& key, const QString& path) {
+  beginResetModel();
+  plugins[key] = path;
+  endResetModel();
+  }
+
+
+QString PluginListModel::value(const QString& key) {
+  return plugins[key];
+  }

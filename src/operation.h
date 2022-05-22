@@ -90,6 +90,7 @@ public:
   double        cutWidth() const;
   int           direction() const;
   int           drillCycle() const;
+  double        drillDepth() const;
   double        dwell() const;
   double        feedPerTooth() const;
   double        finalDepth() const;
@@ -103,6 +104,7 @@ public:
   gp_Dir&       mainDirection();
   gp_Dir        mainDirection() const;
   QString       name() const;
+  double        nominalZ() const;
   double        offset() const;
   double        operationA() const;
   double        operationB() const;
@@ -128,6 +130,7 @@ public:
   void    setCutType(int ct);
   void    setCutWidth(double width);
   void    setDirection(int d);
+  void    setDrillDepth(double depth);
   void    setDrillCycle(int c);
   void    setDwell(double pauseSecs);
   void    setFeedPerTooth(double feed);
@@ -137,6 +140,7 @@ public:
   void    setKind(const QString& kindName);
   void    setLowerZ(double z);
   void    setName(const QString& name);
+  void    setNominalZ(double z);
   void    setOffset(double off);
   void    setOperationA(double angle);
   void    setOperationB(double angle);
@@ -191,22 +195,24 @@ private:
   bool                      outside;
   bool                      absolute;
   bool                      vertical;
+  double                    ae;
+  double                    ap;
+  double                    depth2Drill; // calculated
+  double                    finDepth;   // user value
+  double                    fz;
   double                    opA;
   double                    opB;
   double                    opC;
-  double                    ae;
-  double                    ap;
-  double                    fz;
-  double                    vc;
   double                    off;
+  double                    pause;
   double                    retZ0;
   double                    retZ1;
-  double                    finDepth;
   double                    ret;
-  double                    pause;
+  double                    vc;
   double                    wld;
   double                    zMax;
   double                    zMin;
+  double                    zNom;
   double                    zTop;
   std::vector<Workstep*>    workingSteps;
   std::vector<TopoDS_Edge>  modEdges;

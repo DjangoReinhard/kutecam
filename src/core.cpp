@@ -29,6 +29,8 @@
 #include "kernel.h"
 #include "geomlistmodel.h"
 #include "shapelistmodel.h"
+#include "postprocessor.h"
+#include "pluginlistmodel.h"
 #include "projectfile.h"
 #include "occtviewer.h"
 #include "mainwindow.h"
@@ -37,6 +39,7 @@
 #include "xmltoolreader.h"
 #include <QApplication>
 #include <QFileDialog>
+#include <QPluginLoader>
 #include <QDir>
 #include <QDebug>
 
@@ -146,6 +149,16 @@ std::vector<Operation*> Core::loadOperations(ProjectFile *pf) {
   }
 
 
+PostProcessor* Core::loadPostProcessor(const QString& ppName) {
+  QString ppPath = k->ppModel->value(ppName);
+  QPluginLoader loader(ppPath);
+  QObject*      plugin = loader.instance();
+
+  if (plugin) return qobject_cast<PostProcessor*>(plugin);
+  return nullptr;
+  }
+
+
 bool Core::loadProject(const QString &fileName) {
   return k->loadProject(fileName);
   }
@@ -180,6 +193,16 @@ void Core::onShutdown(QCloseEvent* ce) {
   }
 
 
+QString Core::postProcessor() const {
+  return k->selectedPP;
+  }
+
+
+QAbstractItemModel* Core::ppModel() const {
+  return k->ppModel;
+  }
+
+
 ProjectFile* Core::projectFile() {
   return k->pf;
   }
@@ -207,6 +230,11 @@ void Core::setBAxisIsTable(bool value) {
 
 void Core::setCAxisIsTable(bool value) {
   k->CisTable = value;
+  }
+
+
+void Core::setPostProcessor(const QString& ppName) {
+  k->selectedPP = ppName;
   }
 
 

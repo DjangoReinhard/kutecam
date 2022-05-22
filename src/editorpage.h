@@ -1,12 +1,11 @@
 /* 
  * **************************************************************************
  * 
- *  file:       postprocessor.cpp
+ *  file:       editorpage.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create a graphical application, that assists in identify
- *              and process model elements                        
- *  created:    1.4.2022 by Django Reinhard
+ *  purpose:    create gcode for toolpaths created from CAD models
+ *  created:    22.5.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
@@ -24,21 +23,36 @@
  * 
  * **************************************************************************
  */
-#include "postprocessor.h"
+#ifndef EDITORPAGE_H
+#define EDITORPAGE_H
+#include <QWidget>
+QT_BEGIN_NAMESPACE
+namespace Ui {
+class GCodeEditorPage;
+}
+class GCodeEditor;
+class GCodeHighlighter;
 
 
-PostProcessor::PostProcessor()
- : x(0)
- , y(0)
- , z(0)
- , a(0)
- , b(0)
- , c(0)
- , u(0)
- , v(0)
- , w(0) {
-  }
+class EditorPage : public QWidget
+{
+  Q_OBJECT
+public:
+  explicit EditorPage(QWidget *parent = nullptr);
 
+  void loadFile(const QString& fileName);
 
-PostProcessor::~PostProcessor() {
-  }
+protected:
+  QString chooseGCodeFile(QWidget* parent = nullptr);
+  void    showEvent(QShowEvent *event);
+
+protected slots:
+  void openFile();
+
+private:
+  Ui::GCodeEditorPage* ui;
+  GCodeEditor*         ed;
+  GCodeHighlighter*    gh;
+  QString              fileName;
+  };
+#endif // EDITORPAGE_H

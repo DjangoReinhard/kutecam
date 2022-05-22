@@ -1,15 +1,13 @@
 <RCC>
     <qresource prefix="/">
+        <file>src/GCodeEditor.ui</file>
         <file>src/mainwindow.ui</file>
         <file>src/setup.ui</file>
         <file>src/preview.ui</file>
         <file>src/status.ui</file>
         <file>src/tool.ui</file>
         <file>src/misc.ui</file>
-        <file>src/opDrill.ui</file>
-        <file>src/opContour.ui</file>
         <file>src/opSub.ui</file>
-        <file>src/opSweep.ui</file>
         <file>src/operations.ui</file>
     </qresource>
 </RCC>

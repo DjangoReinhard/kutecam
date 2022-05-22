@@ -374,6 +374,7 @@ void SetupPage::fixModel() {
   pf->setValue("model-rot", QVector3D(ui->angABase->value()
                                     , ui->angBBase->value()
                                     , ui->angCBase->value()));
+  pf->setValue("model-comment", ui->comment->document()->toPlainText());
   pf->endGroup();
   qDebug() << "model loc:" << ui->xMOff->value()
            << "/"          << ui->yMOff->value()

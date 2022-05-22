@@ -69,6 +69,7 @@
 #include <QAction>
 #include <QFileDialog>
 #include <QDir>
+#include <QKeyEvent>
 #include <QListView>
 #include <QMessageBox>
 #include <QStackedLayout>
@@ -258,11 +259,14 @@ bool OperationsPage::eventFilter(QObject *obj, QEvent *event) {
 
 
 void OperationsPage::genGCode() {
-  QString     fileName;
-  QFileDialog dialog(this
-                   , tr("QFileDialog::getSaveFileName()")
-                   , "/media/Scratch"
-                   , tr("GCode Files (*.ngc)"));
+  PostProcessor* pp = Core().loadPostProcessor(Core().postProcessor());
+  QString        xtension = pp->getFileExtension();
+  QString        fileName;
+  QString        filePattern = QString(tr("GCode Files (*.%1)")).arg(xtension);
+  QFileDialog    dialog(this
+                      , tr("QFileDialog::getSaveFileName()")
+                      , "/media/Scratch"
+                      , filePattern);
 
   dialog.setSupportedSchemes(QStringList(QStringLiteral("file")));
   dialog.setOption(QFileDialog::DontUseNativeDialog);
@@ -272,12 +276,21 @@ void OperationsPage::genGCode() {
      return;
      }
   fileName = dialog.selectedUrls().value(0).toLocalFile();
+  if (!fileName.endsWith(QString(".%1").arg(xtension)))
+     fileName += "." + xtension;
 
-//  qDebug() << "save gcode to:" << fileName;
-//  GCodeWriter gcw(new PPFanuc());
-//  Bnd_Box     wpBounds = Core().workData()->workPiece->BoundingBox();
+  qDebug() << "save gcode to:" << fileName;
 
-//  gcw.processOperations(fileName, wpBounds, olm->operations());
+  GCodeWriter gcw(pp);
+  Bnd_Box     wpBounds = Core().workData()->workPiece->BoundingBox();
+  bool        genTC    = Core().isSepWithToolChange();
+
+  if (Core().isAllInOneOperation()) {
+     gcw.processAllInOne(fileName,  wpBounds, olm->operations());
+     emit fileGenerated(fileName);
+     }
+  else
+     gcw.processSingleOPs(fileName, wpBounds, olm->operations(), genTC);
   }
 
 

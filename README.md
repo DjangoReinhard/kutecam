@@ -11,6 +11,18 @@
 
 ## [Wiki](https://github.com/DjangoReinhard/kutecam/wiki)  contains informations about how to build and use kuteCAM
 
+## Status
+actually working:
+- different kinds of selections for drill cycles
+- mill a clamping plug
+- mill plane faces
+- mill open pockets / concave contours
+- mill vertical faces
+
+Postprocessors:
+- Fanuc
+- Heidenhain
+- Sinumeric
 
 ## Teaser
 small video clips for download

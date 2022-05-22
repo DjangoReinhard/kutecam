@@ -29,21 +29,21 @@
 #include <QDebug>
 
 
-WSCycle::WSCycle(int cycle, const gp_Pnt& from, const gp_Pnt& to, double safeZ0, double safeZ1, double depth, QObject* parent)
+WSCycle::WSCycle(int cycle, const gp_Pnt& from, const gp_Pnt& to /*, double safeZ0, double safeZ1, double depth */, QObject* parent)
  : Workstep(WTCycle, from, to, parent)
- , cycle(cycle)
- , sZ0(safeZ0)
- , sZ1(safeZ1)
- , depth(depth) {
+ , cycle(cycle) {
+// , sZ0(safeZ0)
+// , sZ1(safeZ1)
+// , depth(depth) {
   }
 
 
 WSCycle::WSCycle(QSettings& s, QObject* parent)
  : Workstep(WTCycle, s, parent) {
   cycle = s.value("wsCycle").toInt();
-  sZ0   = s.value("wsSafeZ0").toDouble();
-  sZ1   = s.value("wsSafeZ1").toDouble();
-  depth = s.value("wsDepth").toDouble();
+//  sZ0   = s.value("wsSafeZ0").toDouble();
+//  sZ1   = s.value("wsSafeZ1").toDouble();
+//  depth = s.value("wsDepth").toDouble();
   }
 
 
@@ -58,28 +58,29 @@ int WSCycle::drillCycle() const {
 
 
 void WSCycle::dump() const {
-  qDebug() << "WSCycle(" << cycle << ") from" << sZ1 << "through" << sZ0 << "until" << depth;
+  qDebug() << "WSCycle(" << cycle << ") ";
+  // "from" << sZ1 << "through" << sZ0 << "until" << depth;
   }
 
-double WSCycle::finalDepth() const {
-  return depth;
-  }
+//double WSCycle::finalDepth() const {
+//  return depth;
+//  }
 
 
-double WSCycle::safeZ0() const {
-  return sZ0;
-  }
+//double WSCycle::safeZ0() const {
+//  return sZ0;
+//  }
 
 
-double WSCycle::safeZ1() const {
-  return sZ1;
-  }
+//double WSCycle::safeZ1() const {
+//  return sZ1;
+//  }
 
 
 void WSCycle::store(QSettings& s) {
   Workstep::store(s);
   s.setValue("wsCycle", drillCycle());
-  s.setValue("wsSafeZ0", safeZ0());
-  s.setValue("wsSafeZ1", safeZ1());
-  s.setValue("wsDepth", finalDepth());
+//  s.setValue("wsSafeZ0", safeZ0());
+//  s.setValue("wsSafeZ1", safeZ1());
+//  s.setValue("wsDepth", finalDepth());
   }

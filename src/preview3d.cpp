@@ -25,21 +25,23 @@
  * **************************************************************************
  */
 #include "preview3d.h"
-#include "ui_preview.h"
+#include <ui_preview.h>
 #include "ui_mainwindow.h"
 #include "core.h"
+#include "editorpage.h"
 #include "occtviewer.h"
 #include "work.h"
+#include <QLabel>
 
 
 Preview3D::Preview3D(QWidget *parent)
  : QWidget(parent)
  , ui(new Ui::Preview3D)
- , view3D(new OcctQtViewer()) {
+ , view3D(new OcctQtViewer())
+ , edit(new EditorPage()) {
   ui->setupUi(this);
-  ui->placeHolder->setLayout(new QVBoxLayout);
-  ui->placeHolder->layout()->addWidget(view3D);
-  ui->placeHolder->layout()->setContentsMargins(0, 0, 0, 0);
+  ui->notebook->addTab(view3D, tr("Preview"));
+  ui->notebook->addTab(edit, tr("Editor"));
 
   connect(ui->pbBottom,    &QPushButton::clicked, view3D, &OcctQtViewer::bottomView);
   connect(ui->pbLeft,      &QPushButton::clicked, view3D, &OcctQtViewer::leftView);
@@ -74,6 +76,12 @@ Preview3D::Preview3D(QWidget *parent)
 Preview3D::~Preview3D() {
   delete ui;
   delete view3D;
+  }
+
+
+void Preview3D::loadFile(const QString& fileName) {
+  edit->loadFile(fileName);
+  ui->notebook->setCurrentWidget(edit);
   }
 
 

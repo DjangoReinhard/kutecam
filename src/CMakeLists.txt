@@ -12,11 +12,13 @@ add_executable(kuteCAM
     contourtargetdefinition.cpp
     core.cpp
     cctargetdefinition.cpp
-    cuttingparameters.cpp
     cutparamlistmodel.cpp
     cutparmtooleditor.cpp
     dimtooleditor.cpp
     drilltargetdefinition.cpp
+    editorpage.cpp
+    gcodeeditor.cpp
+    gcodehighlighter.cpp
     gcodewriter.cpp
     geomlistmodel.cpp
     gocircle.cpp
@@ -33,6 +35,7 @@ add_executable(kuteCAM
     operationspage.cpp
     operationsubpage.cpp
     pathbuilder.cpp
+    pluginlistmodel.cpp
     preview3d.cpp
     projectfile.cpp
     selectionhandler.cpp
@@ -49,7 +52,6 @@ add_executable(kuteCAM
     targetdeflistmodel.cpp
     tdfactory.cpp
     tooleditor.cpp
-    toolentry.cpp
     toollistmodel.cpp
     util3d.cpp
     viseentry.cpp
@@ -68,9 +70,8 @@ add_executable(kuteCAM
     cfgGCode.ui
     cfgMat.ui
     cfgVise.ui
+    GCodeEditor.ui
     misc.ui
-    opContour.ui
-    opDrill.ui
     operations.ui
     opSub.ui
     preview.ui
@@ -89,9 +90,11 @@ use_interface_libraries(kuteCAM
                         IFOpenCASCADE
                         IFStandard
                         )
+target_link_libraries(kuteCAM
+                      PRIVATE KCPPLib
+                      )
 target_include_directories(kuteCAM
                            PRIVATE ${CMAKE_SOURCE_DIR}
-                           PRIVATE pp/include
                            )
 if(COMMAND qt_create_translation)
     qt_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
@@ -100,3 +103,4 @@ else()
 endif()
 
 add_subdirectory(pp)
+add_subdirectory(PPLib)

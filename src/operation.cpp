@@ -166,6 +166,11 @@ int Operation::drillCycle() const {
   }
 
 
+double Operation::drillDepth() const {
+  return depth2Drill;
+  }
+
+
 double Operation::dwell() const {
   return pause;
   }
@@ -217,6 +222,11 @@ gp_Dir& Operation::mainDirection() {
 
 gp_Dir Operation::mainDirection() const {
   return opDirection;
+  }
+
+
+double Operation::nominalZ() const {
+  return zNom;
   }
 
 
@@ -329,6 +339,11 @@ void Operation::setDrillCycle(int c) {
   }
 
 
+void Operation::setDrillDepth(double depth) {
+  depth2Drill = depth;
+  }
+
+
 void Operation::setFeedPerTooth(double feed) {
   fz = feed;
   }
@@ -372,6 +387,11 @@ void Operation::setLowerZ(double z) {
 
 void Operation::setName(const QString &name) {
   opName = name;
+  }
+
+
+void Operation::setNominalZ(double z) {
+  zNom = z;
   }
 
 

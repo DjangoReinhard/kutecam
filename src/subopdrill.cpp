@@ -75,13 +75,11 @@ void SubOPDrill::createOP() {
 // - plane face selection (every hole of the face will be drill target)
 void SubOPDrill::processSelection() {
   std::vector<TopoDS_Shape> selection = Core().view3D()->selection();
-  Handle(AIS_Shape)         curWP     = Core().helper3D()->fixRotation(Core().workData()->workPiece->Shape()
-                                                                     , curOP->operationA()
-                                                                     , curOP->operationB()
-                                                                     , curOP->operationC());
-  Bnd_Box bbWP = curWP->BoundingBox();
 
-  curOP->setTopZ(bbWP.CornerMax().Z());
+  curOP->setUpperZ(curOP->wpBounds.CornerMax().Z());
+  curOP->setLowerZ(curOP->wpBounds.CornerMin().Z());
+  curOP->setTopZ(curOP->mBounds.CornerMax().Z());
+
   for (auto s : selection) {
       Handle(AIS_Shape) asTmp = new AIS_Shape(s);
       Bnd_Box           bbSel = asTmp->BoundingBox(); bbSel.SetGap(0);
@@ -101,10 +99,8 @@ void SubOPDrill::processSelection() {
 
                if (kute::isVertical(dir)) {
                   // OK, circle is valid location for drill OP
-                  // if selection is circle, it should be the topmost circle of the hole
-                  // final depth will be held in operation { finalDepth() }
-                  // final depth is unknown at this time (user has to set it)
-                  curOP->setUpperZ(bbSel.CornerMax().Z());
+                  //TODO: do we have to care about Z-location from selection?
+                  curOP->setNominalZ(pos.Z());
                   tdModel->append(new DrillTargetDefinition(pos, dir, radius));
                   }
                }
@@ -129,10 +125,7 @@ void SubOPDrill::processSelection() {
 
                       if (kute::isVertical(dir)) {
                          // OK, circle is valid location for drill OP
-                         // if selection is circle, it should be the topmost circle of the hole
-                         // final depth will be held in operation { finalDepth() }
-                         // final depth is unknown at this time (user has to set it)
-                         curOP->setUpperZ(bbSel.CornerMax().Z());
+                         curOP->setNominalZ(pos.Z());
                          tdModel->append(new DrillTargetDefinition(pos, dir, radius));
                          }
                       }
@@ -143,8 +136,8 @@ void SubOPDrill::processSelection() {
             // suppose cylindrical face from hole
             std::vector<TopoDS_Edge> edges = Core().helper3D()->allEdgesWithin(s);
 
-            curOP->setLowerZ(bbSel.CornerMin().Z());
-            curOP->setUpperZ(bbSel.CornerMax().Z());
+//            curOP->setLowerZ(bbSel.CornerMin().Z());
+//            curOP->setUpperZ(bbSel.CornerMax().Z());
             for (auto e : edges) {
                 if (BRep_Tool::IsGeometric(e)) {
                    double first, last;
@@ -158,6 +151,7 @@ void SubOPDrill::processSelection() {
 
                       if (kute::isVertical(dir)) {
                          // OK, first circle will do
+                         curOP->setNominalZ(pos.Z());
                          tdModel->append(new DrillTargetDefinition(pos, dir, radius));
                          break; // don't care for rest of edges
                          }
@@ -170,7 +164,7 @@ void SubOPDrill::processSelection() {
          throw QString("unsupported selection type!");
          }
       }
-  ui->spDepth->setValue(curOP->lowerZ());
+  ui->spDepth->setValue(curOP->topZ());
   ui->cAbsolute->setChecked(true);
   if (!validateDrillTargets()) {
      //TODO: what should we do with different hole radius?
@@ -181,59 +175,60 @@ void SubOPDrill::processSelection() {
 
 void SubOPDrill::showToolPath() {
   if (!curOP->workSteps().size()) return;
-  Workstep* ws = curOP->workSteps().at(0);
-  WSCycle*  wc = static_cast<WSCycle*>(ws);
-  double    drillDepth = wc->safeZ0() - ws->endPos().Z();
+//  Workstep* ws = curOP->workSteps().at(0);
+//  WSCycle*  wc = static_cast<WSCycle*>(ws);
   QVector<double> zStops;
+  double drillDelta = curOP->upperZ() + curOP->safeZ0() - curOP->drillDepth();
 
-  if (curOP->drillCycle() != 4 || drillDepth < curOP->qMin()) {
-     zStops.append(ws->endPos().Z());
+  if (curOP->drillCycle() != 4 || abs(drillDelta) < curOP->qMin()) {
+     zStops.append(curOP->drillDepth());
      }
   else {
      double qDelta   = curOP->qMax() - curOP->qMin();
-     double maxSteps = drillDepth / curOP->qMin();
+     double maxSteps = drillDelta / curOP->qMin();
      double qStep    = qDelta / maxSteps;
      double curStep  = curOP->qMax();
-     double curZ     = wc->safeZ0();
+     double curZ     = curOP->upperZ() + curOP->safeZ0();
 
-     while ((curZ - curStep) > ws->endPos().Z()) {
+     while ((curZ - curStep) > curOP->drillDepth()) {
            curZ -= curStep;
            zStops.append(curZ);
            curStep -= qStep;
            }
-     zStops.append(ws->endPos().Z());
+     zStops.append(curOP->drillDepth());
      }
-  gp_Pnt lastPos(0, 0, -1);
-  double startZ = wc->safeZ0();
-  double curZ   = startZ;
+  gp_Pnt lastPos(0, 0, 300);
+  double zS0  = curOP->upperZ() + curOP->safeZ0();
+  double zS1  = curOP->upperZ() + curOP->safeZ1();
 
   curOP->toolPaths.clear();
   for (auto ws: curOP->workSteps()) {
-      gp_Pnt   from(ws->startPos());
-      gp_Pnt   to(ws->endPos().X(), ws->endPos().Y(), startZ);
+      gp_Pnt from = lastPos;
+      gp_Pnt to(ws->startPos().X(), ws->startPos().Y(), zS1);
       Handle(AIS_Shape) s = Core().helper3D()->createLine(from, to);
 
       s->SetColor(Quantity_NOC_CYAN);
       curOP->toolPaths.push_back(s);
-      if (lastPos.Z() < 0) lastPos = from;
-      s = Core().helper3D()->createLine(lastPos, from);
+
+      from = to;
+      to.SetZ(zS0);
+      s = Core().helper3D()->createLine(from, to);
       s->SetColor(Quantity_NOC_CYAN);
       curOP->toolPaths.push_back(s);
-      lastPos = from;
-      from    = to;
-      to      = ws->endPos();
+
+      from = to;
+      to.SetZ(curOP->drillDepth());
       s = Core().helper3D()->createLine(from, to);
       s->SetColor(Quantity_NOC_RED);
       s->SetWidth(3);
       curOP->toolPaths.push_back(s);
 
       for (double z : zStops) {
-          qDebug() << "\tdepth from " << curZ << "\tto\t" << z;
-          curZ = z;
           to.SetZ(z);
           Core().view3D()->createAxisCross(to, 1, &curOP->toolPaths, Quantity_NOC_RED);
           }
-      curZ = startZ;
+      lastPos = from;
+      lastPos.SetZ(zS1);
       }
   Core().view3D()->showShapes(curOP->toolPaths);
   Core().view3D()->refresh();
@@ -241,22 +236,30 @@ void SubOPDrill::showToolPath() {
 
 
 void SubOPDrill::toolPath() {
-  double drillDepth = curOP->upperZ() + curOP->finalDepth();   // relative depth
+  double    absDrillDepth = curOP->upperZ() + curOP->finalDepth();
+  double    drillStart = curOP->upperZ() + curOP->safeZ0();
 
-  if (curOP->isAbsolute()) drillDepth = curOP->finalDepth();
-  double safeZ0     = curOP->topZ() + curOP->safeZ0();
-  double safeZ1     = curOP->topZ() + curOP->safeZ1();
+  //TODO: need to calculate drill depth ...
 
-  qDebug() << "toolpath generation - change lower z from" << curOP->lowerZ() << "\tto" << drillDepth;
+  if (curOP->isAbsolute()) absDrillDepth = curOP->finalDepth();
+  double modelTop = curOP->mBounds.CornerMax().Z();
+  double wpTop    = curOP->mBounds.CornerMax().Z();
+  double wpMin    = curOP->mBounds.CornerMin().Z();
 
-  curOP->setLowerZ(drillDepth);
+//  double safeZ0     = curOP->topZ() + curOP->safeZ0();
+//  double safeZ1     = curOP->topZ() + curOP->safeZ1();
+
+//  qDebug() << "toolpath generation - change lower z from" << curOP->lowerZ() << "\tto" << drillDepth;
+
+//  curOP->setLowerZ(drillDepth);
+  curOP->setDrillDepth(absDrillDepth);
   tdModel->sort();
   for (TargetDefinition* td : tdModel->itemList()) {
       DrillTargetDefinition* dtd = dynamic_cast<DrillTargetDefinition*>(td);
-      gp_Pnt                 from(dtd->pos().X(), dtd->pos().Y(), safeZ1);
-      gp_Pnt                 to(dtd->pos().X(), dtd->pos().Y(), drillDepth);
+      gp_Pnt                 from(dtd->pos().X(), dtd->pos().Y(), curOP->upperZ());   // Z is not used
+      gp_Pnt                 to(dtd->pos().X(), dtd->pos().Y(), 0 /* drillDepth */);  // on drill positions
 
-      curOP->workSteps().push_back(new WSCycle(curOP->drillCycle(), from, to, safeZ0, safeZ1, drillDepth));
+      curOP->workSteps().push_back(new WSCycle(curOP->drillCycle(), from, to /* , safeZ0, safeZ1, drillDepth */));
       }
   qDebug() << "toolpath consists of" << curOP->workSteps().size() << "items";
   showToolPath();

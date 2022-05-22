@@ -84,6 +84,7 @@ void ConfigPage::closeEvent(QCloseEvent *e) {
       cfg.setValue("Name", matModel->data(matModel->index(i, 0)));
       }
   cfg.endArray();
+  cfg.setValue("PP", Core().postProcessor());
   cfg.setValue("A-is-table", Core().isAAxisTable());
   cfg.setValue("B-is-table", Core().isBAxisTable());
   cfg.setValue("C-is-table", Core().isCAxisTable());

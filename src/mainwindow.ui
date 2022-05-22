@@ -503,7 +503,6 @@
     <addaction name="actionRemove"/>
     <addaction name="separator"/>
     <addaction name="menuSelection"/>
-    <addaction name="actionTest"/>
    </widget>
    <widget class="QMenu" name="menuSetup">
     <property name="title">

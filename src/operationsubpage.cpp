@@ -214,14 +214,19 @@ void OperationSubPage::fixit() {
                                                       , curOP->operationA()
                                                       , curOP->operationB()
                                                       , curOP->operationC());
-
   curOP->wpBounds  = wp->BoundingBox();
   curOP->mBounds   = md->BoundingBox();
   curOP->vBounds   = vs->BoundingBox();
   curOP->workPiece = wp;
+  if (Core().workData()->cpOnTop) {
+     Handle(AIS_Shape) cp = Core().helper3D()->fixRotation(Core().workData()->clampingPlug->Shape()
+                                                         , curOP->operationA()
+                                                         , curOP->operationB()
+                                                         , curOP->operationC());
+
+     curOP->wpBounds.Add(cp->BoundingBox());
+     }
   emit modelChanged(curOP->mBounds);
-  wp.Nullify();
-  vs.Nullify();
   }
 
 

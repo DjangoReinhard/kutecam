@@ -71,6 +71,7 @@ public slots:
   void toolPath();
 
 signals:
+  void fileGenerated(const QString& fileName);
   void raiseMessage(const QString& msg);
   void modelChanged(const Bnd_Box& bb);
 

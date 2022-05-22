@@ -1,12 +1,11 @@
 /* 
  * **************************************************************************
  * 
- *  file:       ppfanuc.h
+ *  file:       ppSinumeric840D.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create a graphical application, that assists in identify
- *              and process model elements                        
- *  created:    11.4.2022 by Django Reinhard
+ *  purpose:    create gcode for toolpaths created from CAD models
+ *  created:    17.5.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
@@ -24,26 +23,29 @@
  * 
  * **************************************************************************
  */
-#ifndef PPFANUC_H
-#define PPFANUC_H
+#ifndef PPSINUMERIC840D_H
+#define PPSINUMERIC840D_H
 #include <dinpostprocessor.h>
 
 
-class PPFanuc : public DINPostProcessor
+class PPSinumeric840D : public DINPostProcessor
 {
   Q_OBJECT
   Q_INTERFACES(PostProcessor)
 #ifdef USE_PLUGINS
-  Q_PLUGIN_METADATA(IID "PostProcessorPlugin_iid" FILE "ppFanuc.json")
+  Q_PLUGIN_METADATA(IID "PostProcessorPlugin_iid" FILE "ppSinumeric840D.json")
 #endif
 public:
-  explicit PPFanuc(QObject* parent = nullptr);
-  virtual ~PPFanuc() = default;
+  explicit PPSinumeric840D(QObject* parent = nullptr);
+  virtual ~PPSinumeric840D() = default;
 
   virtual QString fixtureID(int f) override;
   virtual QString genDefineCycle(int c, double topZ, double r0, double r1, double depth, double qMin, double qMax, double retract, double dwell, int feed) override;
-  virtual QString genEndOfLine()  override;
   virtual QString genEndCycle() override;
   virtual QString getFileExtension() const override;
+  virtual QString genLengthCorrEnd() override;
+  virtual QString genLengthCorrStart(int toolNum) override;
+  virtual QString genPrepareTool(int toolNum) override;
+  virtual QString genToolChange() override;
   };
-#endif // PPFANUC_H
+#endif

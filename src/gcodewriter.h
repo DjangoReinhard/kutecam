@@ -40,15 +40,19 @@ class GCodeWriter
 public:
   explicit GCodeWriter(PostProcessor* pp);
 
-  int  processOperations(const QString& fileName, const Bnd_Box& wpBounds, const QVector<Operation*>& operations);
+  int  processAllInOne(const QString& fileName, const Bnd_Box& wpBounds, const QVector<Operation*>& operations);
+  int  processSingleOPs(const QString& fileName, const Bnd_Box& wpBounds, const QVector<Operation*>& operations, bool genTC = false);
 
 protected:
-//  void processContourTargets(QTextStream& out, const Operation* op, ToolEntry* curTool);
+  void processOperation(QTextStream& out, int n, const QString& opName, const Bnd_Box& wpBounds, const Operation* op, const Operation* nxtOP, bool genTC = false);
   void processDrillTargets(QTextStream& out, const Operation* op, int first, ToolEntry* curTool);
   void processPathTargets(QTextStream& out, const Operation* op, int first, ToolEntry* curTool);
   void writeLine(QTextStream& out, const QString& line = QString());
 
 private:
   PostProcessor*  pp;
+  double          rotA;
+  double          rotB;
+  double          rotC;
   };
 #endif // GCODEWRITER_H

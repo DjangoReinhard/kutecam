@@ -32,7 +32,7 @@
 class WSCycle : public Workstep
 {
 public:
-  explicit WSCycle(int cycle, const gp_Pnt& from, const gp_Pnt& to, double safeZ0, double safeZ1, double finalDepth, QObject* parent = nullptr);
+  explicit WSCycle(int cycle, const gp_Pnt& from, const gp_Pnt& to /*, double safeZ0, double safeZ1, double finalDepth */, QObject* parent = nullptr);
   explicit WSCycle(QSettings& settings, QObject* parent = nullptr);
   virtual ~WSCycle() = default;
 
@@ -41,14 +41,14 @@ public:
   virtual void store(QSettings& settings) override;
 
   int    drillCycle() const;
-  double finalDepth() const;
-  double safeZ0() const;
-  double safeZ1() const;
+//  double finalDepth() const;
+//  double safeZ0() const;
+//  double safeZ1() const;
 
 private:
   int cycle;
-  double sZ0;
-  double sZ1;
-  double depth;
+//  double sZ0;
+//  double sZ1;
+//  double depth;
   };
 #endif // WSCYCLE_H

@@ -1,12 +1,11 @@
 /* 
  * **************************************************************************
  * 
- *  file:       DrillCycle.h
+ *  file:       abstractpostprocessor.cpp
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create a graphical application, that assists in identify
- *              and process model elements                        
- *  created:    5.4.2022 by Django Reinhard
+ *  purpose:    create gcode for toolpaths created from CAD models
+ *  created:    19.5.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
@@ -24,20 +23,14 @@
  * 
  * **************************************************************************
  */
-#ifndef DRILLCYCLE_H
-#define DRILLCYCLE_H
+#include "abstractpostprocessor.h"
 
-
-enum DrillCycle
-{
-  NO_Cycle          // G80
-, FineBoringCycle   // G76
-, SpotDrillCycle    // G81
-, DrillWithDwell    // G82
-, PeckDrilling      // G83
-, Tapping           // G84
-, BoringCycle       // G85
-, InvalidCycle
-  };
-
-#endif // DRILLCYCLE_H
+AbstractPostProcessor::AbstractPostProcessor(QObject* parent)
+ : QObject(parent)
+ , lPos(0, 0, 0)
+ , rot(0, 0, 0)
+ , curTool(0, "unknown")
+ , radiusCorr(0)
+ , MinDelta(1e-5)
+ , Decimals(3) {
+  }

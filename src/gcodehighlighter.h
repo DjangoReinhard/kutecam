@@ -1,11 +1,11 @@
 /* 
  * **************************************************************************
  * 
- *  file:       cfggcode.h
+ *  file:       gcodehighlighter.h
  *  project:    kuteCAM
  *  subproject: main application
  *  purpose:    create gcode for toolpaths created from CAD models
- *  created:    15.5.2022 by Django Reinhard
+ *  created:    19.1.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
@@ -23,28 +23,47 @@
  * 
  * **************************************************************************
  */
-#ifndef CFGGCODE_H
-#define CFGGCODE_H
-#include <QWidget>
-QT_BEGIN_NAMESPACE
-namespace Ui {
-class GCodeConfig;
-}
-QT_END_NAMESPACE
-class QSortFilterProxyModel;
+#ifndef GCODEHIGHLIGHTER_H
+#define GCODEHIGHLIGHTER_H
+
+#include <QSyntaxHighlighter>
+#include <QRegularExpression>
+#include <QTextCharFormat>
+#include <QVector>
 
 
-class CfgGCode : public QWidget
+class GCodeHighlighter : public QSyntaxHighlighter
 {
   Q_OBJECT
 public:
-  explicit CfgGCode(QWidget *parent = nullptr);
+  GCodeHighlighter(QTextDocument* parent);
+  GCodeHighlighter(QObject* parent = nullptr);
+  GCodeHighlighter(const GCodeHighlighter& other);
 
-public slots:
-  void allInOneToggled(const QVariant& v);
+  void highlightBlock(const QString &text) override;
+
+protected:
+  void setup();
 
 private:
-  Ui::GCodeConfig*       ui;
-  QSortFilterProxyModel* ppProxy;
+  struct HighlightingRule
+  {
+    QRegularExpression pattern;
+    QTextCharFormat format;
+    };
+  QVector<HighlightingRule> highlightingRules;
+
+  QTextCharFormat fmtNumber;
+  QTextCharFormat fmtGCode;
+  QTextCharFormat fmtMotion;
+  QTextCharFormat fmtMCode;
+  QTextCharFormat fmtPos;
+  QTextCharFormat fmtXPos;
+  QTextCharFormat fmtTool;
+  QTextCharFormat fmtFeed;
+  QTextCharFormat fmtSpeed;
+  QTextCharFormat fmtVar;
+  QTextCharFormat fmtComment;
+  QTextCharFormat fmtLineComment;
   };
-#endif // CFGGCODE_H
+#endif // GCODEHIGHLIGHTER_H

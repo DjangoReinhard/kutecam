@@ -6,13 +6,9 @@ include(Interface)
 add_library(ppFanuc MODULE
     ppfanuc.cpp
     )
-target_include_directories(ppFanuc
-                           PRIVATE ../include
-                           )
-#target_link_libraries(ppFanuc
-#                      PRIVATE FVBaseLib
-#                      PRIVATE FVguiLib
-#                      )
+target_link_libraries(ppFanuc
+                      PRIVATE KCPPLib
+                      )
 use_interface_libraries(ppFanuc
                         IFQt
                         IFOpenCASCADE

@@ -27,6 +27,7 @@
 #include "kernel.h"
 #include "core.h"
 #include "projectfile.h"
+#include "postprocessor.h"
 #include "work.h"
 #include "mainwindow.h"
 #include "configpage.h"
@@ -36,6 +37,7 @@
 #include "geomlistmodel.h"
 #include "setuppage.h"
 #include "operationspage.h"
+#include "pluginlistmodel.h"
 #include "preview3d.h"
 #include "selectionhandler.h"
 #include "shapelistmodel.h"
@@ -48,7 +50,9 @@
 #include <QApplication>
 #include <QCloseEvent>
 #include <QDebug>
+#include <QDir>
 #include <QMap>
+#include <QPluginLoader>
 #include <QSplitter>
 
 
@@ -67,10 +71,10 @@ Kernel::Kernel(QApplication& app, MainWindow& win)
  , tdFactory(new TDFactory)
  , wsFactory(new WSFactory)
  , matModel(new StringListModel(QStringList()))
- , geomListModel(new GeomListModel(this))
  , shapeListModel(new ShapeListModel(this))
  , viseListModel(new ViseListModel(this))
- , toolListModel(new ToolListModel(this)) {
+ , toolListModel(new ToolListModel(this))
+ , ppModel(new PluginListModel(this)) {
   BRepLib::Precision(1e-4);
   }
 
@@ -80,8 +84,75 @@ void Kernel::clearCurves() {
   }
 
 
+std::vector<QFileInfo*> Kernel::findFile(const QDir& dir, const QStringList& nameFilters, QDir::Filters defFilter) {
+  QDir curDir(dir);
+  std::vector<QFileInfo*> rv;
+
+//  qDebug() << "check path:" << curDir.absolutePath();
+
+  curDir.setFilter(defFilter);
+  curDir.setNameFilters(nameFilters);
+  QFileInfoList list = curDir.entryInfoList();
+
+  for (int i = 0; i < list.size(); ++i) {
+      QFileInfo fileInfo = list.at(i);
+
+      if (fileInfo.isDir()) {
+//         qDebug() << "directory" << fileInfo.absoluteFilePath();
+         std::vector<QFileInfo*> rv0 = findFile(QDir(fileInfo.absoluteFilePath()), nameFilters, defFilter);
+
+         if (rv0.size()) {
+            for (auto& fi : rv0) rv.push_back(fi);
+            }
+         }
+      else {
+//         std::cout << qPrintable(QString("%1 %2").arg(fileInfo.size(), 10)
+//                                                 .arg(fileInfo.fileName()));
+//         std::cout << std::endl;
+         rv.push_back(new QFileInfo(fileInfo));
+         }
+      }
+  return rv;
+  }
+
+
+void Kernel::getPostProcessors() {
+  QStringList   sl;
+  QDir          ppBase("./pp");
+  QDir::Filters defFilter = QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot;
+
+  sl << "lib*.so";
+
+  std::vector<QFileInfo*> res = findFile(ppBase, sl, defFilter);
+
+  // validate plugins by loading them. But don't waste mem for unused postprocessors,
+  // so unload them, until we need one of them for a real job
+  for (auto& fi : res) {
+      qDebug() << "found possible plugin: " << fi->absoluteFilePath();
+
+      QPluginLoader loader(fi->absoluteFilePath());
+      QObject*      plugin = loader.instance();
+      QString       name = fi->fileName().mid(5, fi->fileName().size() - 8);
+
+      if (plugin) {
+         auto iPlugin = qobject_cast<PostProcessor*>(plugin);
+
+         qDebug() << "library " << name << "seems to be valid postprocessor";
+         ppModel->setData(name, fi->absoluteFilePath());
+         if (!loader.unload()) {
+            qDebug() << "failed to unload plugin" << name << "!!!";
+            }
+         }
+      else {
+         qDebug() << "plugin-loader error string: " << loader.errorString();
+         }
+      }
+  }
+
+
 void Kernel::initialize() {
   win.initialize();
+  getPostProcessors();
   loadConfig();
   view3D     = win.viewer3D();
   config     = new ConfigPage(matModel, viseListModel);
@@ -104,6 +175,7 @@ void Kernel::initialize() {
   win.restore();
 
   connect(view3D, &OcctQtViewer::clearCurves, this, &Kernel::clearCurves);
+  connect(operations, &OperationsPage::fileGenerated, win.preview, &Preview3D::loadFile);
   configData.setValue("what", "nope");
   }
 
@@ -112,6 +184,7 @@ bool Kernel::loadConfig() {
   bool rv = loadMaterials();
 
   configData.beginGroup("Work");
+  selectedPP = configData.value("PP").toString();
   AisTable = configData.value("A-is-table").toBool();
   BisTable = configData.value("B-is-table").toBool();
   CisTable = configData.value("C-is-table").toBool();
@@ -193,7 +266,7 @@ bool Kernel::loadProject(const QString &fileName) {
   if (modelFile.endsWith(".brep")) topShape = helper->loadBRep(modelFile);
   else                             topShape = helper->loadStep(modelFile);
   pf->endGroup();
-  win.setWindowTitle(QString("- %1 -- %2 -").arg(app.applicationName()).arg(modelFile));
+  win.setWindowTitle(QString("- %1 -- %2 -").arg(app.applicationName(), modelFile));
   setupPage->loadProject(pf, topShape);
   operations->loadProject(pf);
 

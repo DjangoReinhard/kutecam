@@ -1,12 +1,11 @@
 /* 
  * **************************************************************************
  * 
- *  file:       ppfanuc.h
+ *  file:       abstractpostprocessor.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create a graphical application, that assists in identify
- *              and process model elements                        
- *  created:    11.4.2022 by Django Reinhard
+ *  purpose:    create gcode for toolpaths created from CAD models
+ *  created:    19.5.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
@@ -24,26 +23,28 @@
  * 
  * **************************************************************************
  */
-#ifndef PPFANUC_H
-#define PPFANUC_H
-#include <dinpostprocessor.h>
+#ifndef ABSTRACTPOSTPROCESSOR_H
+#define ABSTRACTPOSTPROCESSOR_H
+#include "postprocessor.h"
+#include "toolentry.h"
+#include <gp_Pnt.hxx>
 
 
-class PPFanuc : public DINPostProcessor
+class AbstractPostProcessor : public QObject
 {
   Q_OBJECT
-  Q_INTERFACES(PostProcessor)
-#ifdef USE_PLUGINS
-  Q_PLUGIN_METADATA(IID "PostProcessorPlugin_iid" FILE "ppFanuc.json")
-#endif
 public:
-  explicit PPFanuc(QObject* parent = nullptr);
-  virtual ~PPFanuc() = default;
+  explicit AbstractPostProcessor(QObject* parent = nullptr);
+  virtual ~AbstractPostProcessor() = default;
 
-  virtual QString fixtureID(int f) override;
-  virtual QString genDefineCycle(int c, double topZ, double r0, double r1, double depth, double qMin, double qMax, double retract, double dwell, int feed) override;
-  virtual QString genEndOfLine()  override;
-  virtual QString genEndCycle() override;
-  virtual QString getFileExtension() const override;
+protected:
+  gp_Pnt    lPos;
+  gp_Pnt    rot;
+  ToolEntry curTool;
+  int       radiusCorr;
+  int       feed;
+
+  const double MinDelta = 1e-5;
+  const int    Decimals = 3;
   };
-#endif // PPFANUC_H
+#endif // ABSTRACTPOSTPROCESSOR_H

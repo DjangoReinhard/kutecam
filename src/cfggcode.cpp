@@ -26,6 +26,7 @@
 #include "cfggcode.h"
 #include "ui_cfgGCode.h"
 #include "core.h"
+#include <QSortFilterProxyModel>
 
 
 CfgGCode::CfgGCode(QWidget *parent)
@@ -39,6 +40,24 @@ CfgGCode::CfgGCode(QWidget *parent)
   ui->cBisTable->setChecked(Core().isBAxisTable());
   ui->cCisTable->setChecked(Core().isCAxisTable());
 
+  ppProxy = new QSortFilterProxyModel(this);
+  ppProxy->setSourceModel(Core().ppModel());
+  ppProxy->setDynamicSortFilter(true);
+  ppProxy->sort(0);
+  ui->cbPostProcessors->setModel(ppProxy);
+
+//  QAbstractItemModel* m = ui->cbPostProcessors->model();
+
+  for (int i=0; i < Core().ppModel()->rowCount(); ++i) {
+      QModelIndex mi    = Core().ppModel()->index(i, 0);
+      QString     entry = Core().ppModel()->data(mi).toString();
+
+      if (!entry.compare(Core().postProcessor())) {
+         ui->cbPostProcessors->setCurrentIndex(ppProxy->mapFromSource(mi).row());
+         break;
+         }
+      }
+  connect(ui->cbPostProcessors, &QComboBox::currentTextChanged, this, [=]{ Core().setPostProcessor(ui->cbPostProcessors->currentText()); });
   connect(ui->cAllInOne, &QCheckBox::toggled, this, &CfgGCode::allInOneToggled);
   connect(ui->cSepToolChange, &QCheckBox::toggled, this, [=]{ Core().setSepWithToolChange(ui->cSepToolChange->isChecked()); });
   connect(ui->cAisTable, &QCheckBox::toggled, this, [=]{ Core().setAAxisIsTable(ui->cAisTable->isChecked()); });

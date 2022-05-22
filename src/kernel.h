@@ -27,6 +27,7 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 #include <QObject>
+#include <QDir>
 #include <QMap>
 #include <QSettings>
 #include <AIS_Shape.hxx>
@@ -41,7 +42,7 @@ class ConfigPage;
 class StringListModel;
 class Operation;
 class OperationsPage;
-class GeomListModel;
+class PluginListModel;
 class SelectionHandler;
 class SetupPage;
 class ShapeListModel;
@@ -51,8 +52,10 @@ class ViseEntry;
 class ViseListModel;
 class Work;
 class WSFactory;
+class QAbstractItemModel;
 class QApplication;
 class QCloseEvent;
+class QFileInfo;
 
 
 class Kernel : public QObject
@@ -67,6 +70,8 @@ public:
   std::vector<Operation*> loadOperations(ProjectFile* pf);
 
 protected:
+  void getPostProcessors();
+  std::vector<QFileInfo*> findFile(const QDir& dir, const QStringList& nameFilters, QDir::Filters defFilters);
   void initialize();  
   bool loadMaterials();
   bool loadViseList();
@@ -95,14 +100,15 @@ private:
   bool                              CisTable;
   bool                              genSepWithToolChange;
   bool                              opAllInOne;
+  QString                           selectedPP;
   SetupPage*                        setupPage;
   TDFactory*                        tdFactory;
   WSFactory*                        wsFactory;
   StringListModel*                  matModel;
-  GeomListModel*                    geomListModel;
   ShapeListModel*                   shapeListModel;
   ViseListModel*                    viseListModel;
   ToolListModel*                    toolListModel;
+  PluginListModel*                  ppModel;
   friend class Core;  
   };
 #endif // KERNEL_H

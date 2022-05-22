@@ -50,7 +50,30 @@
       <property name="spacing">
        <number>4</number>
       </property>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="cbPostProcessors">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>PostProcessor</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
        <widget class="QCheckBox" name="cAllInOne">
         <property name="text">
          <string>all Operations in one file</string>
@@ -60,7 +83,7 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
+      <item row="2" column="0" colspan="2">
        <widget class="QCheckBox" name="cSepToolChange">
         <property name="enabled">
          <bool>false</bool>
