@@ -49,8 +49,9 @@ public:
 public slots:
   void loadFile(const QString& fileName);
 
-protected:
+protected slots:
   void toggleHide();
+  void toggleClip(bool hitX);
   void toggleWireframe();
 
 private:

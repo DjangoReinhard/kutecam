@@ -48,6 +48,8 @@ protected:
 
 protected slots:
   void openFile();
+  void saveFile();
+  void dirtyChanged(bool dirty);
 
 private:
   Ui::GCodeEditorPage* ui;

@@ -462,6 +462,8 @@
     <addaction name="actionBack"/>
     <addaction name="separator"/>
     <addaction name="actionZoom2Fit"/>
+    <addaction name="actionClipX"/>
+    <addaction name="actionClipY"/>
     <addaction name="separator"/>
     <addaction name="actionHideModel"/>
     <addaction name="actionWireframe"/>
@@ -503,6 +505,7 @@
     <addaction name="actionRemove"/>
     <addaction name="separator"/>
     <addaction name="menuSelection"/>
+    <addaction name="actionTest"/>
    </widget>
    <widget class="QMenu" name="menuSetup">
     <property name="title">
@@ -737,6 +740,22 @@
   <action name="actionPreferences">
    <property name="text">
     <string>Preferences</string>
+   </property>
+  </action>
+  <action name="actionClipX">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Clip-X</string>
+   </property>
+  </action>
+  <action name="actionClipY">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Clip-Y</string>
    </property>
   </action>
  </widget>

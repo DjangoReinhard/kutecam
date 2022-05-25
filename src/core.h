@@ -87,10 +87,12 @@ public:
   bool                     loadProject(const QString& fileName);
   bool                     loadTools(const QString& fileName);
   void                     loadVise(ViseEntry* vise, Handle(AIS_Shape)& left, Handle(AIS_Shape)& middle, Handle(AIS_Shape)& right);
+  bool                     move2Backup(const QString& fileName);
   void                     onShutdown(QCloseEvent* ce);
   QString                  postProcessor() const;
   QAbstractItemModel*      ppModel() const;
   ProjectFile*             projectFile();
+  void                     riseError(const QString& msg);
   ShapeFix_ShapeTolerance& shapeFix();
   SelectionHandler*        selectionHandler();
   void                     setAllInOneOperation(bool value);

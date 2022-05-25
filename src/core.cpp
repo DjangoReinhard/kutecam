@@ -39,6 +39,7 @@
 #include "xmltoolreader.h"
 #include <QApplication>
 #include <QFileDialog>
+#include <QMessageBox>
 #include <QPluginLoader>
 #include <QDir>
 #include <QDebug>
@@ -188,6 +189,33 @@ MainWindow* Core::mainWin() {
   }
 
 
+bool Core::move2Backup(const QString& fileName) {
+  QString   backupPat(fileName);
+  QFileInfo fi(fileName);
+  QString   extension(QString(".%1").arg(fi.completeSuffix()));
+
+  backupPat.replace(extension, ".bak%1");
+  QFileInfo check(backupPat.arg(""));
+
+  if (check.exists()) {
+     QFile last(backupPat.arg(9));
+
+     if (last.exists()) last.remove();
+     for (int i=8; i > 0; --i) {
+         QFile tmp(backupPat.arg(i));
+
+         if (tmp.exists()) tmp.rename(backupPat.arg(i+1));
+         }
+     QFile tmp(check.absoluteFilePath());
+
+     tmp.rename(backupPat.arg(1));
+     }
+  QFile file(fileName);
+
+  return file.rename(check.absoluteFilePath());
+  }
+
+
 void Core::onShutdown(QCloseEvent* ce) {
   k->onShutdown(ce);
   }
@@ -205,6 +233,11 @@ QAbstractItemModel* Core::ppModel() const {
 
 ProjectFile* Core::projectFile() {
   return k->pf;
+  }
+
+
+void Core::riseError(const QString &msg) {
+  QMessageBox::critical(nullptr, tr("System Error"), msg);
   }
 
 

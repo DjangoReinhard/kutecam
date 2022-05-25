@@ -70,6 +70,8 @@ Preview3D::Preview3D(QWidget *parent)
   connect(Core().uiMainWin()->actionIso4,        &QAction::triggered, view3D, &OcctQtViewer::iso4View);
   connect(Core().uiMainWin()->actionZoom2Fit,    &QAction::triggered, view3D, &OcctQtViewer::fitAll);
   connect(Core().uiMainWin()->actionWireframe,   &QAction::triggered, view3D, &OcctQtViewer::switchWireframe);
+  connect(Core().uiMainWin()->actionClipX,       &QAction::triggered, this,   [=]{ toggleClip(true); });
+  connect(Core().uiMainWin()->actionClipY,       &QAction::triggered, this,   [=]{ toggleClip(false);});
   }
 
 
@@ -82,6 +84,33 @@ Preview3D::~Preview3D() {
 void Preview3D::loadFile(const QString& fileName) {
   edit->loadFile(fileName);
   ui->notebook->setCurrentWidget(edit);
+  }
+
+
+void Preview3D::toggleClip(bool hitX) {
+  bool clipX = false;
+  bool clipY = false;
+
+  if (hitX) {
+     if (Core().uiMainWin()->actionClipX->isChecked()) {
+        if (Core().uiMainWin()->actionClipY->isChecked()) {
+           Core().uiMainWin()->actionClipY->setChecked(false);
+           Core().view3D()->unClip();
+           }
+        clipX = true;
+        }
+     }
+  else {
+     if (Core().uiMainWin()->actionClipY->isChecked()) {
+        if (Core().uiMainWin()->actionClipX->isChecked()) {
+           Core().uiMainWin()->actionClipX->setChecked(false);
+           Core().view3D()->unClip();
+           }
+        clipY = true;
+        }
+     }
+  if (clipX || clipY) Core().view3D()->clipPlane(clipX, clipY);
+  else                Core().view3D()->unClip();
   }
 
 

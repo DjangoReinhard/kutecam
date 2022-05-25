@@ -83,6 +83,7 @@ public:
   void removeShapes(const std::vector<Handle(AIS_Shape)>& v);
 
 public slots:
+  void clipPlane(bool clipX, bool clipY);
   void fitAll();
   void frontView();
   void backView();
@@ -101,6 +102,7 @@ public slots:
   virtual void OnObjectDragged(const opencascade::handle<AIS_InteractiveContext> &theCtx, const opencascade::handle<V3d_View> &theView, AIS_DragAction theAction) override;
   void switchOrthographic(const QVariant& ortho);
   void switchWireframe(const QVariant& wf);
+  void unClip();
 
 signals:
   void clearCurves();
@@ -136,6 +138,7 @@ private:
 private:
   Handle(V3d_Viewer)             myViewer;
   Handle(V3d_View)               myView;
+  Handle(Graphic3d_ClipPlane)    myClipPlane;
   Handle(AIS_InteractiveContext) myContext;
   Handle(AIS_InteractiveContext) myAltContext;
   Handle(AIS_Shape)              myCone;

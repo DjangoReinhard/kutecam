@@ -206,6 +206,36 @@ void OcctQtViewer::changeGrid() {
   }
 
 
+void OcctQtViewer::clipPlane(bool clipX, bool clipY) {
+  if (clipX || clipY) {
+     gp_Pln cutPlane({0, 0, 0}, {-1, 0, 0});
+
+     if (clipY) cutPlane = gp_Pln({0, 0, 0}, {0, 1, 0});
+     myClipPlane = new Graphic3d_ClipPlane();
+     myClipPlane->SetEquation(cutPlane);
+     myClipPlane->SetCapping(true);
+
+     // set the material with red color of clipping plane
+     Graphic3d_MaterialAspect aMat = myClipPlane->CappingMaterial();
+
+     aMat.SetAmbientColor(Quantity_NOC_RED);
+     aMat.SetDiffuseColor(Quantity_NOC_RED);
+     aMat.SetTransparency(0.8);
+     myClipPlane->SetCappingMaterial(aMat);
+
+     view()->AddClipPlane(myClipPlane);
+     myClipPlane->SetOn(true);
+     }
+  refresh();
+  }
+
+
+void OcctQtViewer::unClip() {
+  if (!myClipPlane.IsNull()) view()->RemoveClipPlane(myClipPlane);
+  refresh();
+  }
+
+
 void OcctQtViewer::closeEvent(QCloseEvent* e) {
   qDebug() << "OcctQtViewer::closeEvent?!?";
   e->accept();

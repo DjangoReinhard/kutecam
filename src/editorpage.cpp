@@ -24,6 +24,7 @@
  * **************************************************************************
  */
 #include "editorpage.h"
+#include "core.h"
 #include "ui_GCodeEditor.h"
 #include "gcodeeditor.h"
 #include "gcodehighlighter.h"
@@ -38,6 +39,8 @@ EditorPage::EditorPage(QWidget *parent)
  , gh(new GCodeHighlighter(ed->document())) {
   ui->setupUi(this);
   connect(ui->pbOpen, &QPushButton::clicked, this, &EditorPage::openFile);
+  connect(ui->pbSave, &QPushButton::clicked, this, &EditorPage::saveFile);
+  connect(ed->document(), &QTextDocument::modificationChanged, this, &EditorPage::dirtyChanged);
   ui->gridLayout->replaceWidget(ui->widget, ed);
   }
 
@@ -63,6 +66,13 @@ QString EditorPage::chooseGCodeFile(QWidget* parent) {
   }
 
 
+void EditorPage::dirtyChanged(bool dirty) {
+  ui->pbSave->setEnabled(dirty);
+  if (dirty) ui->fileName->setText(this->fileName + " [*]");
+  else       ui->fileName->setText(this->fileName);
+  }
+
+
 void EditorPage::loadFile(const QString &fileName) {
   if (ed->loadFile(fileName)) {
      ui->fileName->setText(fileName);
@@ -75,6 +85,31 @@ void EditorPage::openFile() {
 
   if (fileName.isEmpty()) return;
   loadFile(fileName);
+  }
+
+
+void EditorPage::saveFile() {
+  qDebug() << "have to save file:" << ui->fileName->text();
+  if (Core().move2Backup(fileName)) {
+     QString content = ed->document()->toPlainText();
+     QFile   of(fileName);
+
+     if (of.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QTextStream out(&of);
+
+//        content.replace(',', '.');
+        out << content;
+        of.flush();
+        of.close();
+        QTextBlock  b = ed->textCursor().block();
+
+        ed->setPlainText(content);
+        ed->setTextCursor(QTextCursor(b));
+//        fileUpdated(fileName);
+        }
+     else Core().riseError(tr("Failed to write file %1").arg(fileName));
+     }
+  else Core().riseError(tr("Failed to create backup of file %1").arg(fileName));
   }
 
 
