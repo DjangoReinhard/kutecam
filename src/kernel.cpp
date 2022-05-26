@@ -266,7 +266,7 @@ bool Kernel::loadProject(const QString &fileName) {
   if (modelFile.endsWith(".brep")) topShape = helper->loadBRep(modelFile);
   else                             topShape = helper->loadStep(modelFile);
   pf->endGroup();
-  win.setWindowTitle(QString("- %1 -- %2 -").arg(app.applicationName(), modelFile));
+  win.setWindowTitle(QString("- %1 -- %2 -").arg(app.applicationName(), fileName));
   setupPage->loadProject(pf, topShape);
   operations->loadProject(pf);
 

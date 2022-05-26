@@ -27,18 +27,21 @@
 #include "preview3d.h"
 #include <ui_preview.h>
 #include "ui_mainwindow.h"
+#include "clipdialog.h"
 #include "core.h"
 #include "editorpage.h"
 #include "occtviewer.h"
 #include "work.h"
 #include <QLabel>
+#include <QDebug>
 
 
 Preview3D::Preview3D(QWidget *parent)
  : QWidget(parent)
  , ui(new Ui::Preview3D)
  , view3D(new OcctQtViewer())
- , edit(new EditorPage()) {
+ , edit(new EditorPage())
+ , clipDir(-1, 0, 0) {
   ui->setupUi(this);
   ui->notebook->addTab(view3D, tr("Preview"));
   ui->notebook->addTab(edit, tr("Editor"));
@@ -70,8 +73,7 @@ Preview3D::Preview3D(QWidget *parent)
   connect(Core().uiMainWin()->actionIso4,        &QAction::triggered, view3D, &OcctQtViewer::iso4View);
   connect(Core().uiMainWin()->actionZoom2Fit,    &QAction::triggered, view3D, &OcctQtViewer::fitAll);
   connect(Core().uiMainWin()->actionWireframe,   &QAction::triggered, view3D, &OcctQtViewer::switchWireframe);
-  connect(Core().uiMainWin()->actionClipX,       &QAction::triggered, this,   [=]{ toggleClip(true); });
-  connect(Core().uiMainWin()->actionClipY,       &QAction::triggered, this,   [=]{ toggleClip(false);});
+  connect(Core().uiMainWin()->actionClip,        &QAction::triggered, this,   &Preview3D::toggleClip);
   }
 
 
@@ -88,29 +90,23 @@ void Preview3D::loadFile(const QString& fileName) {
 
 
 void Preview3D::toggleClip(bool hitX) {
-  bool clipX = false;
-  bool clipY = false;
+  ClipDialog dlg(clipPos, clipDir, this);
 
-  if (hitX) {
-     if (Core().uiMainWin()->actionClipX->isChecked()) {
-        if (Core().uiMainWin()->actionClipY->isChecked()) {
-           Core().uiMainWin()->actionClipY->setChecked(false);
-           Core().view3D()->unClip();
-           }
-        clipX = true;
-        }
+  dlg.exec();
+
+  if (dlg.clippingEnabled()) {
+     gp_Pnt p  = dlg.clipPosition();
+     gp_Dir d  = dlg.clipDirection();
+
+     qDebug() << "clip position:" << p.X() << " / " << p.Y() << " / " << p.Z();
+     qDebug() << "clip direction" << d.X() << " / " << d.Y() << " / " << d.Z();
+
+     Core().view3D()->clipView(p, d);
+
+     clipPos = p;
+     clipDir = d;
      }
-  else {
-     if (Core().uiMainWin()->actionClipY->isChecked()) {
-        if (Core().uiMainWin()->actionClipX->isChecked()) {
-           Core().uiMainWin()->actionClipX->setChecked(false);
-           Core().view3D()->unClip();
-           }
-        clipY = true;
-        }
-     }
-  if (clipX || clipY) Core().view3D()->clipPlane(clipX, clipY);
-  else                Core().view3D()->unClip();
+  else Core().view3D()->unClip();
   }
 
 

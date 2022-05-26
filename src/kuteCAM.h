@@ -37,7 +37,7 @@ const double MinDelta = 0.001;
 
 
 inline bool isEqual(double a, double b, double minDelta = kute::MinDelta) {
-  if (abs(abs(a) - abs(b)) < minDelta) return true;
+  if (abs(a - b) < minDelta) return true;
   return false;
   }
 

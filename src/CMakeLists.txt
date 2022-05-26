@@ -8,6 +8,7 @@ add_executable(kuteCAM
     cfggcode.cpp
     cfgmaterial.cpp
     cfgvise.cpp
+    clipdialog.cpp
     configpage.cpp
     contourtargetdefinition.cpp
     core.cpp
@@ -38,6 +39,7 @@ add_executable(kuteCAM
     pluginlistmodel.cpp
     preview3d.cpp
     projectfile.cpp
+    selectioninfohandler.cpp
     selectionhandler.cpp
     setuppage.cpp
     shapelistmodel.cpp
@@ -70,6 +72,7 @@ add_executable(kuteCAM
     cfgGCode.ui
     cfgMat.ui
     cfgVise.ui
+    clip.ui
     GCodeEditor.ui
     misc.ui
     operations.ui

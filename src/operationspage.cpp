@@ -35,6 +35,7 @@
 #include "operation.h"
 #include "operationlistmodel.h"
 #include "operationsubpage.h"
+#include "selectioninfohandler.h"
 #include "subopcontour.h"
 #include "subopclampingplug.h"
 #include "subopdrill.h"
@@ -84,6 +85,7 @@ OperationsPage::OperationsPage(QWidget *parent)
  , olm(new OperationListModel)
  , currentOperation(nullptr)
  , opStack(new QStackedLayout())
+ , sIH(new SelectionInfoHandler())
  , subPage(nullptr)
  , tdModel(new TargetDefListModel(&dummy)) {
   ui->setupUi(this);  
@@ -95,7 +97,7 @@ OperationsPage::OperationsPage(QWidget *parent)
   connect(Core().uiMainWin()->actionSelection2Horizontal, &QAction::triggered, this, &OperationsPage::sel2Horizontal);
   connect(Core().uiMainWin()->actionSelection2Vertical, &QAction::triggered, this, &OperationsPage::sel2Vertical);
   connect(ui->lstOperations->selectionModel(),  &QItemSelectionModel::selectionChanged, this, &OperationsPage::opSelected);
-  connect(Core().view3D(), &OcctQtViewer::shapeSelected,  this, &OperationsPage::shapeSelected);
+  connect(Core().view3D(), &OcctQtViewer::selectionChanged,  sIH, &SelectionInfoHandler::evalSelection);
   connect(this,      &OperationsPage::raiseMessage, Core().mainWin(), &MainWindow::setStatusMessage);
   connect(ui->spA,   &QDoubleSpinBox::valueChanged, this, &OperationsPage::rotate);
   connect(ui->spB,   &QDoubleSpinBox::valueChanged, this, &OperationsPage::rotate);

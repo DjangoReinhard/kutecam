@@ -83,7 +83,7 @@ public:
   void removeShapes(const std::vector<Handle(AIS_Shape)>& v);
 
 public slots:
-  void clipPlane(bool clipX, bool clipY);
+  void clipView(const gp_Pnt& p, const gp_Dir& d);
   void fitAll();
   void frontView();
   void backView();
@@ -98,7 +98,7 @@ public slots:
   void reset2D();
   void reset3D();
   void refresh();
-//  virtual void OnSelectionChanged (const Handle(AIS_InteractiveContext)& theCtx, const Handle(V3d_View)& theView) override;
+  virtual void OnSelectionChanged(const Handle(AIS_InteractiveContext)& theCtx, const Handle(V3d_View)& theView) override;
   virtual void OnObjectDragged(const opencascade::handle<AIS_InteractiveContext> &theCtx, const opencascade::handle<V3d_View> &theView, AIS_DragAction theAction) override;
   void switchOrthographic(const QVariant& ortho);
   void switchWireframe(const QVariant& wf);
@@ -106,7 +106,8 @@ public slots:
 
 signals:
   void clearCurves();
-  void shapeSelected(const TopoDS_Shape& shape);
+  void selectionChanged();
+//  void shapeSelected(const TopoDS_Shape& shape);
 
 protected:
   // OpenGL events

@@ -1,12 +1,11 @@
 /* 
  * **************************************************************************
  * 
- *  file:       preview3d.h
+ *  file:       selectioninfohandler.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create a graphical application, that assists in identify
- *              and process model elements                        
- *  created:    11.4.2022 by Django Reinhard
+ *  purpose:    create gcode for toolpaths created from CAD models
+ *  created:    26.5.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
@@ -24,43 +23,25 @@
  * 
  * **************************************************************************
  */
-#ifndef PREVIEW3D_H
-#define PREVIEW3D_H
-#include <QWidget>
-#include <gp_Pnt.hxx>
-#include <gp_Dir.hxx>
-QT_BEGIN_NAMESPACE
-namespace Ui {
-class Preview3D;
-}
-QT_END_NAMESPACE
-class EditorPage;
-class OcctQtViewer;
-class QPushButton;
+#ifndef SELECTIONINFOHANDLER_H
+#define SELECTIONINFOHANDLER_H
+#include <QObject>
+#include <TopoDS_Edge.hxx>
+#include <TopoDS_Face.hxx>
+#include <Geom_Curve.hxx>
 
 
-class Preview3D : public QWidget
+class SelectionInfoHandler : public QObject
 {
   Q_OBJECT
 public:
-  explicit Preview3D(QWidget *parent = nullptr);
-  virtual ~Preview3D();
+  explicit SelectionInfoHandler(QObject *parent = nullptr);
 
-  OcctQtViewer* viewer3D() const { return view3D; }
+  void evalSelection();
 
-public slots:
-  void loadFile(const QString& fileName);
-
-protected slots:
-  void toggleHide();
-  void toggleClip(bool hitX);
-  void toggleWireframe();
-
-private:
-  Ui::Preview3D* ui;
-  OcctQtViewer*  view3D;
-  EditorPage*    edit;
-  gp_Pnt         clipPos;
-  gp_Dir         clipDir;
+protected:
+  void exploreCurve(Handle(Geom_Curve) c, double first, double last);
+  void exploreEdge(TopoDS_Edge e);
+  void exploreFace(TopoDS_Face f);
   };
-#endif // PREVIEW3D_H
+#endif // SELECTIONINFOHANDLER_H

@@ -301,7 +301,8 @@ void SetupPage::exploreModel(const TopoDS_Shape& shape) {
   Bnd_Box bb = Core().workData()->workPiece->BoundingBox();
 
   for (auto& s : Core().workData()->modShapes) {
-      Core().view3D()->showShape(s);
+      s->SetTransparency(0.5);
+      Core().view3D()->showShape(s);      
       }
   std::vector<TopoDS_Face> wpFaces = Core().helper3D()->allFacesWithin(Core().workData()->workPiece->Shape());
 
@@ -698,6 +699,7 @@ void SetupPage::setModel(const TopoDS_Shape& shape) {
 void SetupPage::setupDone() {
   Core().uiMainWin()->actionModelSetup->setEnabled(false);
   Core().uiMainWin()->actionOperationsSetup->setEnabled(true);
+  emit raiseMessage(tr("select element from model and create Operation"));
   Core().switchPage(Core::PgOperations);
   }
 

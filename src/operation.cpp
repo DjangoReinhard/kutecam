@@ -492,6 +492,7 @@ void Operation::restore(QSettings& s) {
   setSpeed(s.value("vc").toDouble());
   setVertical(s.value("vertical").toBool());
   setWaterlineDepth(s.value("wld").toDouble());
+  setDrillDepth(s.value("dz").toDouble());
   setFinalDepth(s.value("z").toDouble());
   setLowerZ(s.value("zMin").toDouble());
   setUpperZ(s.value("zMax").toDouble());
@@ -539,6 +540,7 @@ void Operation::store(QSettings& s) {
   s.setValue("vc", speed());
   s.setValue("vertical", isVertical());
   s.setValue("wld", waterlineDepth());
+  s.setValue("dz", drillDepth());
   s.setValue("z", finalDepth());
   s.setValue("zMin", lowerZ());
   s.setValue("zMax", upperZ());

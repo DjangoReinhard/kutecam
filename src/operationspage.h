@@ -42,6 +42,7 @@ class Work;
 class QItemSelection;
 class QStackedLayout;
 class QStringListModel;
+class SelectionInfoHandler;
 class TargetDefListModel;
 class ToolEntry;
 
@@ -81,6 +82,7 @@ private:
   Operation*                       currentOperation;
   QStackedLayout*                  opStack;
   QMap<QString, OperationSubPage*> pages;
+  SelectionInfoHandler*            sIH;
   OperationSubPage*                subPage;
   std::vector<TargetDefinition*>   dummy;
   TargetDefListModel*              tdModel;

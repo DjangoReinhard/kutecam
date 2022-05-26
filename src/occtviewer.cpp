@@ -206,26 +206,22 @@ void OcctQtViewer::changeGrid() {
   }
 
 
-void OcctQtViewer::clipPlane(bool clipX, bool clipY) {
-  if (clipX || clipY) {
-     gp_Pln cutPlane({0, 0, 0}, {-1, 0, 0});
+void OcctQtViewer::clipView(const gp_Pnt& p, const gp_Dir& d) {
+  gp_Pln cutPlane(p, d);
 
-     if (clipY) cutPlane = gp_Pln({0, 0, 0}, {0, 1, 0});
-     myClipPlane = new Graphic3d_ClipPlane();
-     myClipPlane->SetEquation(cutPlane);
-     myClipPlane->SetCapping(true);
+  if (!myClipPlane.IsNull()) view()->RemoveClipPlane(myClipPlane);
+  myClipPlane = new Graphic3d_ClipPlane();
+  myClipPlane->SetEquation(cutPlane);
+  myClipPlane->SetCapping(true);
+  // set the material with red color of clipping plane
+  Graphic3d_MaterialAspect aMat = myClipPlane->CappingMaterial();
 
-     // set the material with red color of clipping plane
-     Graphic3d_MaterialAspect aMat = myClipPlane->CappingMaterial();
-
-     aMat.SetAmbientColor(Quantity_NOC_RED);
-     aMat.SetDiffuseColor(Quantity_NOC_RED);
-     aMat.SetTransparency(0.8);
-     myClipPlane->SetCappingMaterial(aMat);
-
-     view()->AddClipPlane(myClipPlane);
-     myClipPlane->SetOn(true);
-     }
+  aMat.SetAmbientColor(Quantity_NOC_GREEN);
+  aMat.SetDiffuseColor(Quantity_NOC_GREEN);
+  aMat.SetTransparency(0.5);
+  myClipPlane->SetCappingMaterial(aMat);
+  view()->AddClipPlane(myClipPlane);
+  myClipPlane->SetOn(true);
   refresh();
   }
 
@@ -626,6 +622,11 @@ void OcctQtViewer::wheelEvent(QWheelEvent* e) {
   }
 
 
+void OcctQtViewer::OnSelectionChanged(const Handle(AIS_InteractiveContext)& theCtx, const Handle(V3d_View)& theView) {
+  emit selectionChanged();
+  }
+
+
 void OcctQtViewer::paintGL() {
   if (myView->Window().IsNull()) return;
 
@@ -676,11 +677,6 @@ void OcctQtViewer::OnObjectDragged(const opencascade::handle<AIS_InteractiveCont
   configureGrid({0, 0, 1});
   updateView();
   }
-
-
-//void OcctQtViewer::OnSelectionChanged(const Handle(AIS_InteractiveContext)& theCtx, const Handle(V3d_View)& theView) {
-//  evaluateSelection();
-//  }
 
 
 Handle(AIS_Shape) OcctQtViewer::mainShape() {
@@ -790,15 +786,13 @@ void OcctQtViewer::move(double dX, double dY, double dZ) {
   TopLoc_Location       tll(move);
   AIS_ListOfInteractive shapes;
 
-
   myContext->DisplayedObjects(shapes);
   for (Handle(AIS_InteractiveObject)& s : shapes) {
       qDebug() << s->get_type_name();
       if (s->DynamicType() == STANDARD_TYPE(AIS_ViewCube)) continue;
       myContext->SetLocation(s, tll);
       }
-  myView->Invalidate();
-  update();
+  refresh();
   }
 
 
@@ -829,7 +823,7 @@ void OcctQtViewer::rotate(double dA, double dB, double dC) {
       else                      myContext->SetLocation(s, tll);
       }
   myView->Invalidate();
-  update();
+  refresh();
   }
 
 
@@ -844,4 +838,5 @@ void  OcctQtViewer::switchOrthographic(const QVariant& ortho) {
 
 void  OcctQtViewer::switchWireframe(const QVariant& wf) {
   myContext->SetDisplayMode(wf.toBool() ? AIS_WireFrame : AIS_Shaded, true);
+  refresh();
   }

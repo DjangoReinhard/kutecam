@@ -462,8 +462,7 @@
     <addaction name="actionBack"/>
     <addaction name="separator"/>
     <addaction name="actionZoom2Fit"/>
-    <addaction name="actionClipX"/>
-    <addaction name="actionClipY"/>
+    <addaction name="actionClip"/>
     <addaction name="separator"/>
     <addaction name="actionHideModel"/>
     <addaction name="actionWireframe"/>
@@ -742,12 +741,12 @@
     <string>Preferences</string>
    </property>
   </action>
-  <action name="actionClipX">
+  <action name="actionClip">
    <property name="checkable">
-    <bool>true</bool>
+    <bool>false</bool>
    </property>
    <property name="text">
-    <string>Clip-X</string>
+    <string>clip View</string>
    </property>
   </action>
   <action name="actionClipY">

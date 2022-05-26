@@ -1,12 +1,11 @@
 /* 
  * **************************************************************************
  * 
- *  file:       preview3d.h
+ *  file:       clipdialog.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create a graphical application, that assists in identify
- *              and process model elements                        
- *  created:    11.4.2022 by Django Reinhard
+ *  purpose:    create gcode for toolpaths created from CAD models
+ *  created:    26.5.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
@@ -24,43 +23,32 @@
  * 
  * **************************************************************************
  */
-#ifndef PREVIEW3D_H
-#define PREVIEW3D_H
-#include <QWidget>
+#ifndef CLIPDIALOG_H
+#define CLIPDIALOG_H
+#include <QDialog>
 #include <gp_Pnt.hxx>
 #include <gp_Dir.hxx>
 QT_BEGIN_NAMESPACE
 namespace Ui {
-class Preview3D;
+class ClipDialog;
 }
 QT_END_NAMESPACE
-class EditorPage;
-class OcctQtViewer;
-class QPushButton;
+class QShowEvent;
 
 
-class Preview3D : public QWidget
+class ClipDialog : public QDialog
 {
-  Q_OBJECT
 public:
-  explicit Preview3D(QWidget *parent = nullptr);
-  virtual ~Preview3D();
+  ClipDialog(const gp_Pnt& pos, const gp_Dir& dir, QWidget* parent = nullptr);
 
-  OcctQtViewer* viewer3D() const { return view3D; }
+  bool   clippingEnabled() const;
+  gp_Pnt clipPosition()  const;
+  gp_Dir clipDirection() const;
 
-public slots:
-  void loadFile(const QString& fileName);
-
-protected slots:
-  void toggleHide();
-  void toggleClip(bool hitX);
-  void toggleWireframe();
+protected:
+  void showEvent(QShowEvent *event);
 
 private:
-  Ui::Preview3D* ui;
-  OcctQtViewer*  view3D;
-  EditorPage*    edit;
-  gp_Pnt         clipPos;
-  gp_Dir         clipDir;
+  Ui::ClipDialog* ui;
   };
-#endif // PREVIEW3D_H
+#endif // CLIPDIALOG_H
