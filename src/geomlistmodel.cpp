@@ -33,83 +33,105 @@
 #include <Geom_BSplineCurve.hxx>
 
 
-GeomListModel::GeomListModel(QObject *parent)
- : QAbstractListModel(parent) {
+GeomNodeModel::GeomNodeModel(QObject *parent)
+ : QAbstractItemModel(parent) {
   }
 
 
-void GeomListModel::append(opencascade::handle<Geom_Curve> curve, double first, double last) {
-  int        newRow = list.size();
-  CurveData* cd     = new CurveData(curve, first, last);
+void GeomNodeModel::append(TopoDS_Shape s) {
+//  int        newRow = list.size();
+//  CurveData* cd     = new CurveData(curve, first, last);
 
-  if (list.contains(cd)) return;
-  beginInsertRows(QModelIndex(), newRow, newRow);
-  list.append(cd);
-  endInsertRows();
+//  if (list.contains(cd)) return;
+//  beginInsertRows(QModelIndex(), newRow, newRow);
+//  list.append(cd);
+//  endInsertRows();
   }
 
 
-QVariant GeomListModel::data(int row, int column, int role) const {
+int GeomNodeModel::columnCount(const QModelIndex& parent) const {
+  return 1;
+  }
+
+
+QVariant GeomNodeModel::data(int row, int column, int role) const {
   QModelIndex mi = createIndex(row, column);
 
   return data(mi, role);
   }
 
 
-QVariant GeomListModel::data(const QModelIndex& index, int role) const {
-  if (role != Qt::DisplayRole) return QVariant();
-  if (index.row() >= list.size()) return QVariant();
-  CurveData* cd = list.at(index.row());
+QVariant GeomNodeModel::data(const QModelIndex& index, int role) const {
+//  if (role != Qt::DisplayRole) return QVariant();
+//  if (index.row() >= list.size()) return QVariant();
 
-  if (index.column() == 0) {
-     if (cd->curve->DynamicType() == STANDARD_TYPE(Geom_Line)) {
-        return "Geom_Line";
-        }
-     else if (cd->curve->DynamicType() == STANDARD_TYPE(Geom_Circle)) {
-        return "Geom_Circle";
-        }
-     else if (cd->curve->DynamicType() == STANDARD_TYPE(Geom_BSplineCurve)) {
-        return "Geom_BSplineCurve";
-        }
-    else if (cd->curve->DynamicType() == STANDARD_TYPE(Geom_TrimmedCurve)) {
-        return "Geom_TrimmedCurve";
-        }
-     else if (cd->curve->DynamicType() == STANDARD_TYPE(Geom_Ellipse)) {
-        return "Geom_Ellipse";
-        }
-     else if (cd->curve->DynamicType() == STANDARD_TYPE(Geom_BoundedCurve)) {
-        return "Geom_BoundedCurve";
-        }
-     return "unknown Curve";
-     }
-  else if (index.column() == 1) return cd->first;
-  else if (index.column() == 2) return cd->last;
+//  if (index.column() == 0) {
+//     if (cd->curve->DynamicType() == STANDARD_TYPE(Geom_Line)) {
+//        return "Geom_Line";
+//        }
+//     else if (cd->curve->DynamicType() == STANDARD_TYPE(Geom_Circle)) {
+//        return "Geom_Circle";
+//        }
+//     else if (cd->curve->DynamicType() == STANDARD_TYPE(Geom_BSplineCurve)) {
+//        return "Geom_BSplineCurve";
+//        }
+//    else if (cd->curve->DynamicType() == STANDARD_TYPE(Geom_TrimmedCurve)) {
+//        return "Geom_TrimmedCurve";
+//        }
+//     else if (cd->curve->DynamicType() == STANDARD_TYPE(Geom_Ellipse)) {
+//        return "Geom_Ellipse";
+//        }
+//     else if (cd->curve->DynamicType() == STANDARD_TYPE(Geom_BoundedCurve)) {
+//        return "Geom_BoundedCurve";
+//        }
+//     return "unknown Curve";
+//     }
+//  else if (index.column() == 1) return cd->first;
+//  else if (index.column() == 2) return cd->last;
   return QVariant();
   }
 
 
-Handle(Geom_Curve) GeomListModel::item(int row) const {
-  CurveData*         cd = list.at(row);
-  Handle(Geom_Curve) rv;
+QModelIndex GeomNodeModel::index(int row, int column, const QModelIndex &parent) const {
+//  if (!hasIndex(row, column, parent)) return QModelIndex();
+//  DirEntry* parentItem;
 
-  if (cd) return list.at(row)->curve;
-  return rv;
+//  if (!parent.isValid()) parentItem = rootItem;
+//  else                   parentItem = static_cast<DirEntry*>(parent.internalPointer());
+//  DirEntry* childItem  = parentItem->child(row);
+
+//  if (childItem) return createIndex(row, column, childItem);
+  return QModelIndex();
   }
 
 
-int GeomListModel::rowCount(const QModelIndex &parent) const {
-  return list.size();
+QModelIndex GeomNodeModel::parent(const QModelIndex &index) const {
+//  if (!index.isValid()) return QModelIndex();
+//  DirEntry* childItem  = getItem(index);
+//  DirEntry* parentItem = childItem ? childItem->parent() : nullptr;
+
+//  if (parentItem == rootItem || !parentItem)
+     return QModelIndex();
+//  return createIndex(parentItem->childNumber(), 0, parentItem);
   }
 
 
-void GeomListModel::clear() {
+//Handle(Geom_Curve) GeomNodeModel::item(int row) const {
+//  CurveData*         cd = list.at(row);
+//  Handle(Geom_Curve) rv;
+
+//  if (cd) return list.at(row)->curve;
+//  return rv;
+//  }
+
+
+int GeomNodeModel::rowCount(const QModelIndex &parent) const {
+  return nodes.size();
+  }
+
+
+void GeomNodeModel::clear() {
   beginResetModel();
-  list.clear();
+  nodes.clear();
   endResetModel();
-  }
-
-
-bool GeomListModel::CurveData::operator==(const CurveData &other) {
-  if (&other == this) return true;
-  return curve == other.curve && first == other.first && last == other.last;
   }

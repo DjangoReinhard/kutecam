@@ -26,38 +26,36 @@
  */
 #ifndef GEOMLISTMODEL_H
 #define GEOMLISTMODEL_H
-#include <QAbstractListModel>
-#include <QVector>
-#include <Geom_Curve.hxx>
+#include <QAbstractItemModel>
+#include <TopoDS_Shape.hxx>
 
 
-
-class GeomListModel : public QAbstractListModel
+class GeomNode : public QObject
 {
   Q_OBJECT
 public:
-  explicit GeomListModel(QObject *parent = nullptr);
+  explicit GeomNode(TopoDS_Shape s);
 
-  void               append(Handle(Geom_Curve) curve, double first, double last);
-  QVariant           data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
-  QVariant           data(int row, int column, int role = Qt::DisplayRole) const;
-  Handle(Geom_Curve) item(int row = 0) const;
-  int                rowCount(const QModelIndex &parent = QModelIndex()) const override;
-  void               clear();
+
+  };
+
+class GeomNodeModel : public QAbstractItemModel
+{
+  Q_OBJECT
+public:
+  explicit GeomNodeModel(QObject *parent = nullptr);
+
+  void          append(TopoDS_Shape shape);
+  int           columnCount(const QModelIndex& parent = QModelIndex()) const override;
+  QVariant      data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+  QVariant      data(int row, int column, int role = Qt::DisplayRole) const;
+  QModelIndex   index(int row, int column, const QModelIndex& parent = QModelIndex()) const override;
+  QModelIndex   parent(const QModelIndex& index) const override;
+  //  Handle(Geom_Curve) item(int row = 0) const;
+  int           rowCount(const QModelIndex &parent = QModelIndex()) const override;
+  void          clear();
 
 private:
-  struct CurveData
-  {
-  CurveData(Handle(Geom_Curve) c, double f, double l)
-   : curve(c)
-   , first(f)
-   , last(l) {
-    }
-  bool operator==(const CurveData& other);
-  Handle(Geom_Curve) curve;
-  double             first;
-  double             last;
-    };
-  QVector<CurveData*> list;
+  std::vector<GeomNode*> nodes;
   };
 #endif // GEOMLISTMODEL_H

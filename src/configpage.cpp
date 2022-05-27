@@ -31,8 +31,11 @@
 #include "cfgmaterial.h"
 #include "cfgvise.h"
 #include "core.h"
+#include "kuteCAM.h"
+#include "mainwindow.h"
 #include "stringlistmodel.h"
 #include "occtviewer.h"
+#include "preview3d.h"
 #include "projectfile.h"
 #include "tooleditor.h"
 #include "toollistmodel.h"
@@ -115,6 +118,7 @@ void ConfigPage::initialize() {
   ToolEditor* te = new ToolEditor(matModel, tools);
 
   te->initialize();
+  connect(te, &ToolEditor::teActivated, Core().mainWin()->preview3D(), &Preview3D::toolHint);
   pages->addItem(new CfgGCode(), tr("GCode-Settings"));
   pages->addItem(new CfgMaterial(matModel), tr("Material"));
   pages->addItem(te, tr("Tools"));
@@ -126,7 +130,7 @@ void ConfigPage::loadTools() {
   QString     fileName;
   QFileDialog dialog(this
                    , tr("QFileDialog::getOpenFileName()")
-                   , "/media/Scratch"
+                   , kute::BasePath
                    , tr("XML-Documents (*.xml)"));
 
   dialog.setSupportedSchemes(QStringList(QStringLiteral("file")));
@@ -152,7 +156,7 @@ void ConfigPage::saveTools() {
   QString     fileName;
   QFileDialog dialog(this
                    , tr("QFileDialog::getSaveFileName()")
-                   , "/media/Scratch"
+                   , kute::BasePath
                    , tr("XML-Documents (*.xml)"));
 
   dialog.setSupportedSchemes(QStringList(QStringLiteral("file")));

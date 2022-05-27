@@ -40,18 +40,18 @@ DimToolEditor::DimToolEditor(ToolEntry* toolEntry, QWidget *parent)
   ui->cbCollet->addItem("ER20");
 
   connect(ui->cbCollet, &QComboBox::currentIndexChanged, this, &DimToolEditor::cbColletChanged);
+  ui->tipDiameter->installEventFilter(this);
   ui->fluteLength->installEventFilter(this);
   ui->fluteDiameter->installEventFilter(this);
   ui->freeLength->installEventFilter(this);
   ui->cuttingDepth->installEventFilter(this);
+  ui->cuttingAngle->installEventFilter(this);
   ui->shankDiameter->installEventFilter(this);
   ui->numFlutes->installEventFilter(this);
   }
 
 
 void DimToolEditor::cbColletChanged(const QVariant& ndx) {
-//  int index = ndx.toInt();
-
   toolEntry->setCollet(ui->cbCollet->currentIndex());
   }
 
@@ -67,30 +67,16 @@ bool DimToolEditor::eventFilter(QObject* o, QEvent* event) {
             double     v  = ed->text().toDouble(&ok);
 
             if (!ok) return false;
-            if (o == ui->fluteLength) {
-               toolEntry->setFluteLength(v);
-               return true;
-               }
-            else if (o == ui->fluteDiameter) {
-               toolEntry->setFluteDiameter(v);
-               return true;
-               }
-            else if (o == ui->freeLength) {
-               toolEntry->setFreeLength(v);
-               return true;
-               }
-            else if (o == ui->cuttingDepth) {
-               toolEntry->setCuttingDepth(v);
-               return true;
-               }
-            else if (o == ui->shankDiameter) {
-               toolEntry->setShankDiameter(v);
-               return true;
-               }
-            else if (o == ui->numFlutes) {
-               toolEntry->setNumFlutes((int) v);
-               return true;
-               }
+            if (o == ui->fluteLength)        toolEntry->setFluteLength(v);
+            else if (o == ui->fluteDiameter) toolEntry->setFluteDiameter(v);
+            else if (o == ui->tipDiameter)   toolEntry->setTipDiameter(v);
+            else if (o == ui->freeLength)    toolEntry->setFreeLength(v);
+            else if (o == ui->cuttingDepth)
+              toolEntry->setCuttingDepth(v);
+            else if (o == ui->cuttingAngle)
+              toolEntry->setCuttingAngle(v);
+            else if (o == ui->shankDiameter) toolEntry->setShankDiameter(v);
+            else if (o == ui->numFlutes)     toolEntry->setNumFlutes((int) v);
             } break;
        }
      }
@@ -101,10 +87,12 @@ bool DimToolEditor::eventFilter(QObject* o, QEvent* event) {
 void DimToolEditor::setTool(ToolEntry* toolEntry) {
   this->toolEntry = toolEntry;
 
+  ui->tipDiameter->setText(QString("%1").arg(toolEntry->tipDiameter(), 0, 'f', 3));
   ui->fluteLength->setText(QString("%1").arg(toolEntry->fluteLength(), 0, 'f', 3));
   ui->fluteDiameter->setText(QString("%1").arg(toolEntry->fluteDiameter(), 0, 'f', 3));
   ui->freeLength->setText(QString("%1").arg(toolEntry->freeLength(), 0, 'f', 3));
   ui->cuttingDepth->setText(QString("%1").arg(toolEntry->cuttingDepth(), 0, 'f', 3));
+  ui->cuttingAngle->setText(QString("%1").arg(toolEntry->cuttingAngle(), 0, 'f', 3));
   ui->shankDiameter->setText(QString("%1").arg(toolEntry->shankDiameter(), 0, 'f', 3));
   ui->numFlutes->setText(QString("%1").arg(toolEntry->numFlutes(), 0, 10));
   }

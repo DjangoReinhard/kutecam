@@ -28,6 +28,7 @@
 #include "ui_GCodeEditor.h"
 #include "gcodeeditor.h"
 #include "gcodehighlighter.h"
+#include "kuteCAM.h"
 #include <QDebug>
 #include <QFileDialog>
 
@@ -49,8 +50,8 @@ QString EditorPage::chooseGCodeFile(QWidget* parent) {
   QString     selectedFilter, fileName;
   QFileDialog dialog(parent
                    , tr("QFileDialog::getOpenFileName()")
-                   , "/media/Scratch"
-                   , tr("Fanuc Files (*.dnc);;Heidenhain Files (*.h);;Sinumeric Files (*.arc)"));
+                   , kute::BasePath
+                   , kute::GCodeFilter);
 
   dialog.setSupportedSchemes(QStringList(QStringLiteral("file")));
   dialog.setFileMode(QFileDialog::ExistingFile);

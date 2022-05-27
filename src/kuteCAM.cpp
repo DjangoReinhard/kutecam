@@ -24,6 +24,7 @@
  * **************************************************************************
  */
 #include "kuteCAM.h"
+#include <QObject>
 
 
 namespace kute {
@@ -58,4 +59,11 @@ int relPos(const gp_Pnt& reference, const gp_Pnt& other) {
   if (d > 0) return 1;
   return 0;
   }
+
+
+const double  MinDelta    = 0.001;
+const QString BasePath    = "/media/Scratch";
+const QString CADBase     = "/media/CAD";
+const QString CADFilter   = QObject::tr("BRep Files (*.brep);;Step Files (*.stp *.step)");
+const QString GCodeFilter = QObject::tr("Fanuc Files (*.dnc);;Heidenhain Files (*.h);;Sinumeric Files (*.arc)");
 }

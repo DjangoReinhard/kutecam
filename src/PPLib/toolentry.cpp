@@ -33,10 +33,12 @@ ToolEntry::ToolEntry(int num, const QString& name, QObject *parent)
  : QObject(parent)
  , number(num)
  , name(name)
+ , tipDiam(0)
  , cColl(0)
  , flDiam(0)
  , flLen(0)
  , cutDepth(0)
+ , cutAngle(0)
  , shankDiam(0)
  , freeLen(0)
  , cFlutes(0) {
@@ -88,12 +90,19 @@ double ToolEntry::cuttingDepth() const {
   }
 
 
+double ToolEntry::cuttingAngle() const {
+  return cutAngle;
+  }
+
+
 void ToolEntry::dump() const {
   qDebug() << "\nToolEntry #" << number << "\t" << name;
   qDebug() << "\tcollet:" << cColl;
+  qDebug() << "\ttip-dia:" << tipDiam;
   qDebug() << "\tfl-dia:" << flDiam;
   qDebug() << "\tfl-len:" << flLen;
   qDebug() << "\tcut-Dep:" << cutDepth;
+  qDebug() << "\tcut-Ang:" << cutAngle;
   qDebug() << "\tshank:" << shankDiam;
   qDebug() << "\tfreeL:" << freeLen;
   qDebug() << "\tnum-fl:" << cFlutes;
@@ -156,6 +165,11 @@ void ToolEntry::setCuttingDepth(double depth) {
   }
 
 
+void ToolEntry::setCuttingAngle(double ang) {
+  cutAngle = ang;
+  }
+
+
 void ToolEntry::setShankDiameter(double diam) {
   shankDiam = diam;
   }
@@ -176,6 +190,11 @@ void ToolEntry::setNumber(int number) {
   }
 
 
+void ToolEntry::setTipDiameter(double diam) {
+  tipDiam = diam;
+  }
+
+
 void ToolEntry::setToolName(const QString &name) {
   this->name = name;
   }
@@ -183,6 +202,11 @@ void ToolEntry::setToolName(const QString &name) {
 
 double ToolEntry::shankDiameter() const {
   return shankDiam;
+  }
+
+
+double ToolEntry::tipDiameter() const {
+  return tipDiam;
   }
 
 

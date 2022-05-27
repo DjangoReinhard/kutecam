@@ -38,6 +38,8 @@
 #include <cmath>
 #include <QDebug>
 #include <QInputDialog>
+#include <QHideEvent>
+#include <QShowEvent>
 
 
 ToolEditor::ToolEditor(StringListModel* matModel, ToolListModel* tools, QWidget *parent)
@@ -67,6 +69,11 @@ void ToolEditor::initialize() {
   }
 
 
+void ToolEditor::hideEvent(QHideEvent *event) {
+  emit teActivated(false);
+  }
+
+
 double ToolEditor::readDouble(QLineEdit* edit) {
   QString userInput = edit->text();
   bool    ok;
@@ -75,6 +82,11 @@ double ToolEditor::readDouble(QLineEdit* edit) {
   double rv = userInput.toDouble(&ok);
 
   return ok ? rv : 0;
+  }
+
+
+void ToolEditor::showEvent(QShowEvent *event) {
+  emit teActivated(true);
   }
 
 

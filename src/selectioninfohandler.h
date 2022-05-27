@@ -39,7 +39,7 @@ public:
 
   void evalSelection();
 
-protected:
+//protected:
   void exploreCurve(Handle(Geom_Curve) c, double first, double last);
   void exploreEdge(TopoDS_Edge e);
   void exploreFace(TopoDS_Face f);

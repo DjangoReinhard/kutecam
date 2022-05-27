@@ -27,13 +27,17 @@
 #define KUTECAM_H
 #include <gp_Dir.hxx>
 #include <gp_Pnt.hxx>
+#include <QString>
 #include <cmath>
 
 
 namespace kute {
-int getDominantAxis(const gp_Dir& dir);
-//int relPos(const gp_Pnt& reference, const gp_Pnt& other);
-const double MinDelta = 0.001;
+extern int getDominantAxis(const gp_Dir& dir);
+extern const double  MinDelta;
+extern const QString BasePath;
+extern const QString CADBase;
+extern const QString CADFilter;
+extern const QString GCodeFilter;
 
 
 inline bool isEqual(double a, double b, double minDelta = kute::MinDelta) {

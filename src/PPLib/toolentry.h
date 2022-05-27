@@ -42,21 +42,25 @@ public:
 
   void    dump() const;
   int     collet() const;
+  double  tipDiameter() const;
   int     toolNumber() const;
   QString toolName() const;
   double  fluteDiameter() const;
   double  fluteLength() const;
+  double  cuttingAngle() const;
   double  cuttingDepth() const;
   double  shankDiameter() const;
   double  freeLength() const;
   bool    hasMaterial(const QString& material) const;
   int     numFlutes() const;
+  void    setCuttingAngle(double ang);
   void    setCollet(int collet);
   void    setFluteDiameter(double diam);
   void    setFluteLength(double len);
   void    setCuttingDepth(double depth);
   void    setShankDiameter(double diam);
   void    setFreeLength(double len);
+  void    setTipDiameter(double diam);
   void    setToolName(const QString& name);
   void    setNumFlutes(int num);
   QString toString() const;
@@ -73,9 +77,11 @@ private:
   int     number;
   int     cColl;
   QString name;
+  double  tipDiam;
   double  flDiam;
   double  flLen;
   double  cutDepth;
+  double  cutAngle;
   double  shankDiam;
   double  freeLen;
   int     cFlutes;

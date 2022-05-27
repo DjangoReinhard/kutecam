@@ -77,10 +77,12 @@ void XmlToolWriter::writeTool(QTextStream& out, ToolEntry* t) {
 
   writeProperty(out, "Name",          t->toolName());
   writeProperty(out, "Collet",        t->collet());
+  writeProperty(out, "TipDiameter",   t->tipDiameter());
   writeProperty(out, "FluteDiameter", t->fluteDiameter());
   writeProperty(out, "FluteLength",   t->fluteLength());
   writeProperty(out, "Flutes",        t->numFlutes());
   writeProperty(out, "CuttingDepth",  t->cuttingDepth());
+  writeProperty(out, "CuttingAngle",  t->cuttingAngle());
   writeProperty(out, "ShankDiameter", t->shankDiameter());
   writeProperty(out, "FreeLength",    t->freeLength());
   QVector<CuttingParameters*> cpList = t->cutParameters();

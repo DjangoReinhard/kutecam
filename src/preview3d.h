@@ -34,7 +34,6 @@ namespace Ui {
 class Preview3D;
 }
 QT_END_NAMESPACE
-class EditorPage;
 class OcctQtViewer;
 class QPushButton;
 
@@ -49,7 +48,7 @@ public:
   OcctQtViewer* viewer3D() const { return view3D; }
 
 public slots:
-  void loadFile(const QString& fileName);
+  void toolHint(bool showHint);
 
 protected slots:
   void toggleHide();
@@ -59,7 +58,6 @@ protected slots:
 private:
   Ui::Preview3D* ui;
   OcctQtViewer*  view3D;
-  EditorPage*    edit;
   gp_Pnt         clipPos;
   gp_Dir         clipDir;
   };

@@ -28,6 +28,7 @@
 #include "ui_mainwindow.h"
 #include "ui_status.h"
 #include "core.h"
+#include "editorpage.h"
 #include "util3d.h"
 #include "occtviewer.h"
 #include "preview3d.h"
@@ -68,6 +69,19 @@ void MainWindow::addPage(QWidget *page) {
   }
 
 
+void MainWindow::clearStatus() {
+  ui->xMin->setNum(0);
+  ui->yMin->setNum(0);
+  ui->zMin->setNum(0);
+  ui->xMax->setNum(0);
+  ui->yMax->setNum(0);
+  ui->zMax->setNum(0);
+  ui->material->clear();
+
+  ui->message->setText(tr("load Project or CAD model"));
+  }
+
+
 void MainWindow::closeEvent(QCloseEvent *e) {
   Core().onShutdown(e);
   QMainWindow::closeEvent(e);
@@ -103,12 +117,17 @@ void MainWindow::chooseFile() {
 
 void MainWindow::initialize() {
   ui->setupUi(this);
-  preview = new Preview3D();
-  QVBoxLayout* bl = new QVBoxLayout();
+  QVBoxLayout* bl = new QVBoxLayout();  
 
+  notebook = new QTabWidget();
+  preview  = new Preview3D();
+  editor   = new EditorPage();
+  notebook->setTabPosition(QTabWidget::South);
+  notebook->addTab(preview, tr("Preview"));
+  notebook->addTab(editor, tr("Editor"));
   sp = new QSplitter(Qt::Horizontal);
   sp->addWidget(stack);
-  sp->addWidget(preview);
+  sp->addWidget(notebook);
   bl->setContentsMargins(0, 0, 0, 0);
   bl->addWidget(sp);
   ui->main->setLayout(bl);
@@ -122,7 +141,7 @@ void MainWindow::openProject() {
   QString     fileName;
   QFileDialog dialog(nullptr
                    , tr("QFileDialog::getOpenFileName()")
-                   , "/media/Scratch"
+                   , kute::BasePath
                    , tr("Project Files (*.prj)"));
 
   dialog.setSupportedSchemes(QStringList(QStringLiteral("file")));
@@ -144,18 +163,9 @@ void MainWindow::openProject() {
   }
 
 
-void MainWindow::clearStatus() {
-  ui->xMin->setNum(0);
-  ui->yMin->setNum(0);
-  ui->zMin->setNum(0);
-  ui->xMax->setNum(0);
-  ui->yMax->setNum(0);
-  ui->zMax->setNum(0);
-  ui->material->clear();
-
-  ui->message->setText(tr("load Project or CAD model"));
+Preview3D* MainWindow::preview3D() const {
+  return preview;
   }
-
 
 void MainWindow::refresh(const Bnd_Box& bb) {
   if (!bbModel) bbModel = new Bnd_Box(bb);
@@ -179,7 +189,7 @@ void MainWindow::saveProject() {
   QString     fileName;
   QFileDialog dialog(this
                    , tr("QFileDialog::getSaveFileName()")
-                   , "/media/Scratch"
+                   , kute::BasePath
                    , tr("Project Files (*.prj)"));
 
   dialog.setSupportedSchemes(QStringList(QStringLiteral("file")));

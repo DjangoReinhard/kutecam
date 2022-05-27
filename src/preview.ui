@@ -29,7 +29,7 @@
    <item row="0" column="0">
     <widget class="QWidget" name="buttonBar" native="true">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
@@ -157,32 +157,25 @@
     </widget>
    </item>
    <item row="1" column="0">
-    <widget class="QTabWidget" name="notebook">
-     <property name="tabPosition">
-      <enum>QTabWidget::South</enum>
+    <widget class="QLabel" name="toolHint">
+     <property name="text">
+      <string/>
      </property>
-     <property name="tabShape">
-      <enum>QTabWidget::Rounded</enum>
+     <property name="pixmap">
+      <pixmap resource="../kuteCAM.qrc">:/sample/ToolDimensions02.png</pixmap>
      </property>
-     <property name="currentIndex">
-      <number>1</number>
+     <property name="scaledContents">
+      <bool>false</bool>
      </property>
-     <!--
-     <widget class="QWidget" name="tab">
-      <attribute name="title">
-       <string>Tab 1</string>
-      </attribute>
-     </widget>
-     <widget class="QWidget" name="tab_2">
-      <attribute name="title">
-       <string>Tab 2</string>
-      </attribute>
-     </widget>
-     -->
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
     </widget>
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../kuteCAM.qrc"/>
+ </resources>
  <connections/>
 </ui>

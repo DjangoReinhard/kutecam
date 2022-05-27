@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
+        <file>sample/ToolDimensions02.png</file>
         <file>src/clip.ui</file>
         <file>src/GCodeEditor.ui</file>
         <file>src/mainwindow.ui</file>

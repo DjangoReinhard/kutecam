@@ -40,11 +40,12 @@ Preview3D::Preview3D(QWidget *parent)
  : QWidget(parent)
  , ui(new Ui::Preview3D)
  , view3D(new OcctQtViewer())
- , edit(new EditorPage())
  , clipDir(-1, 0, 0) {
   ui->setupUi(this);
-  ui->notebook->addTab(view3D, tr("Preview"));
-  ui->notebook->addTab(edit, tr("Editor"));
+  QGridLayout* l = static_cast<QGridLayout*>(ui->gridLayout);
+
+  ui->toolHint->setVisible(false);
+  l->addWidget(view3D, 1, 0);
 
   connect(ui->pbBottom,    &QPushButton::clicked, view3D, &OcctQtViewer::bottomView);
   connect(ui->pbLeft,      &QPushButton::clicked, view3D, &OcctQtViewer::leftView);
@@ -80,12 +81,6 @@ Preview3D::Preview3D(QWidget *parent)
 Preview3D::~Preview3D() {
   delete ui;
   delete view3D;
-  }
-
-
-void Preview3D::loadFile(const QString& fileName) {
-  edit->loadFile(fileName);
-  ui->notebook->setCurrentWidget(edit);
   }
 
 
@@ -135,4 +130,16 @@ void Preview3D::toggleHide() {
 void Preview3D::toggleWireframe() {
   Core().uiMainWin()->actionWireframe->toggle();
   Core().view3D()->switchWireframe(Core().uiMainWin()->actionWireframe->isChecked());
+  }
+
+
+void Preview3D::toolHint(bool showHint) {
+  if (showHint) {
+     ui->toolHint->setVisible(true);
+     view3D->setVisible(false);
+     }
+  else {
+     ui->toolHint->setVisible(false);
+     view3D->setVisible(true);
+     }
   }

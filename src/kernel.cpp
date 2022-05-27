@@ -26,6 +26,7 @@
  */
 #include "kernel.h"
 #include "core.h"
+#include "editorpage.h"
 #include "projectfile.h"
 #include "postprocessor.h"
 #include "work.h"
@@ -46,6 +47,7 @@
 #include "viseentry.h"
 #include "viselistmodel.h"
 #include "wsfactory.h"
+#include "xmltoolreader.h"
 #include <BRepLib.hxx>
 #include <QApplication>
 #include <QCloseEvent>
@@ -175,7 +177,7 @@ void Kernel::initialize() {
   win.restore();
 
   connect(view3D, &OcctQtViewer::clearCurves, this, &Kernel::clearCurves);
-  connect(operations, &OperationsPage::fileGenerated, win.preview, &Preview3D::loadFile);
+  connect(operations, &OperationsPage::fileGenerated, win.editor, &EditorPage::loadFile);
   configData.setValue("what", "nope");
   }
 
@@ -258,19 +260,34 @@ std::vector<Operation*> Kernel::loadOperations(ProjectFile* pf) {
 
 
 bool Kernel::loadProject(const QString &fileName) {
-  QString modelFile;
-
   pf = new ProjectFile(fileName);
   pf->beginGroup("Setup");
-  modelFile = pf->value("Model-File").toString();
+  QString modelFile = pf->value("Model-File").toString();
+  QFile   tfn       = pf->value("Tool-file").toString();
+
   if (modelFile.endsWith(".brep")) topShape = helper->loadBRep(modelFile);
   else                             topShape = helper->loadStep(modelFile);
   pf->endGroup();
+  if (tfn.exists()) loadTools(tfn.fileName());
   win.setWindowTitle(QString("- %1 -- %2 -").arg(app.applicationName(), fileName));
   setupPage->loadProject(pf, topShape);
   operations->loadProject(pf);
 
   return true;
+  }
+
+
+bool Kernel::loadTools(const QString &fileName) {
+  QFile inFile(fileName);
+  XmlToolReader xtr;
+
+  if (inFile.exists()) {
+     toolListModel->setData(xtr.read(&inFile));
+     inFile.close();
+
+     return true;
+     }
+  return false;
   }
 
 

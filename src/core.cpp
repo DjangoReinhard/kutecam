@@ -28,6 +28,7 @@
 #include "applicationwindow.h"
 #include "kernel.h"
 #include "geomlistmodel.h"
+#include "kuteCAM.h"
 #include "shapelistmodel.h"
 #include "postprocessor.h"
 #include "pluginlistmodel.h"
@@ -36,7 +37,6 @@
 #include "mainwindow.h"
 #include "toollistmodel.h"
 #include "work.h"
-#include "xmltoolreader.h"
 #include <QApplication>
 #include <QFileDialog>
 #include <QMessageBox>
@@ -83,8 +83,8 @@ QString Core::chooseCADFile(QWidget* parent) {
   QString     selectedFilter, fileName;
   QFileDialog dialog(parent
                    , tr("QFileDialog::getOpenFileName()")
-                   , "/media/CAD"
-                   , tr("BRep Files (*.brep);;Step Files (*.stp *.step)"));
+                   , kute::CADBase
+                   , kute::CADFilter);
 
   dialog.setSupportedSchemes(QStringList(QStringLiteral("file")));
   dialog.setMinimumWidth(1200);
@@ -102,7 +102,6 @@ QString Core::chooseCADFile(QWidget* parent) {
 
 
 void Core::clearCurves() {
-//  k->geoListModel->clear();
   k->shapeListModel->clear();
   }
 
@@ -166,16 +165,11 @@ bool Core::loadProject(const QString &fileName) {
 
 
 bool Core::loadTools(const QString &fileName) {
-  QFile inFile(fileName);
-  XmlToolReader xtr;
+  int os = k->toolListModel->rowCount();
 
-  if (inFile.exists()) {
-     k->toolListModel->setData(xtr.read(&inFile));
-     inFile.close();
+  k->loadTools(fileName);
 
-     return true;
-     }
-  return false;
+  return k->toolListModel->rowCount() > os;
   }
 
 
@@ -331,6 +325,6 @@ WSFactory* Core::wsFactory() {
 
 
 Kernel* Core::k = nullptr;
-const QString Core::PgWorkPiece    = tr("Workpiece");
-const QString Core::PgConfig       = tr("Preferences");
-const QString Core::PgOperations   = tr("Operations");
+const QString Core::PgWorkPiece  = tr("Workpiece");
+const QString Core::PgConfig     = tr("Preferences");
+const QString Core::PgOperations = tr("Operations");

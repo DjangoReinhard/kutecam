@@ -3,10 +3,12 @@
   <ToolDefinition Number="1">
     <Name>NC Center Drill</Name>
     <Collet>1.00</Collet>
+    <TipDiameter>0.00</TipDiameter>
     <FluteDiameter>16.00</FluteDiameter>
     <FluteLength>8.00</FluteLength>
     <Flutes>2.00</Flutes>
     <CuttingDepth>10.00</CuttingDepth>
+    <CuttingAngle>90.00</CuttingAngle>
     <ShankDiameter>16.00</ShankDiameter>
     <FreeLength>150.00</FreeLength>
     <CuttingParameters num="0">
@@ -27,10 +29,12 @@
   <ToolDefinition Number="2">
     <Name>50mm Shoulder Endmill</Name>
     <Collet>1.00</Collet>
+    <TipDiameter>0.00</TipDiameter>
     <FluteDiameter>50.00</FluteDiameter>
     <FluteLength>7.00</FluteLength>
     <Flutes>4.00</Flutes>
-    <CuttingDepth>45.00</CuttingDepth>
+    <CuttingDepth>145.00</CuttingDepth>
+    <CuttingAngle>0.00</CuttingAngle>
     <ShankDiameter>45.00</ShankDiameter>
     <FreeLength>150.00</FreeLength>
     <CuttingParameters num="0">
@@ -51,10 +55,12 @@
   <ToolDefinition Number="3">
     <Name>80mm Shoulder Endmill</Name>
     <Collet>1.00</Collet>
+    <TipDiameter>0.00</TipDiameter>
     <FluteDiameter>80.00</FluteDiameter>
     <FluteLength>7.00</FluteLength>
     <Flutes>7.00</Flutes>
     <CuttingDepth>45.00</CuttingDepth>
+    <CuttingAngle>0.00</CuttingAngle>
     <ShankDiameter>72.00</ShankDiameter>
     <FreeLength>200.00</FreeLength>
     <CuttingParameters num="0">
@@ -75,10 +81,12 @@
   <ToolDefinition Number="4">
     <Name>12mm HPC Endmill</Name>
     <Collet>1.00</Collet>
+    <TipDiameter>0.00</TipDiameter>
     <FluteDiameter>12.00</FluteDiameter>
     <FluteLength>26.00</FluteLength>
     <Flutes>4.00</Flutes>
     <CuttingDepth>35.00</CuttingDepth>
+    <CuttingAngle>0.00</CuttingAngle>
     <ShankDiameter>12.50</ShankDiameter>
     <FreeLength>50.00</FreeLength>
     <CuttingParameters num="0">
@@ -99,10 +107,12 @@
   <ToolDefinition Number="5">
     <Name>6,8mm Drill</Name>
     <Collet>1.00</Collet>
+    <TipDiameter>0.00</TipDiameter>
     <FluteDiameter>6.60</FluteDiameter>
     <FluteLength>95.00</FluteLength>
     <Flutes>2.00</Flutes>
     <CuttingDepth>125.00</CuttingDepth>
+    <CuttingAngle>118.00</CuttingAngle>
     <ShankDiameter>6.80</ShankDiameter>
     <FreeLength>125.00</FreeLength>
     <CuttingParameters num="0">
@@ -123,10 +133,12 @@
   <ToolDefinition Number="6">
     <Name>M8 Tap</Name>
     <Collet>1.00</Collet>
+    <TipDiameter>0.00</TipDiameter>
     <FluteDiameter>8.00</FluteDiameter>
     <FluteLength>37.00</FluteLength>
     <Flutes>3.00</Flutes>
     <CuttingDepth>36.00</CuttingDepth>
+    <CuttingAngle>0.00</CuttingAngle>
     <ShankDiameter>6.00</ShankDiameter>
     <FreeLength>85.00</FreeLength>
     <CuttingParameters num="0">
@@ -147,10 +159,12 @@
   <ToolDefinition Number="7">
     <Name>12,5mm Drill</Name>
     <Collet>1.00</Collet>
+    <TipDiameter>0.00</TipDiameter>
     <FluteDiameter>12.50</FluteDiameter>
     <FluteLength>120.00</FluteLength>
     <Flutes>2.00</Flutes>
     <CuttingDepth>150.00</CuttingDepth>
+    <CuttingAngle>118.00</CuttingAngle>
     <ShankDiameter>12.40</ShankDiameter>
     <FreeLength>150.00</FreeLength>
     <CuttingParameters num="0">
@@ -171,10 +185,12 @@
   <ToolDefinition Number="8">
     <Name>30mm Insert Drill</Name>
     <Collet>1.00</Collet>
+    <TipDiameter>0.00</TipDiameter>
     <FluteDiameter>30.00</FluteDiameter>
     <FluteLength>6.00</FluteLength>
     <Flutes>2.00</Flutes>
     <CuttingDepth>190.00</CuttingDepth>
+    <CuttingAngle>0.00</CuttingAngle>
     <ShankDiameter>27.50</ShankDiameter>
     <FreeLength>190.00</FreeLength>
     <CuttingParameters num="0">
@@ -188,6 +204,44 @@
         <Material>Aluminium</Material>
         <Speed>230.00</Speed>
         <Feed>0.24</Feed>
+        <Width>0.00</Width>
+        <Depth>0.00</Depth>
+    </CuttingParameters>
+  </ToolDefinition>
+  <ToolDefinition Number="9">
+    <Name>16mm HPC Endmill</Name>
+    <Collet>1.00</Collet>
+    <TipDiameter>0.00</TipDiameter>
+    <FluteDiameter>16.00</FluteDiameter>
+    <FluteLength>36.00</FluteLength>
+    <Flutes>4.00</Flutes>
+    <CuttingDepth>40.00</CuttingDepth>
+    <CuttingAngle>0.00</CuttingAngle>
+    <ShankDiameter>16.00</ShankDiameter>
+    <FreeLength>96.00</FreeLength>
+    <CuttingParameters num="0">
+        <Material>Steel</Material>
+        <Speed>180.00</Speed>
+        <Feed>0.08</Feed>
+        <Width>8.00</Width>
+        <Depth>15.00</Depth>
+    </CuttingParameters>
+  </ToolDefinition>
+  <ToolDefinition Number="10">
+    <Name>9,0 Drill</Name>
+    <Collet>1.00</Collet>
+    <TipDiameter>0.00</TipDiameter>
+    <FluteDiameter>9.00</FluteDiameter>
+    <FluteLength>75.00</FluteLength>
+    <Flutes>2.00</Flutes>
+    <CuttingDepth>80.00</CuttingDepth>
+    <CuttingAngle>118.00</CuttingAngle>
+    <ShankDiameter>9.00</ShankDiameter>
+    <FreeLength>112.70</FreeLength>
+    <CuttingParameters num="0">
+        <Material>Steel</Material>
+        <Speed>25.00</Speed>
+        <Feed>0.05</Feed>
         <Width>0.00</Width>
         <Depth>0.00</Depth>
     </CuttingParameters>

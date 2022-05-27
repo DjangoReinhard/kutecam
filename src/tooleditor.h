@@ -58,8 +58,13 @@ public:
 public slots:
   void toolSelected(const QItemSelection &selected, const QItemSelection &deselected);
 
+signals:
+  void teActivated(bool active);
+
 protected:
   double readDouble(QLineEdit* edit);
+  void 	 hideEvent(QHideEvent *event);
+  void 	 showEvent(QShowEvent *event);
 
 private:
   Ui::ToolEditor*    ui;

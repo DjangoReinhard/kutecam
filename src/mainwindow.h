@@ -37,8 +37,9 @@ class StatusPos;
 }
 QT_END_NAMESPACE
 class Bnd_Box;
+class EditorPage;
 class OcctQtViewer;
-class GeomListModel;
+class GeomNodeModel;
 class Preview3D;
 class Util3D;
 class Work;
@@ -61,6 +62,7 @@ public:
   void            addPage(QWidget* page);
   void            clearStatus();
   void            closeEvent(QCloseEvent* e) override;
+  Preview3D*      preview3D() const;
   void            restore();
   void            setPage(QWidget* page);
 
@@ -82,9 +84,11 @@ protected:
 private:
   Ui::MainWindow* ui;
   QStackedWidget* stack;
+  QTabWidget*     notebook;
   QSplitter*      sp;
   QTimer*         timer;
   Preview3D*      preview;
+  EditorPage*     editor;
   Bnd_Box*        bbModel;
   friend class Core;
   friend class Kernel;

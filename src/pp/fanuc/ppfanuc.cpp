@@ -95,4 +95,5 @@ QString PPFanuc::getFileExtension() const {
 
 QString PPFanuc::fixtureID(int f) {
   if (f < 7) return QString("G%1").arg(53 + f);
+  return QString();
   }

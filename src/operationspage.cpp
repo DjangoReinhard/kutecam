@@ -31,6 +31,7 @@
 #include "core.h"
 #include "drilltargetdefinition.h"
 #include "gcodewriter.h"
+#include "geomlistmodel.h"
 #include "occtviewer.h"
 #include "operation.h"
 #include "operationlistmodel.h"
@@ -85,19 +86,21 @@ OperationsPage::OperationsPage(QWidget *parent)
  , olm(new OperationListModel)
  , currentOperation(nullptr)
  , opStack(new QStackedLayout())
+ , infoModel(new GeomNodeModel())
  , sIH(new SelectionInfoHandler())
  , subPage(nullptr)
  , tdModel(new TargetDefListModel(&dummy)) {
   ui->setupUi(this);  
   ui->Operation->setLayout(opStack);
   ui->lstOperations->setModel(olm);
+  ui->geomTree->setModel(infoModel);
   connect(Core().uiMainWin()->actionToolPath, &QAction::triggered, this, &OperationsPage::toolPath);
   connect(Core().uiMainWin()->actionSelReprocess, &QAction::triggered, this, &OperationsPage::reSelect);
   connect(Core().uiMainWin()->actionGenerate_GCode, &QAction::triggered, this, &OperationsPage::genGCode);
   connect(Core().uiMainWin()->actionSelection2Horizontal, &QAction::triggered, this, &OperationsPage::sel2Horizontal);
   connect(Core().uiMainWin()->actionSelection2Vertical, &QAction::triggered, this, &OperationsPage::sel2Vertical);
   connect(ui->lstOperations->selectionModel(),  &QItemSelectionModel::selectionChanged, this, &OperationsPage::opSelected);
-  connect(Core().view3D(), &OcctQtViewer::selectionChanged,  sIH, &SelectionInfoHandler::evalSelection);
+  connect(Core().view3D(), &OcctQtViewer::selectionChanged,  this, &OperationsPage::evalSelection);
   connect(this,      &OperationsPage::raiseMessage, Core().mainWin(), &MainWindow::setStatusMessage);
   connect(ui->spA,   &QDoubleSpinBox::valueChanged, this, &OperationsPage::rotate);
   connect(ui->spB,   &QDoubleSpinBox::valueChanged, this, &OperationsPage::rotate);
@@ -185,6 +188,26 @@ void OperationsPage::closeEvent(QCloseEvent* e) {
   }
 
 
+void OperationsPage::evalSelection() {
+  std::vector<TopoDS_Shape> selection = Core().view3D()->selection();
+
+  //TODO:
+  for (auto& s : selection) {
+      if (s.ShapeType() == TopAbs_FACE) {
+         qDebug() << "selection is face ...";
+         sIH->exploreFace(TopoDS::Face(s));
+         }
+      else if (s.ShapeType() == TopAbs_EDGE) {
+         qDebug() << "selection is edge ...";
+         sIH->exploreEdge(TopoDS::Edge(s));
+         }
+      else {
+         qDebug() << "selection is unknown: " << s.ShapeType();
+         }
+      }
+  }
+
+
 bool OperationsPage::eventFilter(QObject *obj, QEvent *event) {
   if (event->type() == QEvent::KeyPress) {
      QKeyEvent *evt = static_cast<QKeyEvent *>(event);
@@ -267,7 +290,7 @@ void OperationsPage::genGCode() {
   QString        filePattern = QString(tr("GCode Files (*.%1)")).arg(xtension);
   QFileDialog    dialog(this
                       , tr("QFileDialog::getSaveFileName()")
-                      , "/media/Scratch"
+                      , kute::BasePath
                       , filePattern);
 
   dialog.setSupportedSchemes(QStringList(QStringLiteral("file")));

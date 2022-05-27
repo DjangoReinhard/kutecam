@@ -412,7 +412,7 @@
      <x>0</x>
      <y>0</y>
      <width>1200</width>
-     <height>32</height>
+     <height>31</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -504,7 +504,6 @@
     <addaction name="actionRemove"/>
     <addaction name="separator"/>
     <addaction name="menuSelection"/>
-    <addaction name="actionTest"/>
    </widget>
    <widget class="QMenu" name="menuSetup">
     <property name="title">

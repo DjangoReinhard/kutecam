@@ -629,11 +629,11 @@ void SetupPage::loadProject(ProjectFile* pf, const TopoDS_Shape& mShape) {
   if (!work->vm.IsNull()) bb.Add(work->vm->BoundingBox());
   bb.Add(work->vr->BoundingBox());
   work->vise = new AIS_Shape(BRepPrimAPI_MakeBox(bb.CornerMin(), bb.CornerMax()).Shape());
-  QFile tfn = pf->value("Tool-file").toString();
+//  QFile tfn = pf->value("Tool-file").toString();
 
-  if (tfn.exists()) {
-     Core().loadTools(tfn.fileName());
-     }
+//  if (tfn.exists()) {
+//     Core().loadTools(tfn.fileName());
+//     }
   enableModel(false);
   view3D->iso1View();
   pf->endGroup();

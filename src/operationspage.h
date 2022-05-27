@@ -35,6 +35,7 @@ namespace Ui {
 class OperationsPage;
 }
 QT_END_NAMESPACE
+class GeomNodeModel;
 class OperationListModel;
 class OperationSubPage;
 class ProjectFile;
@@ -65,6 +66,7 @@ public:
 public slots:
   void addOperation(Operation* op);
   void cutDepthChanged(double v);
+  void evalSelection();
   void genGCode();
   void reSelect();
   void sel2Horizontal();
@@ -81,6 +83,7 @@ private:
   OperationListModel*              olm;
   Operation*                       currentOperation;
   QStackedLayout*                  opStack;
+  GeomNodeModel*                   infoModel;
   QMap<QString, OperationSubPage*> pages;
   SelectionInfoHandler*            sIH;
   OperationSubPage*                subPage;

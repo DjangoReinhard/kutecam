@@ -83,10 +83,12 @@ void XmlToolReader::processText(ToolEntry* t, const QDomNode& n) {
 
   if (name      == "Name")          t->setToolName(rawData);
   else if (name == "Collet")        t->setCollet(value);
+  else if (name == "TipDiameter")   t->setTipDiameter(value);
   else if (name == "FluteDiameter") t->setFluteDiameter(value);
   else if (name == "FluteLength")   t->setFluteLength(value);
   else if (name == "Flutes")        t->setNumFlutes(value);
   else if (name == "CuttingDepth")  t->setCuttingDepth(value);
+  else if (name == "CuttingAngle")  t->setCuttingAngle(value);
   else if (name == "ShankDiameter") t->setShankDiameter(value);
   else if (name == "FreeLength")    t->setFreeLength(value);
   }

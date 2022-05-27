@@ -74,6 +74,7 @@ protected:
   std::vector<QFileInfo*> findFile(const QDir& dir, const QStringList& nameFilters, QDir::Filters defFilters);
   void initialize();  
   bool loadMaterials();
+  bool loadTools(const QString &fileName);
   bool loadViseList();
   void loadVise(ViseEntry* vise, Handle(AIS_Shape)& left, Handle(AIS_Shape)& middle, Handle(AIS_Shape)& right);
   void onShutdown(QCloseEvent* ce);
