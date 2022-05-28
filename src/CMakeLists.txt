@@ -21,7 +21,7 @@ add_executable(kuteCAM
     gcodeeditor.cpp
     gcodehighlighter.cpp
     gcodewriter.cpp
-    geomlistmodel.cpp
+    geomnodemodel.cpp
     gocircle.cpp
     gocontour.cpp
     goline.cpp
@@ -39,7 +39,6 @@ add_executable(kuteCAM
     pluginlistmodel.cpp
     preview3d.cpp
     projectfile.cpp
-    selectioninfohandler.cpp
     selectionhandler.cpp
     setuppage.cpp
     shapelistmodel.cpp

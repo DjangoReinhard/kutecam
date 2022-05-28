@@ -43,7 +43,7 @@ class Work;
 class QItemSelection;
 class QStackedLayout;
 class QStringListModel;
-class SelectionInfoHandler;
+//class SelectionInfoHandler;
 class TargetDefListModel;
 class ToolEntry;
 
@@ -66,7 +66,7 @@ public:
 public slots:
   void addOperation(Operation* op);
   void cutDepthChanged(double v);
-  void evalSelection();
+  void selectionChanged();
   void genGCode();
   void reSelect();
   void sel2Horizontal();
@@ -85,7 +85,7 @@ private:
   QStackedLayout*                  opStack;
   GeomNodeModel*                   infoModel;
   QMap<QString, OperationSubPage*> pages;
-  SelectionInfoHandler*            sIH;
+//  SelectionInfoHandler*            sIH;
   OperationSubPage*                subPage;
   std::vector<TargetDefinition*>   dummy;
   TargetDefListModel*              tdModel;

@@ -31,12 +31,12 @@
 #include "core.h"
 #include "drilltargetdefinition.h"
 #include "gcodewriter.h"
-#include "geomlistmodel.h"
+#include "geomnodemodel.h"
 #include "occtviewer.h"
 #include "operation.h"
 #include "operationlistmodel.h"
 #include "operationsubpage.h"
-#include "selectioninfohandler.h"
+//#include "selectioninfohandler.h"
 #include "subopcontour.h"
 #include "subopclampingplug.h"
 #include "subopdrill.h"
@@ -87,7 +87,7 @@ OperationsPage::OperationsPage(QWidget *parent)
  , currentOperation(nullptr)
  , opStack(new QStackedLayout())
  , infoModel(new GeomNodeModel())
- , sIH(new SelectionInfoHandler())
+// , sIH(new SelectionInfoHandler())
  , subPage(nullptr)
  , tdModel(new TargetDefListModel(&dummy)) {
   ui->setupUi(this);  
@@ -100,7 +100,7 @@ OperationsPage::OperationsPage(QWidget *parent)
   connect(Core().uiMainWin()->actionSelection2Horizontal, &QAction::triggered, this, &OperationsPage::sel2Horizontal);
   connect(Core().uiMainWin()->actionSelection2Vertical, &QAction::triggered, this, &OperationsPage::sel2Vertical);
   connect(ui->lstOperations->selectionModel(),  &QItemSelectionModel::selectionChanged, this, &OperationsPage::opSelected);
-  connect(Core().view3D(), &OcctQtViewer::selectionChanged,  this, &OperationsPage::evalSelection);
+  connect(Core().view3D(), &OcctQtViewer::selectionChanged,  this, &OperationsPage::selectionChanged);
   connect(this,      &OperationsPage::raiseMessage, Core().mainWin(), &MainWindow::setStatusMessage);
   connect(ui->spA,   &QDoubleSpinBox::valueChanged, this, &OperationsPage::rotate);
   connect(ui->spB,   &QDoubleSpinBox::valueChanged, this, &OperationsPage::rotate);
@@ -185,26 +185,6 @@ void OperationsPage::closeEvent(QCloseEvent* e) {
      pf->endGroup();
      pf->sync();
      }
-  }
-
-
-void OperationsPage::evalSelection() {
-  std::vector<TopoDS_Shape> selection = Core().view3D()->selection();
-
-  //TODO:
-  for (auto& s : selection) {
-      if (s.ShapeType() == TopAbs_FACE) {
-         qDebug() << "selection is face ...";
-         sIH->exploreFace(TopoDS::Face(s));
-         }
-      else if (s.ShapeType() == TopAbs_EDGE) {
-         qDebug() << "selection is edge ...";
-         sIH->exploreEdge(TopoDS::Edge(s));
-         }
-      else {
-         qDebug() << "selection is unknown: " << s.ShapeType();
-         }
-      }
   }
 
 
@@ -463,6 +443,14 @@ void OperationsPage::shapeSelected(const TopoDS_Shape &shape) {
      currentOperation->shBounds = bb;
   emit raiseMessage(QString("%1 <-> %2").arg(bb.CornerMax().Z())
                                         .arg(bb.CornerMin().Z()));
+  }
+
+
+void OperationsPage::selectionChanged() {
+  std::vector<TopoDS_Shape> selection = Core().view3D()->selection();
+
+  infoModel->replaceData(selection);
+  ui->geomTree->expandAll();
   }
 
 
