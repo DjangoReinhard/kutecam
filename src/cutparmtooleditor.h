@@ -45,6 +45,7 @@ public:
   explicit CutParmToolEditor(StringListModel* matModel, ToolEntry* toolEntry, QWidget *parent = nullptr);
 
   void setTool(ToolEntry* toolEntry);
+  void saveTool(ToolEntry* toolEntry);
 
 public slots:
   void addMaterial();

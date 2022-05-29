@@ -41,6 +41,7 @@ class DimToolEditor : public QWidget
 public:
   explicit DimToolEditor(ToolEntry* toolEntry, QWidget *parent = nullptr);
 
+  void saveTool(ToolEntry* toolEntry);
   void setTool(ToolEntry* toolEntry);
 
 public slots:

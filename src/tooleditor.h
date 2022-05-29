@@ -51,20 +51,23 @@ class ToolEditor : public QWidget
 public:
   explicit ToolEditor(StringListModel* matModel, ToolListModel* tools, QWidget *parent = nullptr);
 
+  void addTool(ToolEntry* nt);
+  bool eventFilter(QObject* o, QEvent* event) override;
   void initialize();
   void saveTool(ToolEntry* tool);
   void setTool(ToolEntry* tool);
 
 public slots:
   void toolSelected(const QItemSelection &selected, const QItemSelection &deselected);
+  void toolNameChanged(const QString& name);
+  void toolNumChanged(int num);
 
 signals:
   void teActivated(bool active);
 
 protected:
-  double readDouble(QLineEdit* edit);
-  void 	 hideEvent(QHideEvent *event);
-  void 	 showEvent(QShowEvent *event);
+  void 	 hideEvent(QHideEvent *event) override;
+  void 	 showEvent(QShowEvent *event) override;
 
 private:
   Ui::ToolEditor*    ui;

@@ -131,7 +131,7 @@ void XmlToolReader::readAttribute(ToolEntry* t, CuttingParameters* cp, const QDo
 void XmlToolReader::readAttribute(ToolEntry* t, const QDomAttr& a) {
   qDebug() << "Attribute: " << a.name() << "has value:" << a.value();
 
-  if (a.name() == "Number") t->setNumber(a.value().toInt());
+  if (a.name() == "Number") t->setToolNumber(a.value().toInt());
   }
 
 

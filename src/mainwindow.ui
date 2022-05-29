@@ -439,6 +439,7 @@
     <addaction name="actionToolsOpen"/>
     <addaction name="separator"/>
     <addaction name="actionProjectSave"/>
+    <addaction name="actionProjectSaveAs"/>
     <addaction name="actionToolsSave"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
@@ -599,7 +600,7 @@
     <string>open &amp;Project</string>
    </property>
   </action>
-  <action name="actionProjectSave">
+  <action name="actionProjectSaveAs">
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -754,6 +755,14 @@
    </property>
    <property name="text">
     <string>Clip-Y</string>
+   </property>
+  </action>
+  <action name="actionProjectSave">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>save Project</string>
    </property>
   </action>
  </widget>

@@ -35,8 +35,9 @@ class QSettings;
 class ProjectFile
 {
 public:
-  ProjectFile();
-  ProjectFile(const QString& fileName);
+  explicit ProjectFile();
+  explicit ProjectFile(const QString& fileName);
+  virtual ~ProjectFile();
 
   void       beginGroup(const QString& prefix);
   int        beginReadArray(const QString &prefix);
@@ -49,6 +50,7 @@ public:
   void       setArrayIndex(int i);
   void       setValue(const QString& key, const QVariant& value);
   void       sync();
+  QString    tempFileName() const;
   QVariant   value(const QString& key, const QVariant& defaultValue = QVariant()) const;
 
 private:

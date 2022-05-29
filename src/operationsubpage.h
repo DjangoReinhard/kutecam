@@ -52,7 +52,7 @@ public:
   virtual void processSelection() = 0;
   virtual void showToolPath();
   virtual void toolPath() = 0;
-  virtual void closeEvent(QCloseEvent* e) override;
+//  virtual void closeEvent(QCloseEvent* e) override;
 
 public slots:
   void absToggled(const QVariant& v);

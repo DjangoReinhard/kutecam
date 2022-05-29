@@ -25,6 +25,7 @@
  */
 #include "dimtooleditor.h"
 #include "ui_tDim.h"
+#include "kuteCAM.h"
 #include "toolentry.h"
 #include <QKeyEvent>
 
@@ -63,20 +64,14 @@ bool DimToolEditor::eventFilter(QObject* o, QEvent* event) {
      switch (e->key()) {
        case Qt::Key_Tab: {
             QLineEdit* ed = static_cast<QLineEdit*>(o);
-            bool       ok = false;
-            double     v  = ed->text().toDouble(&ok);
-
-            if (!ok) return false;
-            if (o == ui->fluteLength)        toolEntry->setFluteLength(v);
-            else if (o == ui->fluteDiameter) toolEntry->setFluteDiameter(v);
-            else if (o == ui->tipDiameter)   toolEntry->setTipDiameter(v);
-            else if (o == ui->freeLength)    toolEntry->setFreeLength(v);
-            else if (o == ui->cuttingDepth)
-              toolEntry->setCuttingDepth(v);
-            else if (o == ui->cuttingAngle)
-              toolEntry->setCuttingAngle(v);
-            else if (o == ui->shankDiameter) toolEntry->setShankDiameter(v);
-            else if (o == ui->numFlutes)     toolEntry->setNumFlutes((int) v);
+            if (o == ui->fluteLength)        toolEntry->setFluteLength(kute::textAsDouble(ed->text()));
+            else if (o == ui->fluteDiameter) toolEntry->setFluteDiameter(kute::textAsDouble(ed->text()));
+            else if (o == ui->tipDiameter)   toolEntry->setTipDiameter(kute::textAsDouble(ed->text()));
+            else if (o == ui->freeLength)    toolEntry->setFreeLength(kute::textAsDouble(ed->text()));
+            else if (o == ui->cuttingDepth)  toolEntry->setCuttingDepth(kute::textAsDouble(ed->text()));
+            else if (o == ui->cuttingAngle)  toolEntry->setCuttingAngle(kute::textAsDouble(ed->text()));
+            else if (o == ui->shankDiameter) toolEntry->setShankDiameter(kute::textAsDouble(ed->text()));
+            else if (o == ui->numFlutes)     toolEntry->setNumFlutes(ed->text().toInt());
             } break;
        }
      }
@@ -84,15 +79,27 @@ bool DimToolEditor::eventFilter(QObject* o, QEvent* event) {
   }
 
 
+void DimToolEditor::saveTool(ToolEntry* tool) {
+  tool->setTipDiameter(kute::textAsDouble(ui->tipDiameter->text()));
+  tool->setFluteLength(kute::textAsDouble(ui->fluteLength->text()));
+  tool->setFluteDiameter(kute::textAsDouble(ui->fluteDiameter->text()));
+  tool->setFreeLength(kute::textAsDouble(ui->freeLength->text()));
+  tool->setCuttingDepth(kute::textAsDouble(ui->cuttingDepth->text()));
+  tool->setCuttingAngle(kute::textAsDouble(ui->cuttingAngle->text()));
+  tool->setShankDiameter(kute::textAsDouble(ui->shankDiameter->text()));
+  tool->setNumFlutes(ui->numFlutes->text().toInt());
+  }
+
+
 void DimToolEditor::setTool(ToolEntry* toolEntry) {
   this->toolEntry = toolEntry;
 
-  ui->tipDiameter->setText(QString("%1").arg(toolEntry->tipDiameter(), 0, 'f', 3));
-  ui->fluteLength->setText(QString("%1").arg(toolEntry->fluteLength(), 0, 'f', 3));
-  ui->fluteDiameter->setText(QString("%1").arg(toolEntry->fluteDiameter(), 0, 'f', 3));
-  ui->freeLength->setText(QString("%1").arg(toolEntry->freeLength(), 0, 'f', 3));
-  ui->cuttingDepth->setText(QString("%1").arg(toolEntry->cuttingDepth(), 0, 'f', 3));
-  ui->cuttingAngle->setText(QString("%1").arg(toolEntry->cuttingAngle(), 0, 'f', 3));
-  ui->shankDiameter->setText(QString("%1").arg(toolEntry->shankDiameter(), 0, 'f', 3));
+  ui->tipDiameter->setText(QLocale::system().toString(toolEntry->tipDiameter(), 'f', 3));
+  ui->fluteLength->setText(QLocale::system().toString(toolEntry->fluteLength(), 'f', 3));
+  ui->fluteDiameter->setText(QLocale::system().toString(toolEntry->fluteDiameter(), 'f', 3));
+  ui->freeLength->setText(QLocale::system().toString(toolEntry->freeLength(), 'f', 3));
+  ui->cuttingDepth->setText(QLocale::system().toString(toolEntry->cuttingDepth(), 'f', 3));
+  ui->cuttingAngle->setText(QLocale::system().toString(toolEntry->cuttingAngle(), 'f', 3));
+  ui->shankDiameter->setText(QLocale::system().toString(toolEntry->shankDiameter(), 'f', 3));
   ui->numFlutes->setText(QString("%1").arg(toolEntry->numFlutes(), 0, 10));
   }

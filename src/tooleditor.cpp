@@ -56,6 +56,35 @@ ToolEditor::ToolEditor(StringListModel* matModel, ToolListModel* tools, QWidget 
   ui->setupUi(this);
   ui->lstTools->setModel(tools);
   connect(ui->lstTools->selectionModel(), &QItemSelectionModel::selectionChanged, this, &ToolEditor::toolSelected);
+  connect(ui->toolName, &QLineEdit::textEdited, this, &ToolEditor::toolNameChanged);
+  connect(ui->spToolNum, &QSpinBox::valueChanged, this, &ToolEditor::toolNumChanged);
+  }
+
+
+void ToolEditor::addTool(ToolEntry* nt) {
+  QModelIndex mi   = ui->lstTools->currentIndex();
+  ToolEntry*  tool = Core().toolListModel()->tool(mi.row());
+
+  if (tool) saveTool(tool);
+  Core().toolListModel()->add(nt);
+  setTool(nt);
+  }
+
+
+bool ToolEditor::eventFilter(QObject* o, QEvent* event) {
+  if (event->type() == QEvent::KeyPress) {
+     QKeyEvent* e = static_cast<QKeyEvent*>(event);
+
+     switch (e->key()) {
+       case Qt::Key_Insert:
+            int        rc = Core().toolListModel()->rowCount();
+            ToolEntry* nt = new ToolEntry(rc);
+
+            addTool(nt);
+            return true;
+       }
+     }
+  return false;
   }
 
 
@@ -66,6 +95,10 @@ void ToolEditor::initialize() {
   edCP  = new CutParmToolEditor(matModel, curTool);
   ui->notebook->addTab(edDim, tr("Properties"));
   ui->notebook->addTab(edCP, tr("Cutting Parameters"));
+  edDim->installEventFilter(this);
+  edCP->installEventFilter(this);
+  ui->lstTools->installEventFilter(this);
+  installEventFilter(this);
   }
 
 
@@ -74,24 +107,24 @@ void ToolEditor::hideEvent(QHideEvent *event) {
   }
 
 
-double ToolEditor::readDouble(QLineEdit* edit) {
-  QString userInput = edit->text();
-  bool    ok;
-
-  userInput.replace(',', '.');
-  double rv = userInput.toDouble(&ok);
-
-  return ok ? rv : 0;
-  }
-
-
 void ToolEditor::showEvent(QShowEvent *event) {
   emit teActivated(true);
   }
 
 
+void ToolEditor::toolNameChanged(const QString& name) {
+  if (!curTool) return;
+  curTool->setToolName(name);
+  }
+
+
+void ToolEditor::toolNumChanged(int num) {
+  if (!curTool) return;
+  curTool->setToolNumber(num);
+  }
+
+
 void ToolEditor::toolSelected(const QItemSelection& selected, const QItemSelection& ) {
-//  QModelIndexList dil = deselected.indexes();
   QModelIndexList il  = selected.indexes();
   int             mx  = 0;
 
@@ -104,34 +137,21 @@ void ToolEditor::toolSelected(const QItemSelection& selected, const QItemSelecti
   }
 
 
-#ifdef REDNOSE
 void ToolEditor::saveTool(ToolEntry* tool) {
-  tool->setCollet(ui->cbCollet->currentIndex());
+  tool->setToolNumber(ui->spToolNum->value());
   tool->setToolName(ui->toolName->text());
-  tool->setFluteDiameter(readDouble(ui->fluteDiameter));
-  tool->setFluteLength(readDouble(ui->fluteLength));
-  tool->setCuttingDepth(readDouble(ui->cuttingDepth));
-  tool->setShankDiameter(readDouble(ui->shankDiameter));
-  tool->setFreeLength(readDouble(ui->freeLength));
-  tool->setNumFlutes(ui->numFlutes->text().toInt());
+  edDim->saveTool(tool);
+  edCP->saveTool(tool);
   }
 
 
 void ToolEditor::setTool(ToolEntry *tool) {
   if (!tool) return;
-
   curTool = tool;
-  ui->cbCollet->setCurrentIndex(tool->collet());
-  ui->toolNum->setText(QString("%1").arg(tool->toolNumber()));
-  ui->toolName->setText(tool->toolName());
-  ui->fluteDiameter->setText(QString("%1").arg(tool->fluteDiameter()));
-  ui->fluteLength->setText(QString("%1").arg(tool->fluteLength()));
-  ui->cuttingDepth->setText(QString("%1").arg(tool->cuttingDepth()));
-  ui->shankDiameter->setText(QString("%1").arg(tool->shankDiameter()));
-  ui->freeLength->setText(QString("%1").arg(tool->freeLength()));
-  ui->numFlutes->setText(QString("%1").arg(tool->numFlutes()));
-  model->replace(tool->cutParameters());
-  ui->lstCutParams->setCurrentIndex(model->index(0, 0));
+
+  ui->spToolNum->setValue(curTool->toolNumber());
+  ui->toolName->setText(curTool->toolName());
+  edDim->setTool(curTool);
+  edCP->setTool(curTool);
   ui->toolName->setFocus();
   }
-#endif

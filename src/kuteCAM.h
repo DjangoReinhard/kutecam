@@ -33,6 +33,7 @@
 
 namespace kute {
 extern int getDominantAxis(const gp_Dir& dir);
+extern double textAsDouble(const QString& value);
 extern const double  MinDelta;
 extern const QString BasePath;
 extern const QString CADBase;

@@ -62,6 +62,7 @@ public:
   void    setFreeLength(double len);
   void    setTipDiameter(double diam);
   void    setToolName(const QString& name);
+  void    setToolNumber(int number);
   void    setNumFlutes(int num);
   QString toString() const;
   CuttingParameters* cutParameter(int row);
@@ -71,7 +72,6 @@ public:
 
 private:
   explicit ToolEntry(QObject* parent = nullptr);
-  void     setNumber(int number);
   void     insertCuttingParameters(int row, CuttingParameters* cp);
 
   int     number;

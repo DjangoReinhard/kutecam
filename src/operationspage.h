@@ -59,6 +59,9 @@ public:
   bool eventFilter(QObject *obj, QEvent *event) override;
   void loadOperation(Operation* op);
   void loadProject(ProjectFile* pf);
+  void saveOperations();
+  void saveOperationsTo();
+  void saveProject();
   void opSelected(const QItemSelection& selected, const QItemSelection& deselected);
   void rotate();
   void shapeSelected(const TopoDS_Shape& shape);

@@ -56,7 +56,6 @@ CutParmToolEditor::CutParmToolEditor(StringListModel* matModel, ToolEntry* toolE
 
 
 void CutParmToolEditor::addMaterial() {
-//  if (toolEntry) saveTool(curTool); //TODO: how to replace???
   bool    ok;
   QString material = QInputDialog::getItem(this
                                          , tr("QInputDialog::getItem()")
@@ -67,14 +66,9 @@ void CutParmToolEditor::addMaterial() {
                                          , &ok);
 
   if (ok && !material.isEmpty()) {
-     QVector<ToolEntry*> tools = Core().toolListModel()->tools();
-
-     for (ToolEntry* te : tools) {
-         if (!te->hasMaterial(material))
-            te->cutParameters().append(new CuttingParameters(material));
-         }
-//     model->replace(curTool->cutParameters()); //TODO: how to replace???
-//     ui->lstCutParams->setCurrentIndex(model->index(0, 0));
+     toolEntry->cutParameters().append(new CuttingParameters(material));
+     model->replace(toolEntry->cutParameters());
+     ui->lstCutParams->setCurrentIndex(model->index(0, 0));
      }
   }
 
@@ -123,6 +117,11 @@ void CutParmToolEditor::feedChanged(const QVariant& f) {
   if (!curCutParams) return;
   curCutParams->setToothFeed(f.toDouble());
   calcSpeed();
+  }
+
+
+void CutParmToolEditor::saveTool(ToolEntry* toolEntry) {
+
   }
 
 

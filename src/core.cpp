@@ -27,7 +27,7 @@
 #include "core.h"
 #include "applicationwindow.h"
 #include "kernel.h"
-#include "geomlistmodel.h"
+#include "geomnodemodel.h"
 #include "kuteCAM.h"
 #include "shapelistmodel.h"
 #include "postprocessor.h"
@@ -69,6 +69,11 @@ QString Core::appName() const {
   }
 
 
+QApplication& Core::application() const {
+  return k->app;
+  }
+
+
 QSettings& Core::cfg() {
   return k->configData;
   }
@@ -96,6 +101,29 @@ QString Core::chooseCADFile(QWidget* parent) {
   fileName       = dialog.selectedUrls().value(0).toLocalFile();
 
   qDebug() << "choosen CAD file is:" << fileName;
+
+  return fileName;
+  }
+
+
+QString Core::chooseProjectFile(QWidget* parent) {
+  QString     fileName;
+  QFileDialog dialog(parent
+                   , tr("QFileDialog::getSaveFileName()")
+                   , kute::BasePath
+                   , tr("Project Files (*.prj)"));
+
+  dialog.setSupportedSchemes(QStringList(QStringLiteral("file")));
+  dialog.setOption(QFileDialog::DontUseNativeDialog);
+  dialog.setAcceptMode(QFileDialog::AcceptSave);
+  if (dialog.exec() != QDialog::Accepted) {
+     qDebug() << "Oups - file-dialog aborted!";
+     return fileName;
+     }
+  fileName = dialog.selectedUrls().value(0).toLocalFile();
+  if (!fileName.endsWith(".prj")) fileName += ".prj";
+
+  qDebug() << "save project file to:" << fileName;
 
   return fileName;
   }

@@ -185,7 +185,7 @@ void ToolEntry::setNumFlutes(int num) {
   }
 
 
-void ToolEntry::setNumber(int number) {
+void ToolEntry::setToolNumber(int number) {
   this->number = number;
   }
 

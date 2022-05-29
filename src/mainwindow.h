@@ -78,6 +78,7 @@ protected:
   void openProject();
   void update();
   void saveProject();
+  void saveProjectAs();
   void startTimer();
   OcctQtViewer* viewer3D();
 

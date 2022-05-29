@@ -99,6 +99,10 @@ OperationsPage::OperationsPage(QWidget *parent)
   connect(Core().uiMainWin()->actionGenerate_GCode, &QAction::triggered, this, &OperationsPage::genGCode);
   connect(Core().uiMainWin()->actionSelection2Horizontal, &QAction::triggered, this, &OperationsPage::sel2Horizontal);
   connect(Core().uiMainWin()->actionSelection2Vertical, &QAction::triggered, this, &OperationsPage::sel2Vertical);
+
+  connect(Core().uiMainWin()->actionProjectSave,   &QAction::triggered, this, &OperationsPage::saveOperations);
+  connect(Core().uiMainWin()->actionProjectSaveAs, &QAction::triggered, this, &OperationsPage::saveOperationsTo);
+
   connect(ui->lstOperations->selectionModel(),  &QItemSelectionModel::selectionChanged, this, &OperationsPage::opSelected);
   connect(Core().view3D(), &OcctQtViewer::selectionChanged,  this, &OperationsPage::selectionChanged);
   connect(this,      &OperationsPage::raiseMessage, Core().mainWin(), &MainWindow::setStatusMessage);
@@ -164,27 +168,7 @@ void OperationsPage::cutDepthChanged(double d) {
 
 
 void OperationsPage::closeEvent(QCloseEvent* e) {
-  if (currentOperation) {
-     ProjectFile* pf = Core().projectFile();
-
-     switch (currentOperation->kind()) {
-       case ContourOperation: subPage = pages["Contour"]; break;
-       case DrillOperation:   subPage = pages["Drill"];   break;
-       case SweepOperation:   subPage = pages["Sweep"];   break;
-       }
-     subPage->closeEvent(e);
-     pf->beginGroup("Work");
-     pf->beginWriteArray("Operations");
-     for (int i=0; i < olm->rowCount(); ++i) {
-         Operation* op = olm->operation(i);
-
-         pf->setArrayIndex(i);
-         op->store(pf->settings());
-         }
-     pf->endArray();
-     pf->endGroup();
-     pf->sync();
-     }
+  if (olm->rowCount()) saveOperations();
   }
 
 
@@ -375,6 +359,36 @@ void OperationsPage::rotate() {
 
   if (currentOperation) Core().view3D()->removeShapes(currentOperation->toolPaths);
   Core().view3D()->rotate(kute::deg2rad(dA), kute::deg2rad(dB), kute::deg2rad(dC));
+  }
+
+
+void OperationsPage::saveOperations() {
+  if (currentOperation) {
+     ProjectFile* pf = Core().projectFile();
+
+     pf->beginGroup("Work");
+     pf->beginWriteArray("Operations");
+     for (int i=0; i < olm->rowCount(); ++i) {
+         Operation* op = olm->operation(i);
+
+         pf->setArrayIndex(i);
+         op->store(pf->settings());
+         }
+     pf->endArray();
+     pf->endGroup();
+     }
+  }
+
+
+void OperationsPage::saveOperationsTo() {
+  QString fileName = Core().chooseProjectFile(this);
+  QFile   tmp(Core().projectFile()->fileName());
+
+  if (tmp.copy(fileName)) {
+     //TODO: remove temporary file!
+     Core().setProjectFile(new ProjectFile(fileName));
+     }
+  else qDebug() << "failed to create project file!";
   }
 
 

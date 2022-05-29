@@ -68,11 +68,13 @@ public:
 
   void                     addCurve(Handle(AIS_Shape) s);
   QString                  appName() const;
+  QApplication&            application() const;
   Ui::MainWindow*          uiMainWin();
   MainWindow*              mainWin();
   QSettings&               cfg();
   const QSettings&         cfg() const;
   QString                  chooseCADFile(QWidget* parent = nullptr);
+  QString                  chooseProjectFile(QWidget* parent = nullptr);
   void                     clearCurves();
   Util3D*                  helper3D();
   bool                     hasModelLoaded() const;

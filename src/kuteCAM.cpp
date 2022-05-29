@@ -24,6 +24,8 @@
  * **************************************************************************
  */
 #include "kuteCAM.h"
+#include "core.h"
+#include <QApplication>
 #include <QObject>
 
 
@@ -58,6 +60,15 @@ int relPos(const gp_Pnt& reference, const gp_Pnt& other) {
   if (d < 0) return -1;
   if (d > 0) return 1;
   return 0;
+  }
+
+
+double textAsDouble(const QString& input) {
+  double v = QLocale::system().toDouble(input);
+
+  if (abs(v) < MinDelta) v = input.toDouble();
+
+  return v;
   }
 
 

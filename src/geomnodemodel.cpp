@@ -101,12 +101,12 @@ int GeomNode::columnCount() const {
 QVariant GeomNode::data(int column) const {
   switch (column) {
     case 0:  return type2String();
-    case 1:  return p0.X();
-    case 2:  return p0.Y();
-    case 3:  return p0.Z();
-    case 4:  return p1.X();
-    case 5:  return p1.Y();
-    case 6:  return p1.Z();
+    case 1:  return QString("%1").arg(p0.X(), 0, 'f', 3);
+    case 2:  return QString("%1").arg(p0.Y(), 0, 'f', 3);
+    case 3:  return QString("%1").arg(p0.Z(), 0, 'f', 3);
+    case 4:  return QString("%1").arg(p1.X(), 0, 'f', 3);
+    case 5:  return QString("%1").arg(p1.Y(), 0, 'f', 3);
+    case 6:  return QString("%1").arg(p1.Z(), 0, 'f', 3);
     default: break;
     }
   return QVariant();
@@ -159,6 +159,7 @@ QVariant GeomNodeModel::data(int row, int column, int role) const {
 
 QVariant GeomNodeModel::data(const QModelIndex& index, int role) const {
   if (!index.isValid()) return QVariant();
+  if (index.column() && role == Qt::TextAlignmentRole) return int(Qt::AlignRight | Qt::AlignVCenter);
   if (role != Qt::DisplayRole) return QVariant();
   GeomNode* item = static_cast<GeomNode*>(index.internalPointer());
 

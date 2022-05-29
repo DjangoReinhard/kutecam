@@ -102,8 +102,8 @@ void OperationSubPage::absToggled(const QVariant& v) {
   }
 
 
-void OperationSubPage::closeEvent(QCloseEvent *e) {
-  }
+//void OperationSubPage::closeEvent(QCloseEvent *e) {
+//  }
 
 
 void OperationSubPage::connectSignals() {

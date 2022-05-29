@@ -35,7 +35,7 @@
 #include "setuppage.h"
 #include "util3d.h"
 #include "occtviewer.h"
-#include "geomlistmodel.h"
+#include "geomnodemodel.h"
 #include "setuppage.h"
 #include "operationspage.h"
 #include "pluginlistmodel.h"
@@ -364,4 +364,12 @@ void Kernel::onShutdown(QCloseEvent* ce) {
   configData.setValue("spGeom", win.sp->saveGeometry());
   configData.setValue("spState", win.sp->saveState());
   configData.endGroup();
+  if (!pf) return;
+  const QString& tfn = pf->tempFileName();
+  const QString& fn  = pf->fileName();
+
+  if (tfn == fn) {
+     qDebug() << "possibly have to delete temporary project file ...";
+     QFile::remove(tfn);
+     }
   }

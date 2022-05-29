@@ -44,6 +44,12 @@ ProjectFile::ProjectFile(const QString& fileName)
   }
 
 
+ProjectFile::~ProjectFile() {
+  cfg->sync();
+  delete cfg;
+  }
+
+
 int  ProjectFile::beginReadArray(const QString &prefix) {
   return cfg->beginReadArray(prefix);
   }
@@ -63,6 +69,7 @@ void ProjectFile::beginGroup(const QString& prefix) {
 
 void ProjectFile::endArray() {
   cfg->endArray();
+  cfg->sync();
   }
 
 
@@ -101,6 +108,11 @@ void ProjectFile::setValue(const QString& key, const QVariant& value) {
 
 void ProjectFile::sync() {
   cfg->sync();
+  }
+
+
+QString ProjectFile::tempFileName() const {
+  return tf.fileName();
   }
 
 
