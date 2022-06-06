@@ -79,8 +79,6 @@ class Operation : public QObject
 {
   Q_OBJECT
 public:
-  static QString OTRoughing;
-  static QString OTFinish;
   explicit Operation(int id, OperationType ot, QObject* parent = nullptr);
   explicit Operation(int id, QObject* parent = nullptr);
 
@@ -149,8 +147,8 @@ public:
   void    setQmin(double q);
   void    setQmax(double q);
   void    setRetract(double r);
-  void    setSaveZ0(double z);
-  void    setSaveZ1(double z);
+  void    setSafeZ0(double z);
+  void    setSafeZ1(double z);
   void    setSpeed(double speed);
   void    setToolNum(int num);
   void    setTopZ(double z);

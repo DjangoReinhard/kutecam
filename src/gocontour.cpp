@@ -102,17 +102,20 @@ bool GOContour::add(GraphicObject* o) {
 
      return true;
      }
-  if (kute::isEqual(o->endPoint(), endPoint())
-   || kute::isEqual(o->startPoint(), startPoint()))
+  GraphicObject* first = segs.at(0);
+  GraphicObject* last  = segs.at(segs.size() - 1);
+
+  if (kute::isEqual(o->endPoint(), last->endPoint())
+   || kute::isEqual(o->startPoint(), first->startPoint()))
      o->invert();
 
-  if (kute::isEqual(o->startPoint(), endPoint())) {
+  if (kute::isEqual(o->startPoint(), last->endPoint())) {
      segs.push_back(o);
      setEndPoint(o->endPoint());
 
      return true;
      }
-  if (kute::isEqual(o->endPoint(), startPoint())) {
+  if (kute::isEqual(o->endPoint(), first->startPoint())) {
      segs.insert(segs.begin(), o);
      setStartPoint(o->startPoint());
 
@@ -314,7 +317,7 @@ double GOContour::distEnd() const {
 
 
 void GOContour::dump() const {
-  qDebug() << "<< ================ dump contour segs =======================";
+  qDebug() << "<< ==============>> dump contour segs >>=====================";
   qDebug() << "contour from:" << startPoint().X() << " / " << startPoint().Y()
            << "   to   "      << endPoint().X() << " / " << endPoint().Y()
            << "   with center: " << centerPoint().X() << " / " << centerPoint().Y();
@@ -323,7 +326,7 @@ void GOContour::dump() const {
 
       go->dump();
       }
-  qDebug() << "<< ================ dump contour segs =======================";
+  qDebug() << "<< --------------<< dump contour segs <<---------------------";
   }
 
 
@@ -523,6 +526,7 @@ std::vector<GraphicObject*>& GOContour::simplify(double z, bool cw) {
      setStartPoint(go->startPoint());
      setEndPoint(go->endPoint());
      add(segs.at(0)->split());
+
      }
   return segs;
   }

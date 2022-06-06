@@ -11,14 +11,18 @@ set(OpenCASCADE_DIR "/usr/local/lib/cmake/opencascade" CACHE PATH "OpenCascade 7
 set(ENV{CMAKE_BUILD_PARALLEL_LEVEL} "4")
 ### ------ don't change settings below this line ---- ###
 find_package(Qt5 REQUIRED COMPONENTS
-             Gui
-             Widgets
              Core
+             Gui
+             LinguistTools
              Sql
              UiTools
+             Widgets
              Xml
-             LinguistTools
              )
+if(UNIX)
+  find_package(Qt5 COMPONENTS REQUIRED X11Extras)
+  find_package(X11 REQUIRED)
+endif()
 find_package(OpenCASCADE COMPONENTS
              FoundationClasses
              ModelingData
@@ -121,4 +125,40 @@ target_link_libraries(IFStandard
                       INTERFACE dl
                       INTERFACE util
                       )
+set(TS_FILES
+   i18n/kuteCAM_en.ts
+   i18n/kuteCAM_de.ts
+   )
+
+qt5_add_translation(kuteCAM_QM_FILES ${kuteCAM_TS_FILES})
+add_custom_target(translations DEPENDS ${kuteCAM_TS_FILES})
+if(NOT QT_TRANSLATIONS_DIR)
+  get_target_property(QT5_QMAKE_EXECUTABLE Qt5::qmake IMPORTED_LOCATION)
+  execute_process(COMMAND ${QT5_QMAKE_EXECUTABLE} -query QT_INSTALL_TRANSLATIONS
+                  OUTPUT_VARIABLE qt_translations_dir
+                  OUTPUT_STRIP_TRAILING_WHITESPACE
+                  )
+  file(TO_CMAKE_PATH "${qt_translations_dir}" qt_translations_dir)
+  set(QT_TRANSLATIONS_DIR ${qt_translations_dir}
+      CACHE PATH "The location of the Qt translations" FORCE
+      )
+endif()
+add_custom_command(TARGET translations PRE_BUILD
+                   COMMAND lupdate -silent ${CMAKE_CURRENT_SOURCE_DIR}/src -ts ${CMAKE_CURRENT_SOURCE_DIR}/i18n/kuteCAM_de.ts ${CMAKE_CURRENT_SOURCE_DIR}/i18n/kuteCAM_en.ts
+                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
+                   )
+add_custom_command(TARGET translations PRE_BUILD
+                   COMMAND lrelease -compress -removeidentical ${CMAKE_CURRENT_SOURCE_DIR}/i18n/kuteCAM_de.ts -qm ${CMAKE_CURRENT_SOURCE_DIR}/i18n/kuteCAM_de.qm
+                   )
+add_custom_command(TARGET translations PRE_BUILD
+                   COMMAND lrelease -compress -removeidentical ${CMAKE_CURRENT_SOURCE_DIR}/i18n/kuteCAM_en.ts -qm ${CMAKE_CURRENT_SOURCE_DIR}/i18n/kuteCAM_en.qm
+                   )
+
+if(COMMAND qt_create_translation)
+    qt_create_translation(QM_FILES ${CMAKE_SOURCE_DIR}/i18n ${TS_FILES})
+else()
+    qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR}/i18n ${TS_FILES})
+endif()
 add_subdirectory(src)
+add_dependencies(kuteCAM translations)
+

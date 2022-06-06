@@ -40,18 +40,7 @@ GCodeHighlighter::GCodeHighlighter(QObject* parent)
 
 GCodeHighlighter::GCodeHighlighter(const GCodeHighlighter& other)
  : QSyntaxHighlighter(other.parent())
- , highlightingRules(other.highlightingRules)
- , fmtNumber(other.fmtNumber)
- , fmtGCode(other.fmtGCode)
- , fmtMotion(other.fmtMotion)
- , fmtMCode(other.fmtMCode)
- , fmtPos(other.fmtPos)
- , fmtXPos(other.fmtXPos)
- , fmtTool(other.fmtTool)
- , fmtSpeed(other.fmtSpeed)
- , fmtVar(other.fmtVar)
- , fmtComment(other.fmtComment)
- , fmtLineComment(other.fmtLineComment) {
+ , highlightingRules(other.highlightingRules) {
   }
 
 
@@ -70,153 +59,180 @@ void GCodeHighlighter::highlightBlock(const QString& text) {
 
 void GCodeHighlighter::setup() {
   HighlightingRule rule;
+  QTextCharFormat gcFormat;
 
-  fmtNumber.setForeground(Qt::lightGray);
-  fmtNumber.setFontItalic(true);
+  gcFormat.setForeground(Qt::lightGray);
+  gcFormat.setFontItalic(true);
+  gcFormat.setFontWeight(QFont::Normal);
   rule.pattern = QRegularExpression(QStringLiteral("\\bN\\d+\\b"));
-  rule.format = fmtNumber;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtGCode.setForeground(Qt::darkRed);
-  fmtGCode.setFontWeight(QFont::Bold);
+  gcFormat.setForeground(Qt::darkRed);
+  gcFormat.setFontItalic(false);
+  gcFormat.setFontWeight(QFont::Bold);
   rule.pattern = QRegularExpression(QStringLiteral("\\bG\\d\\d+\\.?\\d*\\b"));
-  rule.format = fmtGCode;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtGCode.setForeground(Qt::darkYellow);
-  fmtGCode.setFontWeight(QFont::Bold);
+  gcFormat.setForeground(Qt::darkYellow);
+  gcFormat.setFontItalic(false);
+  gcFormat.setFontWeight(QFont::Bold);
   rule.pattern = QRegularExpression(QStringLiteral("="));
-  rule.format = fmtGCode;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtGCode.setForeground(Qt::darkYellow);
-  fmtGCode.setFontWeight(QFont::Bold);
+  gcFormat.setForeground(Qt::darkYellow);
+  gcFormat.setFontItalic(false);
+  gcFormat.setFontWeight(QFont::Bold);
   rule.pattern = QRegularExpression(QStringLiteral("(BEGIN|END)\\s+PGM\\s+\\S+\\s+MM"));
-  rule.format = fmtGCode;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtGCode.setForeground(Qt::darkRed);
-  fmtGCode.setFontWeight(QFont::Bold);
+  gcFormat.setForeground(Qt::darkRed);
+  gcFormat.setFontItalic(false);
+  gcFormat.setFontWeight(QFont::Bold);
   rule.pattern = QRegularExpression(QStringLiteral("^\\s*CC\\s+"));
-  rule.format = fmtGCode;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtGCode.setForeground(Qt::darkRed);
-  fmtGCode.setFontWeight(QFont::Bold);
+  gcFormat.setForeground(Qt::darkRed);
+  gcFormat.setFontItalic(false);
+  gcFormat.setFontWeight(QFont::Bold);
   rule.pattern = QRegularExpression(QStringLiteral("^\\s*CYCLE\\s+DEF\\s+\\d+"));
-  rule.format = fmtGCode;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtMotion.setForeground(Qt::red);
-  fmtMotion.setFontWeight(QFont::Bold);
+  gcFormat.setForeground(Qt::red);
+  gcFormat.setFontItalic(false);
+  gcFormat.setFontWeight(QFont::Bold);
   rule.pattern = QRegularExpression(QStringLiteral("(?=G\\d\\D)G0"));
-  rule.format = fmtMotion;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtMotion.setForeground(QColor(180, 0, 0));
-  fmtMotion.setFontWeight(QFont::Bold);
+  gcFormat.setForeground(QColor(180, 0, 0));
+  gcFormat.setFontItalic(false);
+  gcFormat.setFontWeight(QFont::Bold);
   rule.pattern = QRegularExpression(QStringLiteral("(?=G\\d\\D)(G1|G2|G3)"));
-  rule.format = fmtMotion;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtMotion.setForeground(Qt::red);
-  fmtMotion.setFontWeight(QFont::Bold);
+  gcFormat.setForeground(Qt::red);
+  gcFormat.setFontItalic(false);
+  gcFormat.setFontWeight(QFont::Bold);
   rule.pattern = QRegularExpression(QStringLiteral("^\\s*(L|C)\\s+"));
-  rule.format = fmtMotion;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtMCode.setForeground(Qt::darkMagenta);
-  fmtMCode.setFontWeight(QFont::Bold);
+  gcFormat.setForeground(Qt::darkMagenta);
+  gcFormat.setFontItalic(false);
+  gcFormat.setFontWeight(QFont::Bold);
   rule.pattern = QRegularExpression(QStringLiteral("\\bM\\d+\\.?\\d*\\b"));
-  rule.format = fmtMCode;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtMCode.setForeground(Qt::darkMagenta);
-  fmtMCode.setFontWeight(QFont::Bold);
+  gcFormat.setForeground(Qt::darkMagenta);
+  gcFormat.setFontItalic(false);
+  gcFormat.setFontWeight(QFont::Bold);
   rule.pattern = QRegularExpression(QStringLiteral("\\bMCALL\\b|CYCLE\\d+"));
-  rule.format = fmtMCode;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtPos.setForeground(Qt::darkBlue);
-  rule.pattern = QRegularExpression(QStringLiteral("\\b[ABCUVWXYZ]([+-]?\\d+[,.]?\\d*|\\[.+?\\])\\b"));
-  rule.format = fmtPos;
+  gcFormat.setForeground(Qt::darkBlue);
+  gcFormat.setFontItalic(false);
+  gcFormat.setFontWeight(QFont::Normal);
+  rule.pattern = QRegularExpression(QStringLiteral("\\b[ABCUVXY]([+-]?\\d+[,.]?\\d*|\\[.+?\\])\\b"));
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtXPos.setForeground(Qt::darkCyan);
+  gcFormat.setForeground(Qt::black);
+  gcFormat.setFontItalic(true);
+  gcFormat.setFontWeight(QFont::Bold);
+  rule.pattern = QRegularExpression(QStringLiteral("\\b[WZ]([+-]?\\d+[,.]?\\d*|\\[.+?\\])\\b"));
+  rule.format = gcFormat;
+  highlightingRules.append(rule);
+
+  gcFormat.setForeground(Qt::darkCyan);
+  gcFormat.setFontItalic(false);
+  gcFormat.setFontWeight(QFont::Normal);
   rule.pattern = QRegularExpression(QStringLiteral("\\b[EIJKLQR]([+-]?\\d+[,.]?\\d*|\\[.+?\\])\\b"));
-  rule.format = fmtXPos;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtXPos.setForeground(Qt::darkCyan);
+  gcFormat.setForeground(Qt::darkCyan);
+  gcFormat.setFontItalic(false);
+  gcFormat.setFontWeight(QFont::Normal);
   rule.pattern = QRegularExpression(QStringLiteral("\\bDR[+-]|R0|RR|RL\\b"));
-  rule.format = fmtXPos;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtTool.setForeground(Qt::darkYellow);
-  fmtTool.setFontWeight(QFont::Bold);
-  fmtTool.setFontItalic(true);
+  gcFormat.setForeground(Qt::darkYellow);
+  gcFormat.setFontWeight(QFont::Bold);
+  gcFormat.setFontItalic(true);
   rule.pattern = QRegularExpression(QStringLiteral("\\b[THD]\\d*[,.]?\\d*\\b"));
-  rule.format = fmtTool;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtFeed.setForeground(Qt::magenta);
-  fmtFeed.setFontWeight(QFont::Bold);
-  fmtFeed.setFontItalic(true);
+  gcFormat.setForeground(Qt::magenta);
+  gcFormat.setFontWeight(QFont::Bold);
+  gcFormat.setFontItalic(true);
   rule.pattern = QRegularExpression(QStringLiteral("\\bF\\d*[,.]?\\d*\\b"));
-  rule.format = fmtFeed;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtSpeed.setForeground(Qt::magenta);
-  fmtSpeed.setFontWeight(QFont::Bold);
-  fmtSpeed.setFontItalic(true);
+  gcFormat.setForeground(Qt::magenta);
+  gcFormat.setFontWeight(QFont::Bold);
+  gcFormat.setFontItalic(true);
   rule.pattern = QRegularExpression(QStringLiteral("\\bS\\d*[,.]?\\d*\\b"));
-  rule.format = fmtSpeed;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtSpeed.setForeground(Qt::magenta);
-  fmtSpeed.setFontWeight(QFont::Normal);
-  fmtSpeed.setFontItalic(true);
+  gcFormat.setForeground(Qt::magenta);
+  gcFormat.setFontWeight(QFont::Normal);
+  gcFormat.setFontItalic(true);
   rule.pattern = QRegularExpression(QStringLiteral("\\bFMAX\\b"));
-  rule.format = fmtSpeed;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtVar.setForeground(Qt::darkCyan);
-  fmtVar.setFontWeight(QFont::Normal);
-  fmtVar.setFontItalic(true);
+  gcFormat.setForeground(Qt::darkCyan);
+  gcFormat.setFontWeight(QFont::Normal);
+  gcFormat.setFontItalic(true);
   rule.pattern = QRegularExpression(QStringLiteral("^\\s*TOOL\\s+DEF\\s+"));
-  rule.format = fmtVar;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtVar.setForeground(Qt::cyan);
-  fmtVar.setFontWeight(QFont::Bold);
-//  fmtVar.setFontItalic(true);
+  gcFormat.setForeground(Qt::cyan);
+  gcFormat.setFontWeight(QFont::Bold);
+  gcFormat.setFontItalic(false);
   rule.pattern = QRegularExpression(QStringLiteral("^\\s*TOOL\\s+CALL\\s+\\d+\\s+[XYZ]"));
-  rule.format = fmtVar;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtVar.setForeground(Qt::darkCyan);
-  fmtVar.setFontWeight(QFont::Bold);
-  fmtVar.setFontItalic(true);
+  gcFormat.setForeground(Qt::darkCyan);
+  gcFormat.setFontWeight(QFont::Bold);
+  gcFormat.setFontItalic(true);
   rule.pattern = QRegularExpression(QStringLiteral("^\\s*BLK\\s+FORM\\s+(0\\.1|0\\.2)\\s+(Z\\s+)?"));
-  rule.format = fmtVar;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtVar.setForeground(Qt::cyan);
-  fmtVar.setFontWeight(QFont::Bold);
-  fmtVar.setFontItalic(true);
+  gcFormat.setForeground(Qt::cyan);
+  gcFormat.setFontWeight(QFont::Bold);
+  gcFormat.setFontItalic(true);
   rule.pattern = QRegularExpression(QStringLiteral("#\\<.+?\\>"));
-  rule.format = fmtVar;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtComment.setForeground(Qt::darkGreen);
-  fmtComment.setFontItalic(true);
+  gcFormat.setForeground(Qt::darkGreen);
+  gcFormat.setFontWeight(QFont::Normal);
+  gcFormat.setFontItalic(true);
   rule.pattern = QRegularExpression(QStringLiteral(";.*$"));
-  rule.format = fmtComment;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
 
-  fmtLineComment.setForeground(Qt::darkGreen);
-  fmtLineComment.setFontItalic(true);
+  gcFormat.setForeground(Qt::darkGreen);
+  gcFormat.setFontWeight(QFont::Normal);
+  gcFormat.setFontItalic(true);
   rule.pattern = QRegularExpression(QStringLiteral("\\(.+?\\)"));
-  rule.format = fmtLineComment;
+  rule.format = gcFormat;
   highlightingRules.append(rule);
   }

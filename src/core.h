@@ -95,6 +95,7 @@ public:
   QAbstractItemModel*      ppModel() const;
   ProjectFile*             projectFile();
   void                     riseError(const QString& msg);
+  void                     saveOperations();
   ShapeFix_ShapeTolerance& shapeFix();
   SelectionHandler*        selectionHandler();
   void                     setAllInOneOperation(bool value);

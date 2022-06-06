@@ -91,7 +91,8 @@ void MainWindow::closeEvent(QCloseEvent *e) {
 void MainWindow::createConnections() {
   connect(ui->actionFileOpen,      &QAction::triggered, this,  &MainWindow::chooseFile);
   connect(ui->actionProjectOpen,   &QAction::triggered, this,  &MainWindow::openProject);
-  connect(ui->actionProjectSaveAs, &QAction::triggered, this,  &MainWindow::saveProjectAs);
+  connect(ui->actionProjectSave,   &QAction::triggered, this,  [=](){ saveProject(); });
+  connect(ui->actionProjectSaveAs, &QAction::triggered, this,  [=](){ saveProject(true); });
   connect(ui->actionExit,          &QAction::triggered, this,  &QWidget::close);
 
   connect(ui->actionHideModel,     &QAction::triggered, this,  &MainWindow::showModel);
@@ -108,6 +109,7 @@ void MainWindow::chooseFile() {
   if (fileName.isEmpty()) return;
   Core().loadFile(fileName);
   ui->actionProjectSave->setEnabled(true);
+  ui->actionProjectSaveAs->setEnabled(true);
   ui->actionModelSetup->setEnabled(true);
   ui->actionOperationsSetup->setEnabled(false);
   Core().switchPage(Core::PgWorkPiece);
@@ -157,6 +159,7 @@ void MainWindow::openProject() {
   ui->actionModelSetup->setEnabled(false);
   ui->actionOperationsSetup->setEnabled(true);
   ui->actionProjectSave->setEnabled(true);
+  ui->actionProjectSaveAs->setEnabled(true);
   Core().switchPage(Core::PgOperations);
   ui->message->clear();
   startTimer();
@@ -183,44 +186,28 @@ void MainWindow::restore() {
   }
 
 
-void MainWindow::saveProject() {
+void MainWindow::saveProject(bool createNew) {
+  if (!Core().hasModelLoaded()) return;
   ProjectFile*   pf  = Core().projectFile();
   const QString& tfn = pf->tempFileName();
   QString        fn  = pf->fileName();
 
-  if (tfn == fn) fn = Core().chooseProjectFile(this);
+  if (tfn == fn) createNew = true;
 
-  qDebug() << "save project to:" << fn << "   temp-file was:" << tfn;
-
-  //TODO: save operations to project file ...
-  }
-
-
-void MainWindow::saveProjectAs() {
-  if (!Core().hasModelLoaded()) return;
   qDebug() << "current project file:" << Core().projectFile()->fileName();
-//  QString     fileName;
-//  QFileDialog dialog(this
-//                   , tr("QFileDialog::getSaveFileName()")
-//                   , kute::BasePath
-//                   , tr("Project Files (*.prj)"));
 
-//  dialog.setSupportedSchemes(QStringList(QStringLiteral("file")));
-//  dialog.setOption(QFileDialog::DontUseNativeDialog);
-//  dialog.setAcceptMode(QFileDialog::AcceptSave);
-//  if (dialog.exec() != QDialog::Accepted) {
-//     qDebug() << "Oups - file-dialog aborted!";
-//     return;
-//     }
-//  fileName = dialog.selectedUrls().value(0).toLocalFile();
-//  if (!fileName.endsWith(".prj")) fileName += ".prj";
+  if (createNew) {
+     QString fileName = Core().chooseProjectFile(this);
+     QFile   tmp(Core().projectFile()->fileName());
 
-//  qDebug() << "save project file to:" << fileName;
-  QString fileName = Core().chooseProjectFile(this);
-  QFile   tmp(Core().projectFile()->fileName());
-
-  if (tmp.copy(fileName)) Core().setProjectFile(new ProjectFile(fileName));
-  else                    qDebug() << "failed to create project file!";
+     if (tmp.copy(fileName)) {
+        Core().setProjectFile(new ProjectFile(fileName));
+        tmp.close();
+        if (fn == tfn) QFile::remove(tfn);
+        }
+     else qDebug() << "failed to create project file!";
+     }
+  Core().saveOperations();
   }
 
 

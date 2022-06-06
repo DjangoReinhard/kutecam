@@ -78,6 +78,8 @@ protected:
   bool loadViseList();
   void loadVise(ViseEntry* vise, Handle(AIS_Shape)& left, Handle(AIS_Shape)& middle, Handle(AIS_Shape)& right);
   void onShutdown(QCloseEvent* ce);
+  void processAppArgs(const QStringList& args);
+  QLocale* setupTranslators();
 
 protected slots:
   void clearCurves();
@@ -85,6 +87,7 @@ protected slots:
 private:
   QApplication&                     app;
   MainWindow&                       win;
+  QLocale*                          curLocale;
   QSettings                         configData;
   QMap<QString, ApplicationWindow*> pages;
   ShapeFix_ShapeTolerance           shapeTolerance;
@@ -101,6 +104,7 @@ private:
   bool                              CisTable;
   bool                              genSepWithToolChange;
   bool                              opAllInOne;
+  QString                           langDir;
   QString                           selectedPP;
   SetupPage*                        setupPage;
   TDFactory*                        tdFactory;

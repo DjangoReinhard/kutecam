@@ -40,6 +40,7 @@
 #include "workstep.h"
 #include "wsarc.h"
 #include <BRepAdaptor_Surface.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
 #include <QStringListModel>
 #include <QDebug>
 
@@ -50,14 +51,14 @@ OperationSubPage::OperationSubPage(OperationListModel* olm, TargetDefListModel* 
  , olm(olm)
  , curOP(nullptr)
  , activeTool(nullptr)
- , pathBuilder(new PathBuilder)
+ , pPathBuilder(new PathBuilder)
  , tdModel(tdModel)
  , opTypes(nullptr) {
   ui->setupUi(this);
   QStringList items;
 
-  items << Operation::OTRoughing
-        << Operation::OTFinish;
+  items << tr("Roughing")
+        << tr("Finish");
   opTypes = new QStringListModel(items, this);
 
   items.clear();
@@ -102,13 +103,9 @@ void OperationSubPage::absToggled(const QVariant& v) {
   }
 
 
-//void OperationSubPage::closeEvent(QCloseEvent *e) {
-//  }
-
-
 void OperationSubPage::connectSignals() {
   connect(ui->cAbsolute, &QCheckBox::toggled, this, &OperationSubPage::absToggled);
-  connect(ui->cOutside,  &QCheckBox::toggled, this, &OperationSubPage::outToggled);
+  connect(ui->cInside,   &QCheckBox::toggled, this, &OperationSubPage::outToggled);
   connect(ui->cbTool,    QOverload<int>::of(&QComboBox::currentIndexChanged), this, &OperationSubPage::toolChanged);
   connect(ui->cbCooling, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &OperationSubPage::coolingChanged);
   connect(ui->cbCycle,   QOverload<int>::of(&QComboBox::currentIndexChanged), this, &OperationSubPage::cycleChanged);
@@ -130,6 +127,57 @@ void OperationSubPage::connectSignals() {
 
 void OperationSubPage::coolingChanged(const QVariant& v) {
   curOP->setCooling(v.toInt());
+  }
+
+
+std::vector<Handle(AIS_Shape)> OperationSubPage::createCutPlanes(Operation* op) {
+  std::vector<Handle(AIS_Shape)> cutPlanes;
+
+  if (op->cutPart.IsNull()) return cutPlanes;
+  if (!op->cutDepth()) {
+     qDebug() << "can't increment depth without cut-depth value!";
+     return cutPlanes;
+     }
+  Bnd_Box bb = op->cutPart->BoundingBox();
+  double startZ = bb.CornerMax().Z();
+  double lastZ  = op->finalDepth() + op->offset();
+  double curZ   = startZ;
+  gp_Dir dir(0, 0, 1);
+  gp_Pnt pos(bb.CornerMin().X(), bb.CornerMin().Y(), curZ);
+  gp_Pln plane;
+
+  qDebug() << "VM - final depth:" << op->finalDepth() << "\tlast cut depth:" << lastZ;
+
+  curZ -= op->cutDepth();
+  while (curZ > lastZ) {
+        qDebug() << "cut depth is" << curZ;
+        pos.SetZ(curZ);
+        plane = gp_Pln(pos, dir);
+        BRepBuilderAPI_MakeFace mf(plane, -500, 500, -500, 500);
+        Handle(AIS_Shape) wc    = new AIS_Shape(Core().helper3D()->intersect(op->cutPart->Shape(), mf.Shape()));
+        Bnd_Box           bbC   = wc->BoundingBox();
+
+        qDebug() << "cut-plane is from"
+                 << bbC.CornerMin().X() << "/" << bbC.CornerMin().Y() << "/" << bbC.CornerMin().Z()
+                 << "\tto\t"
+                 << bbC.CornerMax().X() << "/" << bbC.CornerMax().Y() << "/" << bbC.CornerMax().Z();
+        wc->SetColor(Quantity_NOC_LIGHTGOLDENRODYELLOW);
+        cutPlanes.push_back(wc);
+        op->cShapes.push_back(wc);
+        curZ -= op->cutDepth();
+        }
+  if (!kute::isEqual(curZ, lastZ)) {
+     qDebug() << "last cut depth is" << lastZ;
+     pos.SetZ(lastZ);
+     plane = gp_Pln(pos, dir);
+     BRepBuilderAPI_MakeFace mf(plane, -500, 500, -500, 500);
+     Handle(AIS_Shape) wc = new AIS_Shape(Core().helper3D()->intersect(op->cutPart->Shape(), mf.Shape()));
+
+     wc->SetColor(Quantity_NOC_LIGHTGOLDENRODYELLOW);
+     cutPlanes.push_back(wc);
+     op->cShapes.push_back(wc);
+     }
+  return cutPlanes;
   }
 
 
@@ -270,7 +318,7 @@ void OperationSubPage::loadOP(Operation *op) {
   else ui->cbTool->clear();
   tdModel->replaceData(&op->targets);
   ui->opName->setText(op->name());
-  ui->cOutside->setChecked(op->isOutside());
+  ui->cInside->setChecked(!op->isOutside());
   ui->cbType->setCurrentIndex(op->cutType());
   ui->cbDir->setCurrentIndex(op->direction());
   ui->cbFixture->setCurrentIndex(op->fixture());
@@ -314,17 +362,22 @@ void OperationSubPage::outToggled(const QVariant& v) {
   }
 
 
+PathBuilder* OperationSubPage::pathBuilder() const {
+  return pPathBuilder;
+  }
+
+
 void OperationSubPage::processTargets() {
   }
 
 
 void OperationSubPage::r1Changed(double v) {
-  curOP->setSaveZ0(v);
+  curOP->setSafeZ0(v);
   }
 
 
 void OperationSubPage::r2Changed(double v) {
-  curOP->setSaveZ1(v);
+  curOP->setSafeZ1(v);
   }
 
 
@@ -345,36 +398,43 @@ void OperationSubPage::toolChanged(const QVariant &i) {
   }
 
 
-void OperationSubPage::showToolPath() {
-  if (!curOP->workSteps().size()) return;
+void OperationSubPage::showToolPath(Operation* op) {
+  if (!op->workSteps().size()) return;
   Handle(AIS_Shape) as;
-  gp_Pnt lastPos = curOP->workSteps().at(0)->startPos();
+  gp_Pnt lastPos = op->workSteps().at(0)->startPos();
 
-  for (int i=0; i < curOP->workSteps().size(); ++i) {
-      Workstep* ws = curOP->workSteps().at(i);
+  for (int i=0; i < op->workSteps().size(); ++i) {
+      Workstep* ws = op->workSteps().at(i);
 
       if (!kute::isEqual(ws->startPos(), lastPos)) {
-         qDebug() << "found wrong serial at #" << i;
-         ws->dump();
+         qDebug() << "invalid sequence! startpoint of #" << i
+                  << "does not match last position!";
 //         throw std::domain_error("invalid sequence!");
+//         return;
          }
       switch (ws->type()) {
         case WTTraverse:
-             curOP->toolPaths.push_back(Core().helper3D()->genFastMove(ws->startPos(), ws->endPos()));
+             as = Core().helper3D()->genFastMove(ws->startPos(), ws->endPos());
+             as->SetColor(ws->color());
+             op->toolPaths.push_back(as);
              break;
         case WTStraightMove:
-             curOP->toolPaths.push_back(Core().helper3D()->genWorkLine(ws->startPos(), ws->endPos()));
+             as = Core().helper3D()->genWorkLine(ws->startPos(), ws->endPos());
+             as->SetColor(ws->color());
+             op->toolPaths.push_back(as);
              break;
         case WTArc: {
              WSArc* wa = static_cast<WSArc*>(ws);
 
-             curOP->toolPaths.push_back(Core().helper3D()->genWorkArc(ws->startPos(), ws->endPos(), wa->centerPos(), wa->isCCW()));
+             as = Core().helper3D()->genWorkArc(ws->startPos(), ws->endPos(), wa->centerPos(), wa->isCCW());
+             as->SetColor(ws->color());
+             op->toolPaths.push_back(as);
              } break;
         default: break;
         }
       lastPos = ws->endPos();
       }
-  Core().view3D()->showShapes(curOP->toolPaths);
+  Core().view3D()->showShapes(op->toolPaths);
   Core().view3D()->refresh();
   }
 

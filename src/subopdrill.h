@@ -43,7 +43,7 @@ public slots:
 
 protected:
   void processSelection() override;
-  void showToolPath() override;
+  void showToolPath(Operation* op) override;
   bool validateDrillTargets();
   };
 #endif // SUBOPDRILL_H

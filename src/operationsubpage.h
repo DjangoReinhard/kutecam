@@ -48,11 +48,12 @@ public:
   explicit OperationSubPage(OperationListModel* olm, TargetDefListModel* tdModel, QWidget *parent = nullptr);
   virtual ~OperationSubPage() = default;
 
+  std::vector<Handle(AIS_Shape)> createCutPlanes(Operation* op);
+  PathBuilder* pathBuilder() const;
   virtual void loadOP(Operation* op);
   virtual void processSelection() = 0;
-  virtual void showToolPath();
+  virtual void showToolPath(Operation* op);
   virtual void toolPath() = 0;
-//  virtual void closeEvent(QCloseEvent* e) override;
 
 public slots:
   void absToggled(const QVariant& v);
@@ -89,7 +90,7 @@ protected:
   OperationListModel* olm;
   Operation*          curOP;
   ToolEntry*          activeTool;
-  PathBuilder*        pathBuilder;
+  PathBuilder*        pPathBuilder;
   QStringListModel*   opTypes;
   QStringListModel*   dirModel;
   QStringListModel*   drillCycles;

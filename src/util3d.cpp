@@ -25,6 +25,7 @@
  * **************************************************************************
  */
 #include "util3d.h"
+#include "Geom_HelixData.h"
 #include "graphicobject.h"
 #include "gocircle.h"
 #include "gocontour.h"
@@ -63,6 +64,7 @@
 #include <TopoDS_Shape.hxx>
 #include <TopoDS_Vertex.hxx>
 #include <QString>
+#include <QVector3D>
 #include <QDebug>
 #include <cmath>
 
@@ -244,44 +246,104 @@ gp_Pnt Util3D::centerOf(const Bnd_Box& bb) {
 
 TopoDS_Edge Util3D::createArc(const gp_Pnt& from, const gp_Pnt& to, double radius, bool ccw) {
   TopoDS_Edge edge;
-  gp_Pnt a = from;
-  gp_Pnt b = to;
+  double      x = to.X() - from.X();     // get distance components
+  double      y = to.Y() - from.Y();
+  double      l = sqrt(x*x + y*y);       // length between A and B
 
-  double x     = b.X() - a.X();     // get distance components
-  double y     = b.Y() - a.Y();
-  double l     = sqrt(x*x + y*y);   // length between A and B
-
+  qDebug() << "U3D: create Arc without center from: " << from.X() << " / " << from.Y() << " / " << from.Z()
+           << "   to   " << to.X() << " / " << to.Y() << " / " << to.Z()
+           << "   and ccw:" << (ccw ? "YES" : "NO");
   if (2*radius >= l) {
      double  sweepAngle = asin(l / (2 * radius));     // find the sweep angle (actually half the sweep angle)
      double  h          = radius * cos(sweepAngle);   // triangle height from the chord to the center
-     gp_Pnt  c          = gp_Pnt((double)(a.X() + x / 2 - h * (y / l))  // get center point.
-                              , (double)(a.Y() + y / 2 + h * (x / l))
-                              , a.Z());
+     gp_Pnt  c          = gp_Pnt((double)(from.X() + x / 2 - h * (y / l))  // get center point.
+                              , (double)(from.Y() + y / 2 + h * (x / l))
+                              , from.Z());
      gp_Dir  dir(0, 0, ccw ? 1 : -1);
      gp_Circ rawCircle(gp_Ax2(c, dir), radius);
-     edge = BRepBuilderAPI_MakeEdge(rawCircle, a, b);
+     edge = BRepBuilderAPI_MakeEdge(rawCircle, from, to);
+     }
+  else {
+     qDebug() << "U3D: got invalid arc request! distance from start to end is larger"
+              << "than circles diameter!";
      }
   return edge;
   }
 
 
 Handle(AIS_Shape) Util3D::createArc(const gp_Pnt& from, const gp_Pnt& to, const gp_Pnt& center, bool ccw) {
-  double r0 = center.Distance(from);
-  double r1 = center.Distance(to);
+  Handle(AIS_Shape) rv;
 
-  assert(abs(r0 - r1) < kute::MinDelta);
+  if (!kute::isEqual(from.Z(), to.Z())
+   || !kute::isEqual(from.Z(), center.Z())
+   || !kute::isEqual(to.Z(), center.Z())) {
+     QVector3D start(from.X(), from.Y(), from.Z());
+     QVector3D end(to.X(), to.Y(), from.Z());
+     QVector3D c(center.X(), center.Y(), from.Z());
+     gp_Dir    hAxis(0, 0, ccw ? 1 : -1);
+     QVector3D s = start - c;
+     QVector3D e = end - c;
 
-  gp_Dir       dir(0, 0, ccw ? 1 : -1);
-  gp_Circ      rawCircle(gp_Ax2(center, dir), r0);
-  TopoDS_Edge  edge;
+     double r0 = s.length();
+     double a0 = atan2(s.y(), s.x());
+     double a1 = atan2(e.y(), e.x());
 
-  if (from.Distance(to) <= gp::Resolution()) {
-     edge = BRepBuilderAPI_MakeEdge(rawCircle);
+     if (a0 < 0) a0 += 2 * M_PI;
+     if (a1 < 0) a1 += 2 * M_PI;
+     Handle(Geom_BSplineCurve) aHelix;
+     Geom_HelixData helDat;
+     gp_Ax3 pos(center, hAxis);
+     double arc        = ccw ? 2 * M_PI - abs(a1 - a0) : abs(a1 - a0);
+     double height     = to.Z() - from.Z();
+     double turnFactor = arc / (2.0 * M_PI);
+     double pitch      = (ccw ? 1 : -1) * height / turnFactor;
+
+     qDebug() << "U3D: create Helix from" << from.X() << " / " << from.Y() << " / " << from.Z()
+              << "   to   " << to.X() << " / " << to.Y() << " / " << to.Z()
+              << "   with center:" << center.X() << " / " << center.Y() << " / " << center.Z()
+              << "   and ccw ==" << (ccw ? "YES" : "NO");
+     qDebug() << "Helix - a0:" << a0 << "   a1:" << a1 << "   arc:" << arc;
+     helDat.setPosition(pos);
+     helDat.setRadius(r0);
+     helDat.setPitch(pitch);
+     helDat.setRangeMax(arc);
+     Handle(AIS_Shape) shape;
+
+     if (helDat.MakeHelix(helDat, aHelix)) {
+        TopoDS_Shape ts = BRepBuilderAPI_MakeEdge(aHelix);
+        gp_Trsf rot;
+
+        rot.SetRotation(pos.Axis(), ccw ? a0 : -(a0 + M_PI));
+        TopoDS_Shape rts = BRepBuilderAPI_Transform(ts, rot);
+
+        rv = new AIS_Shape(rts);
+        }
+     return rv;
      }
   else {
-     edge = BRepBuilderAPI_MakeEdge(rawCircle, from, to);
+     double r0 = center.Distance(from);
+     double r1 = center.Distance(to);
+
+     assert(abs(r0 - r1) < kute::MinDelta);
+
+     gp_Dir      dir(0, 0, ccw ? 1 : -1);
+     gp_Circ     rawCircle(gp_Ax2(center, dir), r0);
+     double      len = from.Distance(to);
+     TopoDS_Edge edge;
+
+     qDebug() << "U3D: create Circle from" << from.X() << " / " << from.Y() << " / " << from.Z()
+              << "   to   " << to.X() << " / " << to.Y() << " / " << to.Z()
+              << "   with center:" << center.X() << " / " << center.Y() << " / " << center.Z()
+              << "   and ccw ==" << (ccw ? "YES" : "NO");
+     if (abs(len) <= gp::Resolution()) {
+        edge = BRepBuilderAPI_MakeEdge(rawCircle);
+        }
+     else {
+        edge = BRepBuilderAPI_MakeEdge(rawCircle, from, to);
+        }
+     rv = new AIS_Shape(edge);
      }
-  return new AIS_Shape(edge);
+  return rv;
   }
 
 
@@ -461,8 +523,7 @@ Handle(AIS_Shape) Util3D::fixLocation(const TopoDS_Shape& s, double x, double y,
 
 
 Handle(AIS_Shape) Util3D::genFastMove(const gp_Pnt& from, const gp_Pnt& to) {
-  TopoDS_Edge       fm   = BRepBuilderAPI_MakeEdge(from, to);
-  Handle(AIS_Shape) move = new AIS_Shape(fm);
+  Handle(AIS_Shape) move = createLine(from, to);
 
   move->SetColor(Quantity_NOC_CYAN);
   move->SetWidth(2);
@@ -482,8 +543,7 @@ Handle(AIS_Shape) Util3D::genWorkArc(const gp_Pnt& from, const gp_Pnt& to, const
 
 
 Handle(AIS_Shape) Util3D::genWorkLine(const gp_Pnt& from, const gp_Pnt& to) {
-  TopoDS_Edge       tp   = BRepBuilderAPI_MakeEdge(from, to);
-  Handle(AIS_Shape) path = new AIS_Shape(tp);
+  Handle(AIS_Shape) path = createLine(from, to);
 
   path->SetColor(Quantity_NOC_RED1);
   path->SetWidth(3);
@@ -512,33 +572,6 @@ TopoDS_Shape Util3D::intersect(const TopoDS_Shape& src, const TopoDS_Shape& tool
   }
 
 
-//bool Util3D::isEqual(double a, double b, double minDelta) {
-//  if (abs(abs(a) - abs(b)) < minDelta) return true;
-//  return false;
-//  }
-
-
-//bool Util3D::isEqual(const gp_Pnt& a, const gp_Pnt& b) {
-//  return a.Distance(b) < kute::MinDelta;
-//  }
-
-
-//bool Util3D::isVertical(const gp_Dir& d) const {
-//  if (abs(d.X()) < kute::MinDelta
-//   && abs(d.Y()) < kute::MinDelta
-//   && 1 - abs(d.Z()) < kute::MinDelta) return true;
-//  return false;
-//  }
-
-
-//bool Util3D::isVertical(const gp_Vec& v) const {
-//  if (abs(v.X()) < kute::MinDelta
-//   && abs(v.Y()) < kute::MinDelta
-//   && 1 - abs(v.Z()) < kute::MinDelta) return true;
-//  return false;
-//  }
-
-
 TopoDS_Shape Util3D::loadBRep(const QString& fileName) {
   BRep_Builder builder;
   TopoDS_Shape result;
@@ -557,86 +590,6 @@ TopoDS_Shape Util3D::loadStep(const QString& fileName) {
 
   return reader.OneShape();
   }
-
-
-//TopoDS_Shape Util3D::makeCube(const gp_Pnt& p0
-//                            , const gp_Pnt& p1) {
-//#ifdef REDNOSE
-//  gp_Pnt p[4];
-//  Handle(Geom_TrimmedCurve) tc[4];
-//  TopoDS_Edge e[4];
-//  TopoDS_Wire w;
-//  TopoDS_Face f;
-
-//  p[0] = p0;
-//  p[1] = gp_Pnt(p1.X(), p0.Y(), p0.Z());
-//  p[2] = gp_Pnt(p1.X(), p1.Y(), p0.Z());
-//  p[3] = gp_Pnt(p0.X(), p1.Y(), p0.Z());
-//  tc[ 0] = GC_MakeSegment(p[0], p[1]);
-//  tc[ 1] = GC_MakeSegment(p[1], p[2]);
-//  tc[ 2] = GC_MakeSegment(p[2], p[3]);
-//  tc[ 3] = GC_MakeSegment(p[3], p[0]);
-//  for (int i=0; i < 4; ++i)
-//      e[i] = BRepBuilderAPI_MakeEdge(tc[i]);
-//  w = BRepBuilderAPI_MakeWire(e[0], e[1], e[2],  e[3]);
-//  f = BRepBuilderAPI_MakeFace(w);
-//  gp_Vec       ev(0.0, 0.0, p1.Z() - p0.Z());
-//  TopoDS_Shape cube = BRepPrimAPI_MakePrism(f, ev);
-
-//  return cube;
-//#else
-//  return BRepPrimAPI_MakeBox(p0, p1);
-//#endif
-//  }
-
-
-//TopoDS_Shape Util3D::makeCube(const Standard_Real width
-//                            , const Standard_Real height
-//                            , const Standard_Real depth) {
-//  // define points
-//  gp_Pnt pt1(-width / 2.0, 0.0, 0.0 );
-//  gp_Pnt pt2(-width / 2.0, -depth / 2.0, 0.0 );
-//  gp_Pnt pt3(width / 2.0, -depth / 2.0, 0.0 );
-//  gp_Pnt pt4(width /2.0, 0.0, 0.0 );
-
-//  // define segments
-//  Handle_Geom_TrimmedCurve seg1 = GC_MakeSegment(pt1, pt2);
-//  Handle_Geom_TrimmedCurve seg2 = GC_MakeSegment(pt2, pt3);
-//  Handle_Geom_TrimmedCurve seg3 = GC_MakeSegment(pt3, pt4);
-
-//  // make edge
-//  TopoDS_Edge edge1 = BRepBuilderAPI_MakeEdge(seg1);
-//  TopoDS_Edge edge2 = BRepBuilderAPI_MakeEdge(seg2);
-//  TopoDS_Edge edge3 = BRepBuilderAPI_MakeEdge(seg3);
-
-//  // make wire
-//  TopoDS_Wire wire1 = BRepBuilderAPI_MakeWire(edge1, edge2, edge3);
-
-//  //Complete Profile
-//  gp_Ax1  xAxis = gp::OX();
-//  gp_Trsf transfer;
-
-//  transfer.SetMirror(xAxis);
-
-//  BRepBuilderAPI_Transform aBRepTrsf(wire1, transfer);
-//  TopoDS_Shape mirroredShape = aBRepTrsf.Shape();
-//  TopoDS_Wire mirroredWire1 = TopoDS::Wire(mirroredShape);
-
-//  BRepBuilderAPI_MakeWire mkWire;
-
-//  mkWire.Add(wire1);
-//  mkWire.Add(mirroredWire1);
-
-//  TopoDS_Wire wireProfile = mkWire.Wire();
-
-//  //Body : Prism the Profile
-//  TopoDS_Face faceProfile = BRepBuilderAPI_MakeFace(wireProfile);
-//  gp_Vec prismVec(0.0, 0.0, height);
-
-//  TopoDS_Shape cube = BRepPrimAPI_MakePrism(faceProfile, prismVec);
-
-//  return cube;
-//  }
 
 
 gp_Vec Util3D::normalOfFace(const TopoDS_Shape& face) {

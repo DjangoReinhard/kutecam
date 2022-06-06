@@ -39,7 +39,6 @@
      </property>
      <property name="font">
       <font>
-       <weight>75</weight>
        <bold>true</bold>
       </font>
      </property>
@@ -64,7 +63,7 @@
     </widget>
    </item>
    <item row="8" column="0" colspan="2">
-    <widget class="QCheckBox" name="cOutside">
+    <widget class="QCheckBox" name="cInside">
      <property name="text">
       <string>invert In/Out</string>
      </property>
@@ -266,7 +265,6 @@
      </property>
      <property name="font">
       <font>
-       <weight>75</weight>
        <bold>true</bold>
       </font>
      </property>

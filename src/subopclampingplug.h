@@ -46,6 +46,6 @@ protected:
   int findMax(int d0, int d1, int d2, int d3);
   void processSelection() override;
   void processTargets() override;
-  void showToolPath() override;
+//  void showToolPath() override;
   };
 #endif // SUBOPCLAMPINGPLUG_H

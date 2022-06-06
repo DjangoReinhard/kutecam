@@ -3,8 +3,33 @@ cmake_minimum_required(VERSION 3.16)
 project(kuteCAM LANGUAGES CXX)
 #=============================================================================
 include(Interface)
-add_executable(kuteCAM
+add_executable(kuteCAM "")
+set(RESOURCE_FILES
+    ../kuteCAM.qrc
+    )
+set(SOURCE_FILES
+    GCodeEditor.ui
+    cfgGCode.ui
+    cfgMat.ui
+    cfgVise.ui
+    clip.ui
+    mainwindow.ui
+    misc.ui
+    opSub.ui
+    operations.ui
+    preview.ui
+    setup.ui
+    status.ui
+    tCutParm.ui
+    tDim.ui
+    tool.ui
+    #-------------
+    Geom_HelixData.cpp
+    HHelixCurveAdaptor.cpp
+    HelixCurveAdaptor.cpp
+    HelixCurveAdaptor_CylinderEvaluator.cpp
     applicationwindow.cpp
+    cctargetdefinition.cpp
     cfggcode.cpp
     cfgmaterial.cpp
     cfgvise.cpp
@@ -12,7 +37,6 @@ add_executable(kuteCAM
     configpage.cpp
     contourtargetdefinition.cpp
     core.cpp
-    cctargetdefinition.cpp
     cutparamlistmodel.cpp
     cutparmtooleditor.cpp
     dimtooleditor.cpp
@@ -28,6 +52,7 @@ add_executable(kuteCAM
     gopocket.cpp
     graphicobject.cpp
     kernel.cpp
+    kuteCAM.cpp
     main.cpp
     mainwindow.cpp
     occtviewer.cpp
@@ -42,7 +67,6 @@ add_executable(kuteCAM
     selectionhandler.cpp
     setuppage.cpp
     shapelistmodel.cpp
-    kuteCAM.cpp
     stringlistmodel.cpp
     subopclampingplug.cpp
     subopcontour.cpp
@@ -66,43 +90,28 @@ add_executable(kuteCAM
     wstraverse.cpp
     xmltoolreader.cpp
     xmltoolwriter.cpp
-    #-------------
-    mainwindow.ui
-    cfgGCode.ui
-    cfgMat.ui
-    cfgVise.ui
-    clip.ui
-    GCodeEditor.ui
-    misc.ui
-    operations.ui
-    opSub.ui
-    preview.ui
-    setup.ui
-    status.ui
-    tCutParm.ui
-    tDim.ui
-    tool.ui
-    ../kuteCAM.qrc
-    )
-set(TS_FILES
-    kuteCAM.ts
     )
 use_interface_libraries(kuteCAM
                         IFQt
                         IFOpenCASCADE
                         IFStandard
                         )
+target_sources(kuteCAM PRIVATE
+               ${SOURCE_FILES}
+               ${RESOURCE_FILES}
+               ${kuteCAM_QM_FILES}
+               )
 target_link_libraries(kuteCAM
                       PRIVATE KCPPLib
                       )
+if(UNIX)
+  target_link_libraries(kuteCAM PRIVATE
+                        Qt5::X11Extras
+                        ${X11_LIBRARIES}
+                        )
+endif()
 target_include_directories(kuteCAM
                            PRIVATE ${CMAKE_SOURCE_DIR}
                            )
-if(COMMAND qt_create_translation)
-    qt_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
-else()
-    qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
-endif()
-
 add_subdirectory(pp)
 add_subdirectory(PPLib)

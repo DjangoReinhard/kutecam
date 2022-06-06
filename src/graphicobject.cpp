@@ -35,7 +35,9 @@
 
 
 GraphicObject::GraphicObject(GraphicType gt, const gp_Pnt& from, const gp_Pnt& to)
- : gType(gt)
+ : p0(0)
+ , p1(0)
+ , gType(gt)
  , fromPnt(from)
  , toPnt(to) {
   }

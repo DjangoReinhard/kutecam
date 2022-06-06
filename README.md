@@ -18,11 +18,16 @@ actually working:
 - mill plane faces
 - mill open pockets / concave contours
 - mill vertical faces
+- mill circular pockets
+- mill cylinder
 
 Postprocessors:
 - Fanuc
 - Heidenhain
 - Sinumeric
+
+Support other languages:
+- actually english and german
 
 ## Teaser
 small video clips for download

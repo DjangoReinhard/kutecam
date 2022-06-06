@@ -28,26 +28,30 @@
 #include <QSettings>
 
 
-ContourTargetDefinition::ContourTargetDefinition(const gp_Pnt& pos, double radius, QObject* parent)
- : TargetDefinition(pos, radius, parent) {
+ContourTargetDefinition::ContourTargetDefinition(const gp_Pnt& pos, double maxRadius, double minRadius, QObject* parent)
+ : TargetDefinition(pos, maxRadius, parent)
+ , rMin(0) {
   }
 
 
 ContourTargetDefinition::ContourTargetDefinition(QSettings& s, QObject* parent)
- : TargetDefinition(s, parent) {
+ : TargetDefinition(s, parent)
+ , rMin(0) {
   }
 
 
 void ContourTargetDefinition::store(QSettings& s) {
   s.setValue("tdType", "ContourTarget");
+  s.setValue("minRadius", minRadius());
   TargetDefinition::store(s);
   }
 
 
 QString ContourTargetDefinition::toString() const {
-  QString rv = QString("%1/%2/%3")
+  QString rv = QString("%1/%2/%3 minR:%4")
                       .arg(pos().X())
                       .arg(pos().Y())
-                      .arg(pos().Z());
+                      .arg(pos().Z())
+                      .arg(minRadius(), 0, 'f', 3);
   return rv;
   }

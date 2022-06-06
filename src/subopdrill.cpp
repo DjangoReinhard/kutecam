@@ -53,7 +53,7 @@ SubOPDrill::SubOPDrill(OperationListModel* olm, TargetDefListModel* tdModel, QWi
   ui->lDir->setVisible(false);
   ui->cbDir->setVisible(false);
   ui->lStep->setText(tr("[min/max]"));
-  ui->cOutside->setVisible(false);
+  ui->cInside->setVisible(false);
   ui->cbType->setVisible(false);
   ui->spOff->setVisible(false);
   connect(Core().uiMainWin()->actionDrillNew, &QAction::triggered, this, &SubOPDrill::createOP);
@@ -173,64 +173,64 @@ void SubOPDrill::processSelection() {
   }
 
 
-void SubOPDrill::showToolPath() {
-  if (!curOP->workSteps().size()) return;
-//  Workstep* ws = curOP->workSteps().at(0);
+void SubOPDrill::showToolPath(Operation* op) {
+  if (!op->workSteps().size()) return;
+//  Workstep* ws = op->workSteps().at(0);
 //  WSCycle*  wc = static_cast<WSCycle*>(ws);
   QVector<double> zStops;
-  double drillDelta = curOP->upperZ() + curOP->safeZ0() - curOP->drillDepth();
+  double drillDelta = op->upperZ() + op->safeZ0() - op->drillDepth();
 
-  if (curOP->drillCycle() != 4 || abs(drillDelta) < curOP->qMin()) {
-     zStops.append(curOP->drillDepth());
+  if (op->drillCycle() != 4 || abs(drillDelta) < op->qMin()) {
+     zStops.append(op->drillDepth());
      }
   else {
-     double qDelta   = curOP->qMax() - curOP->qMin();
-     double maxSteps = drillDelta / curOP->qMin();
+     double qDelta   = op->qMax() - op->qMin();
+     double maxSteps = drillDelta / op->qMin();
      double qStep    = qDelta / maxSteps;
-     double curStep  = curOP->qMax();
-     double curZ     = curOP->upperZ() + curOP->safeZ0();
+     double curStep  = op->qMax();
+     double curZ     = op->upperZ() + op->safeZ0();
 
-     while ((curZ - curStep) > curOP->drillDepth()) {
+     while ((curZ - curStep) > op->drillDepth()) {
            curZ -= curStep;
            zStops.append(curZ);
            curStep -= qStep;
            }
-     zStops.append(curOP->drillDepth());
+     zStops.append(op->drillDepth());
      }
   gp_Pnt lastPos(0, 0, 300);
-  double zS0  = curOP->upperZ() + curOP->safeZ0();
-  double zS1  = curOP->upperZ() + curOP->safeZ1();
+  double zS0  = op->upperZ() + op->safeZ0();
+  double zS1  = op->upperZ() + op->safeZ1();
 
-  curOP->toolPaths.clear();
-  for (auto ws: curOP->workSteps()) {
+  op->toolPaths.clear();
+  for (auto ws: op->workSteps()) {
       gp_Pnt from = lastPos;
       gp_Pnt to(ws->startPos().X(), ws->startPos().Y(), zS1);
       Handle(AIS_Shape) s = Core().helper3D()->createLine(from, to);
 
       s->SetColor(Quantity_NOC_CYAN);
-      curOP->toolPaths.push_back(s);
+      op->toolPaths.push_back(s);
 
       from = to;
       to.SetZ(zS0);
       s = Core().helper3D()->createLine(from, to);
       s->SetColor(Quantity_NOC_CYAN);
-      curOP->toolPaths.push_back(s);
+      op->toolPaths.push_back(s);
 
       from = to;
-      to.SetZ(curOP->drillDepth());
+      to.SetZ(op->drillDepth());
       s = Core().helper3D()->createLine(from, to);
       s->SetColor(Quantity_NOC_RED);
       s->SetWidth(3);
-      curOP->toolPaths.push_back(s);
+      op->toolPaths.push_back(s);
 
       for (double z : zStops) {
           to.SetZ(z);
-          Core().view3D()->createAxisCross(to, 1, &curOP->toolPaths, Quantity_NOC_RED);
+          Core().view3D()->createAxisCross(to, 1, &op->toolPaths, Quantity_NOC_RED);
           }
       lastPos = from;
       lastPos.SetZ(zS1);
       }
-  Core().view3D()->showShapes(curOP->toolPaths);
+  Core().view3D()->showShapes(op->toolPaths);
   Core().view3D()->refresh();
   }
 
@@ -262,7 +262,7 @@ void SubOPDrill::toolPath() {
       curOP->workSteps().push_back(new WSCycle(curOP->drillCycle(), from, to /* , safeZ0, safeZ1, drillDepth */));
       }
   qDebug() << "toolpath consists of" << curOP->workSteps().size() << "items";
-  showToolPath();
+  showToolPath(curOP);
   }
 
 

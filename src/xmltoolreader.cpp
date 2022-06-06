@@ -30,6 +30,7 @@
 #include <QDomDocument>
 #include <QIODevice>
 #include <QDebug>
+static const bool debug = false;
 
 
 XmlToolReader::XmlToolReader(QObject *parent)
@@ -60,9 +61,10 @@ void XmlToolReader::processText(CuttingParameters* cp, const QDomNode& n) {
   double         value = rawData.toDouble(&ok);
   const QString& name  = n.parentNode().nodeName();
 
-  if (ok) qDebug() << "\tcolumn value:" << value;
-  else    qDebug() << "\tcolumn value:" << rawData;
-
+  if (debug) {
+     if (ok) qDebug() << "\tcolumn value:" << value;
+     else    qDebug() << "\tcolumn value:" << rawData;
+     }
   if (name == "Material")   cp->setName(rawData);
   else if (name == "Speed") cp->setCuttingSpeed(value);
   else if (name == "Feed")  cp->setToothFeed(value);
@@ -78,9 +80,10 @@ void XmlToolReader::processText(ToolEntry* t, const QDomNode& n) {
   double         value = rawData.toDouble(&ok);
   const QString& name  = n.parentNode().nodeName();
 
-  if (ok) qDebug() << "\tcolumn value:" << value;
-  else    qDebug() << "\tcolumn value:" << rawData;
-
+  if (debug) {
+     if (ok) qDebug() << "\tcolumn value:" << value;
+     else    qDebug() << "\tcolumn value:" << rawData;
+     }
   if (name      == "Name")          t->setToolName(rawData);
   else if (name == "Collet")        t->setCollet(value);
   else if (name == "TipDiameter")   t->setTipDiameter(value);
@@ -120,7 +123,7 @@ QVector<ToolEntry*> XmlToolReader::read(const QByteArray& ba) {
 
 
 void XmlToolReader::readAttribute(ToolEntry* t, CuttingParameters* cp, const QDomAttr& a) {
-  qDebug() << "Attribute: " << a.name() << "has value:" << a.value();
+  if (debug) qDebug() << "Attribute: " << a.name() << "has value:" << a.value();
 
   if (a.name() == "num") {
      t->insertCuttingParameters(a.value().toInt(), cp);
@@ -129,7 +132,7 @@ void XmlToolReader::readAttribute(ToolEntry* t, CuttingParameters* cp, const QDo
 
 
 void XmlToolReader::readAttribute(ToolEntry* t, const QDomAttr& a) {
-  qDebug() << "Attribute: " << a.name() << "has value:" << a.value();
+  if (debug) qDebug() << "Attribute: " << a.name() << "has value:" << a.value();
 
   if (a.name() == "Number") t->setToolNumber(a.value().toInt());
   }
@@ -158,27 +161,29 @@ void XmlToolReader::readAttributes(ToolEntry *t, CuttingParameters* cp, const QD
 
 
 void XmlToolReader::readElement(ToolEntry* t, CuttingParameters* cp, const QDomElement& e) {
-  qDebug() << "Element: " << e.tagName() << " - parent:" << e.parentNode().nodeName();
+  if (debug) qDebug() << "Element: " << e.tagName() << " - parent:" << e.parentNode().nodeName();
 
   if (e.hasAttributes()) readAttributes(t, cp, e.attributes());
   for (QDomNode n = e.firstChild(); !n.isNull(); n = n.nextSibling()) {
       if (n.isAttr()) readAttribute(t, cp, n.toAttr());
       else if (n.isText()) processText(cp, n);
       else if (n.isElement()) readElement(t, cp, n.toElement());
-      else qDebug() << "Element of unknown type!";
+      else {
+         if (debug) qDebug() << "Element of unknown type!";
+         }
       }
   }
 
 
 void XmlToolReader::readElement(ToolEntry* t, const QDomElement& e) {
-  qDebug() << "Element: " << e.tagName() << " - parent:" << e.parentNode().nodeName();
+  if (debug) qDebug() << "Element: " << e.tagName() << " - parent:" << e.parentNode().nodeName();
 
   if (e.hasAttributes()) readAttributes(t, e.attributes());
   for (QDomNode n = e.firstChild(); !n.isNull(); n = n.nextSibling()) {
       if (n.isAttr()) readAttribute(t, n.toAttr());
       else if (n.isText()) processText(t, n);
       else if (n.isElement()) {
-         qDebug() << "node name:" << n.nodeName();
+         if (debug) qDebug() << "node name:" << n.nodeName();
 
          if (n.nodeName() == "CuttingParameters") {
             CuttingParameters* cp = new CuttingParameters();
@@ -187,6 +192,8 @@ void XmlToolReader::readElement(ToolEntry* t, const QDomElement& e) {
             }
          else readElement(t, n.toElement());
          }
-      else qDebug() << "Element of unknown type!";
+      else {
+         if (debug) qDebug() << "Element of unknown type!";
+         }
       }
   }

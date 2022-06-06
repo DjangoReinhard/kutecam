@@ -105,7 +105,6 @@ void PathBuilder::cleanup(std::vector<Workstep*>& tp) {
 
       if (kute::isEqual(ws->startPos(), ws->endPos())) {
          tp.erase(tp.begin() + i--);
-         continue;
          }
       }
   }
@@ -126,7 +125,7 @@ void dump(std::vector<std::vector<std::vector<GOContour*>>> cPool) {
           qDebug() << ">> dump path #" << ++i;
 
           for (auto& c : p) {
-              qDebug() << ">> contour #" << ++j
+              qDebug() << ">> contour #" << ++j << c->sType()
                        << "   from " << c->startPoint().X() << " / " << c->startPoint().Y()
                        << "   to   " << c->endPoint().X() << " / " << c->endPoint().Y();
               qDebug() << "   real - a0:" << c->a0() << " <> a1:" << c->a1();
@@ -138,20 +137,49 @@ void dump(std::vector<std::vector<std::vector<GOContour*>>> cPool) {
   }
 
 
-std::vector<Workstep*> PathBuilder::genFlatPaths(Operation* op, std::vector<Handle(AIS_Shape)> cutPlanes, std::vector<std::vector<std::vector<GOContour*>>> clippedParts, double curZ, double xtend) {
+std::vector<Workstep*> PathBuilder::genBasicPath(std::vector<std::vector<GOContour*>> levelParts) {
+  std::vector<Workstep*> toolPath;
+
+  for (int j=0; j < levelParts.size(); ++j) {
+      auto& contours = levelParts.at(j);
+
+      for (int k=0; k < contours.size(); ++k) {
+          auto& c = contours.at(k);
+
+          processContour(toolPath, c);
+          }
+      }
+  return toolPath;
+  }
+
+
+std::vector<Workstep*> PathBuilder::genFlatPaths(Operation* op, std::vector<Handle(AIS_Shape)> cutPlanes, std::vector<std::vector<std::vector<GOContour*>>> clippedParts, double curZ, double xtend, int level) {
   std::vector<std::vector<GOContour*>> pool;
   std::vector<Workstep*> toolPath;
 
-  for (auto& lp: clippedParts) {                            // flatten clippedParts ...
-      std::vector<GOContour*> contours;
+  if (level < 0) {
+     for (auto& lp: clippedParts) {                            // flatten clippedParts ...
+         std::vector<GOContour*> contours;
 
-      for (auto& p : lp) {
-          for (auto& c : p) {
-              contours.push_back(c);
-              }
-          }
-      pool.push_back(contours);
-      }
+         for (auto& p : lp) {
+             for (auto& c : p) {
+                 contours.push_back(c);
+                 }
+             }
+         pool.push_back(contours);
+         }
+     }
+  else {
+     auto& lp = clippedParts.at(level);
+     std::vector<GOContour*> contours;
+
+     for (auto& p : lp) {
+         for (auto& c : p) {
+             contours.push_back(c);
+             }
+         }
+     pool.push_back(contours);
+     }
 
   qDebug() << "collected " << pool.size() << " contours";
   gp_Pnt s = gp_Pnt(0, 0, 300), e = s;
@@ -180,13 +208,14 @@ std::vector<Workstep*> PathBuilder::genFlatPaths(Operation* op, std::vector<Hand
              }
 //          c->simplify(curZ);
           s = c->startPoint();
-          genInterMove(toolPath, e, s, c->centerPoint(), bb, xtend + i);   //TODO: remove debug offset from xtend
+                            //TODO: remove debug offset from xtend
+          genInterMove(toolPath, e, s, c->centerPoint(), bb, xtend + i);
 //          drawDebugContour(op, c, curZ);
-          processContour(toolPath, c);
-          e = c->endPoint();
+          e = processContour(toolPath, c);
+//          e = c->endPoint();
           }
       s = e;
-      e.SetZ(bb.CornerMax().Z() + op->safeZ1());
+      e.SetZ(op->topZ() + op->safeZ1());
       toolPath.push_back(new WSTraverse(s, e));
       curZ -= op->cutDepth();
       if (curZ < op->finalDepth()) break;
@@ -209,8 +238,10 @@ gp_Pnt PathBuilder::genInterMove(std::vector<Workstep*>& ws, const gp_Pnt& from,
      e.SetX(bb.CornerMin().X() - xtend);
   else if (reg1 & Right  && e.X() < (bb.CornerMax().X() + xtend))
      e.SetX(bb.CornerMax().X() + xtend);
+  double check0 = e.Z() - tmp.Z();
+  double check1 = tmp.Z() - e.Z();
 
-  if (tmp.Z() > e.Z()) {
+  if ((tmp.Z() - e.Z()) > kute::MinDelta) {
      tmp = e;
      tmp.SetZ(s.Z());
      if (!kute::isEqual(s, tmp)) {
@@ -607,89 +638,148 @@ gp_Pnt PathBuilder::genRoundInterMove(std::vector<Workstep*>& ws, const gp_Pnt& 
 
 std::vector<Workstep*> PathBuilder::genRoundToolpaths(Operation* op, const std::vector<Handle(AIS_Shape)>& cutPlanes) {
   std::vector<Workstep*> workSteps;
-  int                    mx = cutPlanes.size();
-  gp_Pnt                 from, to, startXXPos;
-  ToolEntry*             activeTool  = Core().toolListModel()->tool(Core().toolListModel()->findToolNum(op->toolNum()));
-  double                 xtend       = activeTool->fluteDiameter() * 0.8;
-  TopoDS_Edge            e;
-  Handle(AIS_Shape)      path;
-  bool                   againstFeed = op->direction() == 1;
+  int                      mx = cutPlanes.size();
+  gp_Pnt                   from, tmp, to, startXXPos;
+  ToolEntry*               activeTool  = Core().toolListModel()->tool(Core().toolListModel()->findToolNum(op->toolNum()));
+  ContourTargetDefinition* ctd = static_cast<ContourTargetDefinition*>(op->targets.at(0));
+  double                   xtend       = activeTool->fluteDiameter() * 0.8;
+  double                   topZ        = fmax(op->topZ(), op->upperZ());
+  double                   safeZ0      = topZ + op->safeZ0();
+  double                   safeZ1      = topZ + op->safeZ1();
+  double                   rMin        = ctd->minRadius() + op->cutWidth();
+  double                   rMax        = ctd->maxRadius() - op->offset() - activeTool->fluteDiameter() / 2;
+  double                   curR        = rMin;
+  gp_Pnt                   pTC(0, 0, 300);
+  gp_Pnt                   oC          = ctd->pos();
+  gp_Pnt                   c           = oC;
+  TopoDS_Edge              e;
+  Handle(AIS_Shape)        path;
+  bool                     againstFeed = op->direction() != 1;
+  bool                     insideOut   = !op->isOutside();
 
-  for (int i=0; i < mx; ++i) {
+  if (!insideOut) {
+     rMin = ctd->minRadius() + op->offset() + activeTool->fluteDiameter() / 2;
+     rMax = ctd->maxRadius();
+     curR = rMax;
+     }
+  from = pTC;
+  to   = gp_Pnt(oC.X(), oC.Y() + curR, pTC.Z());
+  workSteps.push_back(new WSTraverse(from, to));
+  from = to;
+  to.SetZ(safeZ0);
+  workSteps.push_back(new WSTraverse(from, to));
+
+  c.SetZ(safeZ0);
+  from = c;
+  from.SetY(c.Y() + curR);
+
+  qDebug() << "rMin:" << rMin << "rMax:" << rMax << "topZ:" << topZ << "lastZ:" << op->lowerZ();
+
+  for (int i=0; i < mx; ++i, curR = insideOut ? rMin : rMax) {
       Handle(AIS_Shape) s      = cutPlanes.at(i);
       Bnd_Box           bb     = s->BoundingBox(); bb.SetGap(0);
-      gp_Pnt            center = gp_Pnt((bb.CornerMin().X() + bb.CornerMax().X()) / 2
-                                      , (bb.CornerMin().Y() + bb.CornerMax().Y()) / 2
-                                      , bb.CornerMin().Z());
-      double            radius = (bb.CornerMax().X() - bb.CornerMin().X()) / 2;
-      double            xStart = radius + activeTool->fluteDiameter() * 0.6;
-      double            rStart = radius - op->cutWidth() + activeTool->fluteDiameter() / 2;
-      double            lastY  = rStart;
-      double            curZ   = bb.CornerMin().Z();
-      double            curR   = rStart;
+      double            nextZ  = bb.CornerMin().Z() + (topZ - bb.CornerMin().Z()) / 2;
 
       qDebug() << "round cut plane: "
                << bb.CornerMin().X() << "/" << bb.CornerMin().Y() << "/" << bb.CornerMin().Z()
                << "\tto\t"
                << bb.CornerMax().X() << "/" << bb.CornerMax().Y() << "/" << bb.CornerMax().Z();
 
-      if (i) {
-         from = to;
-         to   = gp_Pnt(startXXPos.X(), startXXPos.Y(), from.Z());
-         workSteps.push_back(new WSTraverse(from, to));
+      if (from.Y() > oC.Y()) {
+         to = gp_Pnt(oC.X(), oC.Y() - curR, nextZ);
+         c.SetY(from.Y() - (from.Y() - to.Y()) / 2);
+//         c.SetZ(nextZ);
+         workSteps.push_back(new WSArc(from, to, c, againstFeed));
+//         genArc(from, to, c, againstFeed);
 
          from = to;
-         to   = gp_Pnt(startXXPos.X(), startXXPos.Y(), curZ);
-         workSteps.push_back(new WSTraverse(from, to));
          }
-      from = againstFeed ? gp_Pnt(center.X() + xStart, center.Y() + rStart, curZ)
-                         : gp_Pnt(center.X() - xStart, center.Y() + rStart, curZ);
-      if (!i) startXXPos = from;
-      to = gp_Pnt(center.X(), center.Y() + rStart, curZ);
+      to = gp_Pnt(oC.X(), oC.Y() + curR, bb.CornerMin().Z());
+      c.SetY(from.Y() - (from.Y() - to.Y()) / 2);
+      c.SetZ(from.Z());
+      workSteps.push_back(new WSArc(from, to, c, againstFeed));
+//      genArc(from, to, c, againstFeed);
 
-      qDebug() << "start line from:" << from.X() << "/"
-                                     << from.Y() << "/"
-                                     << from.Z()
-               << "   to   "         << to.X()   << "/"
-                                     << to.Y()   << "/"
-                                     << to.Z();
-      workSteps.push_back(new WSStraightMove(from, to));
       from = to;
-      workSteps.push_back(new WSArc(from, to, center, againstFeed));
-      lastY = startXXPos.Y();
-      curR -= op->cutWidth();
+      to   = gp_Pnt(oC.X(), oC.Y() - curR, bb.CornerMin().Z());
+      c.SetY(from.Y() - (from.Y() - to.Y()) / 2);
+      c.SetZ(from.Z());
+      workSteps.push_back(new WSArc(from, to, c, againstFeed));
+//      genArc(from, to, c, againstFeed);
 
-      while (curR > 0) {
-            from = to;
-            to   = gp_Pnt(center.X()
-                        , -curR
-                        , curZ);
-            center.SetY(lastY - (lastY + curR) / 2);
-            workSteps.push_back(new WSArc(from, to, center, againstFeed));
-            from = to;
-            to   = gp_Pnt(center.X(), curR, curZ);
-            center.SetY(0);
-            workSteps.push_back(new WSArc(from, to, center, againstFeed));
-            curR -= op->cutWidth();
-            lastY = to.Y();
-            }
       from = to;
-      to   = gp_Pnt(from.X(), from.Y(), from.Z() + 5);
-      workSteps.push_back(new WSTraverse(from, to));
+      to   = gp_Pnt(oC.X(), oC.Y() + curR, bb.CornerMin().Z());
+      c.SetY(from.Y() - (from.Y() - to.Y()) / 2);
+      workSteps.push_back(new WSArc(from, to, c, againstFeed));
+//      genArc(from, to, c, againstFeed);
+
+      from = to;
+      if (insideOut) {
+         while ((curR += op->cutWidth()) < rMax) {
+               to = gp_Pnt(oC.X(), oC.Y() - curR, bb.CornerMin().Z());
+               c.SetY(from.Y() - (from.Y() - to.Y()) / 2);
+               workSteps.push_back(new WSArc(from, to, c, againstFeed));
+//               genArc(from, to, c, againstFeed);
+
+               from = to;
+   //            if ((curR += op->cutWidth()) > rMax) break;
+               to   = gp_Pnt(oC.X(), oC.Y() + curR, bb.CornerMin().Z());
+               c.SetY(from.Y() - (from.Y() - to.Y()) / 2);
+               workSteps.push_back(new WSArc(from, to, c, againstFeed));
+//               genArc(from, to, c, againstFeed);
+               from = to;
+               }
+         }
+      else {
+         while ((curR -= op->cutWidth()) > rMin) {
+               to = gp_Pnt(oC.X(), oC.Y() - curR, bb.CornerMin().Z());
+               c.SetY(from.Y() - (from.Y() - to.Y()) / 2);
+               workSteps.push_back(new WSArc(from, to, c, againstFeed));
+//               genArc(from, to, c, againstFeed);
+
+               from = to;
+   //            if ((curR += op->cutWidth()) > rMax) break;
+               to   = gp_Pnt(oC.X(), oC.Y() + curR, bb.CornerMin().Z());
+               c.SetY(from.Y() - (from.Y() - to.Y()) / 2);
+               workSteps.push_back(new WSArc(from, to, c, againstFeed));
+//               genArc(from, to, c, againstFeed);
+               from = to;
+               }
+         }
+      curR = insideOut ? rMax : rMin;
+      to = gp_Pnt(oC.X(), oC.Y() - curR, bb.CornerMin().Z());
+      c.SetY(from.Y() - (from.Y() - to.Y()) / 2);
+      workSteps.push_back(new WSArc(from, to, c, againstFeed));
+//      genArc(from, to, c, againstFeed);
+
+      from = to;
+      to   = gp_Pnt(oC.X(), oC.Y() + curR, bb.CornerMin().Z());
+      c.SetY(from.Y() - (from.Y() - to.Y()) / 2);
+      workSteps.push_back(new WSArc(from, to, c, againstFeed));
+//      genArc(from, to, c, againstFeed);
+
+      from = to;
+      to = gp_Pnt(oC.X(), oC.Y() - curR, bb.CornerMin().Z());
+      c.SetY(from.Y() - (from.Y() - to.Y()) / 2);
+      workSteps.push_back(new WSArc(from, to, c, againstFeed));
+//      genArc(from, to, c, againstFeed);
+      from = to;
       }
   return workSteps;
   }
 
 
 std::vector<Workstep*> PathBuilder::genToolPath(Operation* op, Handle(AIS_Shape) cutPart, bool wantPockets) {
-  TargetDefinition*      td  = op->targets.at(0);
-  SweepTargetDefinition* std = dynamic_cast<SweepTargetDefinition*>(td);
-  std::vector<Workstep*> toolPath;
+  TargetDefinition*        td  = op->targets.at(0);
+  SweepTargetDefinition*   std = dynamic_cast<SweepTargetDefinition*>(td);
+  ContourTargetDefinition* ctd = dynamic_cast<ContourTargetDefinition*>(td);
+  std::vector<Workstep*>   toolPath;
 
   if (!td) return toolPath;
-  gp_Pnt center(op->wpBounds.CornerMin().X() + (op->wpBounds.CornerMax().X() - op->wpBounds.CornerMin().X()) / 2
-              , op->wpBounds.CornerMin().Y() + (op->wpBounds.CornerMax().Y() - op->wpBounds.CornerMin().Y()) / 2
-              , op->wpBounds.CornerMin().Z() + (op->wpBounds.CornerMax().Z() - op->wpBounds.CornerMin().Z()) / 2);
+//  gp_Pnt center(op->wpBounds.CornerMin().X() + (op->wpBounds.CornerMax().X() - op->wpBounds.CornerMin().X()) / 2
+//              , op->wpBounds.CornerMin().Y() + (op->wpBounds.CornerMax().Y() - op->wpBounds.CornerMin().Y()) / 2
+//              , op->wpBounds.CornerMin().Z() + (op->wpBounds.CornerMax().Z() - op->wpBounds.CornerMin().Z()) / 2);
+  gp_Pnt     center  = td->pos();
   GOContour* contour = td->contour();
 
   if (!contour) return toolPath;
@@ -716,21 +806,33 @@ std::vector<Workstep*> PathBuilder::genToolPath(Operation* op, Handle(AIS_Shape)
   lastZ -=  2 * kute::MinDelta;
   while (curZ > lastZ) {
         qDebug() << "cut depth is" << curZ;
-        std::vector<std::vector<GOContour*>> levelContours = processCurve(op, contour, curveIsBorder, center, xtend, firstOffset, curZ);
+        std::vector<std::vector<GOContour*>> levelContours = processCurve(op, contour, curveIsBorder, center, /* xtend, */ firstOffset, curZ);
 
         if (levelContours.size()) clippedParts.push_back(levelContours);
         gp_Pln pln({0, 0, curZ}, {0, 0, 1});
         BRepBuilderAPI_MakeFace mf(pln, -500, 500, -500, 500);
 
         cutPlanes.push_back(new AIS_Shape(Core().helper3D()->intersect(op->cutPart->Shape(), mf.Shape())));
+
         curZ -= op->cutDepth();
         }
+  //TODO: show clippedParts without additional paths!
+//  dump(clippedParts);
+//  std::vector<Workstep*>   tP0 = genBasicPath(clippedParts.at(0));
+
+//  cleanup(tP0);
+//  toolPath = genFlatPaths(op, cutPlanes, clippedParts, curZ, xtend, 1);
+//  cleanup(toolPath);
+//  toolPath.insert(toolPath.begin(), tP0.begin(), tP0.end());
+//  cleanup(toolPath);
+
+//  return toolPath;
 
   qDebug() << "have" << clippedParts.size() << "cut stages\n";
 
   if (!clippedParts.size()) return toolPath;
 
-  qDebug() << "center: " << center.X() << " / " << center.Y() << "   extend: " << xtend;
+  qDebug() << "center: " << center.X() << " / " << center.Y(); // << "   extend: " << xtend;
   qDebug() << "workpiece: " << op->wpBounds.CornerMin().X() << " / " << op->wpBounds.CornerMin().Y()
            << "   to   "    << op->wpBounds.CornerMax().X() << " / " << op->wpBounds.CornerMax().Y();
   dump(clippedParts);
@@ -745,7 +847,7 @@ std::vector<Workstep*> PathBuilder::genToolPath(Operation* op, Handle(AIS_Shape)
   else {
      toolPath = genFlatPaths(op, cutPlanes, clippedParts, curZ, xtend);
      }
-  cleanup(toolPath);
+//  cleanup(toolPath);
 
   return toolPath;
   }
@@ -771,33 +873,40 @@ void PathBuilder::drawDebugContour(Operation* op, GOContour* c, double z) {
   }
 
 
-void PathBuilder::processContour(std::vector<Workstep*>& ws, GOContour* c) {
+gp_Pnt PathBuilder::processContour(std::vector<Workstep*>& tp, GOContour* c) {
   qDebug() << "process contour" << c->toString();
+  Workstep* ws = nullptr;
 
   for (auto& go : c->segments()) {
       switch (go->type()) {
         case GTLine:
-             ws.push_back(new WSStraightMove(go->startPoint(), go->endPoint()));
+             ws = new WSStraightMove(go->startPoint(), go->endPoint());
+             ws->setColor(Quantity_NOC_PURPLE1);
+             tp.push_back(ws);
              break;
         case GTCircle: {
              GOCircle* gc = dynamic_cast<GOCircle*>(go);
 
-             ws.push_back(new WSArc(go->startPoint(), go->endPoint(), gc->center(), gc->isCCW()));
+             ws = new WSArc(go->startPoint(), go->endPoint(), gc->center(), gc->isCCW());
+             ws->setColor(Quantity_NOC_PURPLE1);
+             tp.push_back(ws);
              } break;
         default:
              throw std::domain_error(QString("unsupported graphic-type %1").arg(go->type()).toStdString());
              break;
         }
       }
+  return ws->endPos();
   }
 
 
 // all contiguous segments form a contour (instance of GOContour).
 // A cutted offset curve may lead to several subcontours (vector of GOContour)
 // processCurve processes all contour(-segments) of same z-level
-std::vector<std::vector<GOContour*>> PathBuilder::processCurve(Operation* op, GOContour* curve, bool curveIsBorder, const gp_Pnt& center, double xtend, double firstOffset, double curZ) {
+std::vector<std::vector<GOContour*>> PathBuilder::processCurve(Operation* op, GOContour* curve, bool curveIsBorder, const gp_Pnt& center, /* double xtend, */ double firstOffset, double curZ) {
   BRepOffsetAPI_MakeOffset              offMaker(TopoDS::Wire(curve->toWire(curZ)));
   TopoDS_Shape                          rawPath;
+  Bnd_Box                               bbCut = op->cutPart->BoundingBox();
   std::vector<std::vector<GOContour*>>  levelContours;
   bool                                  debug = false;
 
@@ -836,9 +945,9 @@ std::vector<std::vector<GOContour*>> PathBuilder::processCurve(Operation* op, GO
                    }
                 path->add(goSeg);   // keep all segments for last workpath
                 }
+//            stripPath(path, curve);
+            path->extendBy(5);
             path->simplify(curZ);
-            stripPath(path, curve);
-            path->extendBy(xtend);
             pathParts.push_back(path);
             }
          else {
@@ -855,7 +964,7 @@ std::vector<std::vector<GOContour*>> PathBuilder::processCurve(Operation* op, GO
                    }
                 if (path->add(goSeg)) continue;
                 if (path->size()) {
-                   path->extendBy(xtend);
+                   path->extendBy(5);
                    path->simplify(curZ);
                    pathParts.push_back(path);
                    path = new GOContour(center, i);
@@ -863,7 +972,7 @@ std::vector<std::vector<GOContour*>> PathBuilder::processCurve(Operation* op, GO
                    }
                 }
             if (path->size()) {
-               path->extendBy(xtend);
+               path->extendBy(5);
                path->simplify(curZ);
                pathParts.push_back(path);
                }

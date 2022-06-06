@@ -34,6 +34,7 @@
 WSTraverse::WSTraverse(const gp_Pnt& from, const gp_Pnt& to, QObject* parent)
  : Workstep(WTTraverse, from, to, parent) {
   if (kute::isEqual(from, to)) throw std::domain_error("startpoint and endpoint may not be the same!");
+  setColor(Quantity_NOC_CYAN);
   }
 
 

@@ -32,7 +32,8 @@
 Workstep::Workstep(WorkstepType wt, const gp_Pnt& from, const gp_Pnt& to, QObject* parent)
  : wsType(wt)
  , start(from)
- , end(to) {
+ , end(to)
+ , c(Quantity_NOC_RED1) {
   }
 
 
@@ -41,6 +42,7 @@ Workstep::Workstep(WorkstepType wt, QSettings& s, QObject* parent)
   start.SetX(s.value("wsStartX").toDouble());
   start.SetY(s.value("wsStartY").toDouble());
   start.SetZ(s.value("wsStartZ").toDouble());
+  Quantity_Color::ColorFromHex(s.value("wsCol").toString().toLatin1(), c);
   end.SetX(s.value("wsEndX").toDouble());
   end.SetY(s.value("wsEndY").toDouble());
   end.SetZ(s.value("wsEndZ").toDouble());
@@ -52,6 +54,10 @@ QString Workstep::className() const {
   }
 
 
+Quantity_Color Workstep::color() const {
+  return c;
+  }
+
 void Workstep::dump() const {
   qDebug() << className() << "-Type:" << wsType << "from:" << start.X() << " / " << start.Y() << " / " << start.Z()
                                                 << "  to:" << end.X() << " / " << end.Y() << " / " << end.Z();
@@ -60,6 +66,11 @@ void Workstep::dump() const {
 
 gp_Pnt Workstep::endPos() const {
   return end;
+  }
+
+
+void Workstep::setColor(Quantity_Color c) {
+  this->c = c;
   }
 
 
@@ -78,6 +89,7 @@ void Workstep::store(QSettings& s) {
   s.setValue("wsStartX", start.X());
   s.setValue("wsStartY", start.Y());
   s.setValue("wsStartZ", start.Z());
+  s.setValue("wsCol", Quantity_Color::ColorToHex(c).ToCString());
   s.setValue("wsEndX", end.X());
   s.setValue("wsEndY", end.Y());
   s.setValue("wsEndZ", end.Z());

@@ -147,40 +147,13 @@ void SubOPClampingPlug::processTargets() {
   }
 
 
-// display generated toolpath (process list of worksteps)
-void SubOPClampingPlug::showToolPath() {
-  if (!curOP->workSteps().size()) return;
-  Handle(AIS_Shape) as;
-
-  for (auto ws : curOP->workSteps()) {
-      ws->dump();
-      switch (ws->type()) {
-        case WTTraverse:
-             curOP->toolPaths.push_back(Core().helper3D()->genFastMove(ws->startPos(), ws->endPos()));
-             break;
-        case WTStraightMove:
-             curOP->toolPaths.push_back(Core().helper3D()->genWorkLine(ws->startPos(), ws->endPos()));
-             break;
-        case WTArc: {
-             WSArc* wa = static_cast<WSArc*>(ws);
-
-             curOP->toolPaths.push_back(Core().helper3D()->genWorkArc(ws->startPos(), ws->endPos(), wa->centerPos(), wa->isCCW()));
-             } break;
-        default: break;
-        }
-      }
-  Core().view3D()->showShapes(curOP->toolPaths);
-  Core().view3D()->refresh();
-  }
-
-
 // generated worksteps from target definition
 void SubOPClampingPlug::toolPath() {
   if (!curOP->cutDepth()) return;
   processTargets();
-  curOP->workSteps() = pathBuilder->genToolPath(curOP, curOP->cutPart, false);
+  curOP->workSteps() = pathBuilder()->genToolPath(curOP, curOP->cutPart, false);
   Core().view3D()->showShapes(curOP->toolPaths, false);
   if (curOP->showCutParts) Core().view3D()->showShapes(curOP->cShapes, false);
   Core().view3D()->refresh();
-  showToolPath();
+  showToolPath(curOP);
   }

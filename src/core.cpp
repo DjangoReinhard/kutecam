@@ -34,6 +34,7 @@
 #include "pluginlistmodel.h"
 #include "projectfile.h"
 #include "occtviewer.h"
+#include "operationspage.h"
 #include "mainwindow.h"
 #include "toollistmodel.h"
 #include "work.h"
@@ -260,6 +261,11 @@ ProjectFile* Core::projectFile() {
 
 void Core::riseError(const QString &msg) {
   QMessageBox::critical(nullptr, tr("System Error"), msg);
+  }
+
+
+void Core::saveOperations() {
+  k->operations->saveOperations();
   }
 
 

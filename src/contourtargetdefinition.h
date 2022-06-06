@@ -32,13 +32,16 @@
 class ContourTargetDefinition : public TargetDefinition
 {
 public:
-  explicit ContourTargetDefinition(const gp_Pnt& pos, double radius = 0, QObject* parent = nullptr);
+  explicit ContourTargetDefinition(const gp_Pnt& pos, double maxRadius = 0, double minRadius = 0, QObject* parent = nullptr);
   explicit ContourTargetDefinition(QSettings& settings, QObject* parent = nullptr);
   virtual ~ContourTargetDefinition() = default;
 
+  inline double minRadius() const { return rMin; }
+  inline double maxRadius() const { return radius(); }
   virtual void    store(QSettings& settings) override;
   virtual QString toString() const override;
 
 private:
+  double rMin;
   };
 #endif // CONTOURTARGETDEFINITION_H

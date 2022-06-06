@@ -130,26 +130,48 @@ void SubOPContour::processSelection() {
          if (!selectedFace->IsKind(STANDARD_TYPE(Geom_Plane))) {
             std::vector<TopoDS_Edge> edges = Core().helper3D()->allEdgesWithin(s);
 
-            curOP->setLowerZ(bbSel.CornerMin().Z());
+            curOP->setFinalDepth(bbSel.CornerMin().Z());
             curOP->setUpperZ(bbSel.CornerMax().Z());
+            ui->spDepth->setValue(curOP->finalDepth());
+            ui->cAbsolute->setChecked(true);
+            curOP->setOutside(!ui->cInside->isChecked());
+
             for (auto e : edges) {
                 if (BRep_Tool::IsGeometric(e)) {
                    double first, last;
                    Handle(Geom_Curve) c = BRep_Tool::Curve(e, first, last);
 
-                   if (c->DynamicType() == STANDARD_TYPE(Geom_Circle)) {
+                   if (c->DynamicType() == STANDARD_TYPE(Geom_Circle)
+                    && !first && kute::isEqual(last, 2 * M_PI)) {
                       Handle(Geom_Circle) circle = Handle(Geom_Circle)::DownCast(c);
                       gp_Pnt              pos    = circle->Position().Location();
                       const gp_Dir&       dir    = circle->Position().Direction();
-                      double              radius = circle->Radius();
+                      double              radius = circle->Radius();                      
 
                       if (kute::isVertical(dir)) {         // OK, first horizontal circle will do
                          pos.SetZ(-500);
                          cuttingFace = BRepPrimAPI_MakeCylinder(gp_Ax2(pos, dir), radius, 1000);
                          cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP);
                          bbCP    = cutPart->BoundingBox();
+                         double dx = bbCP.CornerMax().X() - bbCP.CornerMin().X();
+                         double dy = bbCP.CornerMax().Y() - bbCP.CornerMin().Y();
+                         ContourTargetDefinition* ctd = new ContourTargetDefinition(pos, radius);
 
-                         tdModel->append(new ContourTargetDefinition(pos, radius));
+                         qDebug() << "cutpart has extend:" << bbCP.CornerMin().X() << " / " << bbCP.CornerMin().Y() << " / " << bbCP.CornerMin().Z()
+                                  << "   to:" << bbCP.CornerMax().X() << " / " << bbCP.CornerMax().Y() << " / " << bbCP.CornerMax().Z();
+                         qDebug() << "cutOP is" << (curOP->isOutside() ? "OUTSIDE" : "INSIDE");
+                         if (dx > (2.0 * radius + 1)
+                          || dy > (2.0 * radius + 1)) curOP->setOutside(true);
+                         else                         curOP->setOutside(false);
+                         curOP->setTopZ(bbCP.CornerMax().Z());
+                         curOP->setLowerZ(bbCP.CornerMin().Z());
+                         if (curOP->isOutside()) {
+                            contour = new GOContour(pos);
+                            contour->add(new GOCircle(circle, first, last));
+                            contour->simplify(pos.Z());
+                            ctd->setContour(contour);
+                            }
+                         tdModel->append(ctd);
                          break; // don't care for rest of edges
                          }
                       }
@@ -196,10 +218,38 @@ void SubOPContour::processTargets() {
   else {
      // possibly cylindrical face selection
      gp_Pnt pos = ctd->pos();
+     bool   outside = curOP->isOutside();
 
      pos.SetZ(-500);
      cuttingFace = BRepPrimAPI_MakeCylinder(gp_Ax2(pos, {0, 0, 1}), ctd->radius(), 1000);
      curOP->cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP);
+     Bnd_Box bbCP = curOP->cutPart->BoundingBox();
+     double dx = bbCP.CornerMax().X() - bbCP.CornerMin().X();
+     double dy = bbCP.CornerMax().Y() - bbCP.CornerMin().Y();
+
+     qDebug() << "cutpart has extend:" << bbCP.CornerMin().X() << " / " << bbCP.CornerMin().Y() << " / " << bbCP.CornerMin().Z()
+              << "   to:" << bbCP.CornerMax().X() << " / " << bbCP.CornerMax().Y() << " / " << bbCP.CornerMax().Z();
+     qDebug() << "cutOP is" << (curOP->isOutside() ? "OUTSIDE" : "INSIDE");
+     if ((outside && (dx < (2.0 * ctd->radius() + 1)
+                   || dy < (2.0 * ctd->radius() + 1)))
+     || (!outside && (dx > (2.0 * ctd->radius() + 1)
+                   || dy > (2.0 * ctd->radius() + 1)))) {
+        // we got wrong part of workpiece as cutpart,
+        // so flip outside flag and try again ...
+        curOP->setOutside(!curOP->isOutside());
+        curOP->cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP);
+        bbCP = curOP->cutPart->BoundingBox();
+        dx   = bbCP.CornerMax().X() - bbCP.CornerMin().X();
+        dy   = bbCP.CornerMax().Y() - bbCP.CornerMin().Y();
+
+        if ((outside && (dx > (2.0 * ctd->radius() + 1)
+                      || dy > (2.0 * ctd->radius() + 1)))
+        || (!outside && (dx < (2.0 * ctd->radius() + 1)
+                      || dy < (2.0 * ctd->radius() + 1)))) {
+           curOP->setOutside(outside);
+           }
+        else curOP->cutPart.Nullify();
+        }
      }
   if (!curOP->cutPart.IsNull()) {
      curOP->cutPart->SetColor(Quantity_NOC_CYAN);
@@ -237,7 +287,7 @@ void SubOPContour::toolPath() {
      gp_Pln cutPlane({center.X(), center.Y(), curOP->finalDepth()}, {0, 0, 1});
      BRepBuilderAPI_MakeFace mf(cutPlane, -500, 500, -500, 500);
      curOP->cutPart = Core().selectionHandler()->createCutPart(mf.Shape(), curOP);
-     curOP->workSteps() = pathBuilder->genToolPath(curOP, curOP->cutPart, true);
+     curOP->workSteps() = pathBuilder()->genToolPath(curOP, curOP->cutPart, true);
      }
   // try to cut selection based contour
   else if (curOP->targets.size()) {
@@ -247,48 +297,37 @@ void SubOPContour::toolPath() {
 
      if (kute::isEqual(ctd->radius(), 0)) {
         // may be stored waterline contour?!?
-        curOP->workSteps() = pathBuilder->genToolPath(curOP, curOP->cutPart, true);
+        curOP->workSteps() = pathBuilder()->genToolPath(curOP, curOP->cutPart, true);
         }
      else if (ctd->radius() < 0) {
         // possibly contour from selected faces ...
-        curOP->workSteps() = pathBuilder->genToolPath(curOP, curOP->cutPart, true);
+        curOP->workSteps() = pathBuilder()->genToolPath(curOP, curOP->cutPart, true);
         }
      else {
         // possibly cylindrical face selection
         qDebug() << "cut cylindrical face contour?!?";
+        Bnd_Box bbCut = curOP->cutPart->BoundingBox();
         std::vector<TopoDS_Edge> edges = Core().helper3D()->allEdgesWithin(curOP->cutPart->Shape());
+        double dx = bbCut.CornerMax().X() - bbCut.CornerMin().X();
+        double dy = bbCut.CornerMax().Y() - bbCut.CornerMin().Y();
 
-        // outside of circle we'd expect different circles and the outer has
-        // radius bigger than radius from target definition
-        for (auto &e : edges) {
-            if (BRep_Tool::IsGeometric(e)) {
-               double first, last;
-               Handle(Geom_Curve) c = BRep_Tool::Curve(e, first, last);
-
-               if (c->DynamicType() == STANDARD_TYPE(Geom_Circle)) {
-                  Handle(Geom_Circle) circle = Handle(Geom_Circle)::DownCast(c);
-                  double              radius = circle->Radius();
-
-                  if (radius > ctd->radius()) {
-                     // cut outside of circle
-                     qDebug() << "cut outside of circle, outer limit:" << radius;
-                     }
-                  else {
-                     // cut circular pocket
-                     qDebug() << "cut circular pocket ...";
-                     }
-                  }
-               }
-            }
-        qDebug() << "what?";
+        if (dx > (2.0 * ctd->radius() + 1) || dy > (2.0 * ctd->radius() + 1)) {
+           // mill outside of circle ...
+           curOP->workSteps() = pathBuilder()->genToolPath(curOP, curOP->cutPart, false);
+           }
+        else {
+           // posibly circular pocket ...
+           std::vector<Handle(AIS_Shape)> cutPlanes = createCutPlanes(curOP);
+           curOP->workSteps() = pathBuilder()->genRoundToolpaths(curOP, cutPlanes);
+           }
         }
      }
   curOP->cutPart->SetColor(Quantity_NOC_CYAN);
   curOP->cutPart->SetTransparency(0.8);
   Core().view3D()->showShape(curOP->cutPart, false);
   if (curOP->showCutParts) Core().view3D()->showShapes(curOP->cShapes, false);
+  showToolPath(curOP);
   Core().view3D()->refresh();
-  showToolPath();
   }
 
 
@@ -308,37 +347,3 @@ void SubOPContour::updateCut(double d) {
 
   Core().view3D()->refresh();
   }
-
-
-//void SubOPContour::showToolPath() {
-//  if (!curOP->workSteps().size()) return;
-//  Handle(AIS_Shape) as;
-//  gp_Pnt lastPos = curOP->workSteps().at(0)->startPos();
-
-//  for (int i=0; i < curOP->workSteps().size(); ++i) {
-//      Workstep* ws = curOP->workSteps().at(i);
-
-//      if (!kute::isEqual(ws->startPos(), lastPos)) {
-//         qDebug() << "found wrong serial at #" << i;
-//         ws->dump();
-////         throw std::domain_error("invalid sequence!");
-//         }
-//      switch (ws->type()) {
-//        case WTTraverse:
-//             curOP->toolPaths.push_back(Core().helper3D()->genFastMove(ws->startPos(), ws->endPos()));
-//             break;
-//        case WTStraightMove:
-//             curOP->toolPaths.push_back(Core().helper3D()->genWorkLine(ws->startPos(), ws->endPos()));
-//             break;
-//        case WTArc: {
-//             WSArc* wa = static_cast<WSArc*>(ws);
-
-//             curOP->toolPaths.push_back(Core().helper3D()->genWorkArc(ws->startPos(), ws->endPos(), wa->centerPos(), wa->isCCW()));
-//             } break;
-//        default: break;
-//        }
-//      lastPos = ws->endPos();
-//      }
-//  Core().view3D()->showShapes(curOP->toolPaths);
-//  Core().view3D()->refresh();
-//  }

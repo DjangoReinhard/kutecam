@@ -1,27 +1,27 @@
-/* 
+/*
  * **************************************************************************
- * 
+ *
  *  file:       operationspage.cpp
  *  project:    kuteCAM
  *  subproject: main application
  *  purpose:    create a graphical application, that assists in identify
- *              and process model elements                        
+ *              and process model elements
  *  created:    23.4.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
- * 
- *  This program is free software: you can redistribute it and/or modify 
- *  it under the terms of the GNU General Public License as published by 
- *  the Free Software Foundation, either version 2 of the License, or 
- *  (at your option) any later version. 
- *   
- *  This program is distributed in the hope that it will be useful, 
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
- *  GNU General Public License for more details. 
- *   
- *  You should have received a copy of the GNU General Public License 
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- * 
+ *
  * **************************************************************************
  */
 #include "operationspage.h"
@@ -36,7 +36,6 @@
 #include "operation.h"
 #include "operationlistmodel.h"
 #include "operationsubpage.h"
-//#include "selectioninfohandler.h"
 #include "subopcontour.h"
 #include "subopclampingplug.h"
 #include "subopdrill.h"
@@ -87,10 +86,9 @@ OperationsPage::OperationsPage(QWidget *parent)
  , currentOperation(nullptr)
  , opStack(new QStackedLayout())
  , infoModel(new GeomNodeModel())
-// , sIH(new SelectionInfoHandler())
  , subPage(nullptr)
  , tdModel(new TargetDefListModel(&dummy)) {
-  ui->setupUi(this);  
+  ui->setupUi(this);
   ui->Operation->setLayout(opStack);
   ui->lstOperations->setModel(olm);
   ui->geomTree->setModel(infoModel);
@@ -99,10 +97,6 @@ OperationsPage::OperationsPage(QWidget *parent)
   connect(Core().uiMainWin()->actionGenerate_GCode, &QAction::triggered, this, &OperationsPage::genGCode);
   connect(Core().uiMainWin()->actionSelection2Horizontal, &QAction::triggered, this, &OperationsPage::sel2Horizontal);
   connect(Core().uiMainWin()->actionSelection2Vertical, &QAction::triggered, this, &OperationsPage::sel2Vertical);
-
-  connect(Core().uiMainWin()->actionProjectSave,   &QAction::triggered, this, &OperationsPage::saveOperations);
-  connect(Core().uiMainWin()->actionProjectSaveAs, &QAction::triggered, this, &OperationsPage::saveOperationsTo);
-
   connect(ui->lstOperations->selectionModel(),  &QItemSelectionModel::selectionChanged, this, &OperationsPage::opSelected);
   connect(Core().view3D(), &OcctQtViewer::selectionChanged,  this, &OperationsPage::selectionChanged);
   connect(this,      &OperationsPage::raiseMessage, Core().mainWin(), &MainWindow::setStatusMessage);
@@ -124,7 +118,7 @@ OperationsPage::OperationsPage(QWidget *parent)
      ; ++i) {
     opStack->addWidget(i.value());
     connect(i.value(), &OperationSubPage::opCreated, this, &OperationsPage::addOperation);
-    }  
+    }
   }
 
 
@@ -312,7 +306,7 @@ void OperationsPage::loadOperation(Operation* op) { // don't touch old operation
   ui->dsCut->setValue(op->waterlineDepth());
   if (currentOperation) {
      if (currentOperation->cShapes.size())     Core().view3D()->showShapes(currentOperation->cShapes, false);
-     if (currentOperation->workSteps().size()) subPage->showToolPath();
+     if (currentOperation->workSteps().size()) subPage->showToolPath(currentOperation);
      Core().view3D()->refresh();
      }
   }
@@ -346,6 +340,7 @@ void OperationsPage::reSelect() {
      currentOperation->setOperationC(ui->spC->value());
      }
   subPage->fixit();
+  currentOperation->targets.clear();
   subPage->processSelection();
   if (currentOperation && currentOperation->cShapes.size())
      Core().view3D()->showShapes(currentOperation->cShapes, false);
@@ -377,18 +372,6 @@ void OperationsPage::saveOperations() {
      pf->endArray();
      pf->endGroup();
      }
-  }
-
-
-void OperationsPage::saveOperationsTo() {
-  QString fileName = Core().chooseProjectFile(this);
-  QFile   tmp(Core().projectFile()->fileName());
-
-  if (tmp.copy(fileName)) {
-     //TODO: remove temporary file!
-     Core().setProjectFile(new ProjectFile(fileName));
-     }
-  else qDebug() << "failed to create project file!";
   }
 
 

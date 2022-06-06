@@ -33,6 +33,7 @@
 #include <ElCLib.hxx>
 #include <gp_Circ.hxx>
 #include <Geom_Line.hxx>
+#include <StdFail_NotDone.hxx>
 #include <TopoDS_Edge.hxx>
 #include <QVector3D>
 #include <QDebug>
@@ -93,6 +94,9 @@ GOCircle::GOCircle(const QString& s)
   x = subSL.at(0).toDouble(&ok);
   y = subSL.at(1).toDouble(&ok);
   z = subSL.at(2).toDouble(&ok);
+  if (!kute::isEqual(z, startPoint().Z())
+   && !kute::isEqual(z, endPoint().Z()))
+     z = startPoint().Z();
   centerPnt = gp_Pnt(x, y, z);
 
   subSL = sl.at(4).split("/");
@@ -112,12 +116,34 @@ gp_Pnt GOCircle::center() const {
 
 
 void GOCircle::createCircle() {
-  gp_Circ rawCircle(gp_Ax2(centerPnt, axis), r);
-  double p0 = ElCLib::Parameter(rawCircle, startPoint());
-  double p1 = ElCLib::Parameter(rawCircle, endPoint());
-  TopoDS_Edge tmp = BRepBuilderAPI_MakeEdge(rawCircle, p0, p1);
+  gp_Circ     rawCircle(gp_Ax2(centerPnt, axis), r);
+  TopoDS_Edge tmp;
 
+  try {
+      if (kute::isEqual(startPoint(), endPoint())) {
+         qDebug() << "create full circle ...";
+         tmp = BRepBuilderAPI_MakeEdge(rawCircle);
+         }
+      else {
+         qDebug() << "create some arc ...";
+         tmp = BRepBuilderAPI_MakeEdge(rawCircle, startPoint(), endPoint());
+         }
+      }
+  catch (const StdFail_NotDone& e) {
+      qDebug() << "creation of circle failed with: " << e.GetMessageString();
+      }
   curve = BRep_Tool::Curve(tmp, p0, p1);
+  gp_Pnt s0 = curve->Value(p0);
+  gp_Pnt e0 = curve->Value(p1);
+
+  if (!kute::isEqual(s0, startPoint())) {
+     qDebug() << "failed to create circle - startpoints don't match!";
+     setStartPoint(s0);
+     }
+  if (!kute::isEqual(e0, endPoint())) {
+     qDebug() << "failed to create circle - endpoints don't match!";
+     setEndPoint(e0);
+     }
   }
 
 
@@ -184,8 +210,6 @@ void GOCircle::setZ(double z) {
   s.SetZ(z);
   e.SetZ(z);
   c.SetZ(z);
-  setStartPoint(s);
-  setEndPoint(e);
   centerPnt = c;
   createCircle();
   }
@@ -254,8 +278,9 @@ Handle(AIS_Shape) GOCircle::toShape(double z) {
   else {
      gp_Pnt start(startPoint());
      gp_Pnt end(endPoint());
-     if (kute::isEqual(abs(z), 0)) {
+     if (!kute::isEqual(abs(z), 0)) {
         start.SetZ(z);
+        centerPnt.SetZ(z);
         end.SetZ(z);
         }
      double p0 = ElCLib::Parameter(rawCircle, start);

@@ -52,18 +52,5 @@ private:
     QTextCharFormat format;
     };
   QVector<HighlightingRule> highlightingRules;
-
-  QTextCharFormat fmtNumber;
-  QTextCharFormat fmtGCode;
-  QTextCharFormat fmtMotion;
-  QTextCharFormat fmtMCode;
-  QTextCharFormat fmtPos;
-  QTextCharFormat fmtXPos;
-  QTextCharFormat fmtTool;
-  QTextCharFormat fmtFeed;
-  QTextCharFormat fmtSpeed;
-  QTextCharFormat fmtVar;
-  QTextCharFormat fmtComment;
-  QTextCharFormat fmtLineComment;
   };
 #endif // GCODEHIGHLIGHTER_H

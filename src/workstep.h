@@ -27,6 +27,7 @@
 #ifndef WORKSTEP_H
 #define WORKSTEP_H
 #include <gp_Pnt.hxx>
+#include <Quantity_Color.hxx>
 #include <QString>
 class QObject;
 class QSettings;
@@ -48,16 +49,19 @@ public:
   explicit Workstep(WorkstepType wt, QSettings& settings, QObject* parent = nullptr);
   virtual ~Workstep() = default;
 
+  Quantity_Color color() const;
   gp_Pnt endPos() const;
   gp_Pnt startPos() const;
   WorkstepType type() const;
   virtual QString className() const;
+  virtual void setColor(Quantity_Color c);
   virtual void store(QSettings& settings);
   virtual void dump() const;
 
 private:
-  WorkstepType wsType;
-  gp_Pnt       start;
-  gp_Pnt       end;
+  WorkstepType   wsType;
+  gp_Pnt         start;
+  gp_Pnt         end;
+  Quantity_Color c;
   };
 #endif // WORKSTEP_H

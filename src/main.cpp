@@ -31,13 +31,23 @@
 
 
 int main(int argc, char *argv[]) {
-  QApplication a(argc, argv); a.setApplicationName("kuteCAM V0.01");
-  MainWindow   w;
-  Core         core(a, w);
+  int rv = -1;
 
-  qDebug() << "application name:" << a.applicationName();
+  try {
+      QApplication a(argc, argv); a.setApplicationName("kuteCAM V0.01");
+      MainWindow   w;
+      Core         core(a, w);
 
-  w.show();
+      qDebug() << "application name:" << a.applicationName();
 
-  return a.exec();
+      w.show();
+      rv = a.exec();
+      }
+  catch (const QString& s) {
+      qDebug() << s;
+      }
+  catch (const std::exception& e) {
+      qDebug() << e.what();
+      }
+  return rv;
   }

@@ -77,8 +77,7 @@ protected:
   void createConnections();
   void openProject();
   void update();
-  void saveProject();
-  void saveProjectAs();
+  void saveProject(bool createNew = false);
   void startTimer();
   OcctQtViewer* viewer3D();
 

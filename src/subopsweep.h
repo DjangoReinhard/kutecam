@@ -47,7 +47,6 @@ public slots:
   void createOP();
 
 protected:
-  std::vector<Handle(AIS_Shape)> createCutPlanes(Operation* op);
   void createHorizontalToolpaths(const std::vector<Handle(AIS_Shape)>& cutPlanes);
   void createRoundToolpaths(const std::vector<Handle(AIS_Shape)>& cutPlanes);
   void createVerticalToolpaths(Operation* op, Handle(AIS_Shape) cutPart);

@@ -430,12 +430,12 @@ void Operation::setQmax(double q) {
   }
 
 
-void Operation::setSaveZ0(double z) {
+void Operation::setSafeZ0(double z) {
   retZ0 = z;
   }
 
 
-void Operation::setSaveZ1(double z) {
+void Operation::setSafeZ1(double z) {
   retZ1 = z;
   }
 
@@ -487,8 +487,8 @@ void Operation::restore(QSettings& s) {
   setFeedPerTooth(s.value("fz").toDouble());
   setOffset(s.value("off").toDouble());
   setOutside(s.value("outside").toBool());
-  setSaveZ0(s.value("R0").toDouble());
-  setSaveZ1(s.value("R1").toDouble());
+  setSafeZ0(s.value("R0").toDouble());
+  setSafeZ1(s.value("R1").toDouble());
   setSpeed(s.value("vc").toDouble());
   setVertical(s.value("vertical").toBool());
   setWaterlineDepth(s.value("wld").toDouble());
@@ -592,11 +592,5 @@ std::vector<Workstep*>& Operation::workSteps() {
   }
 
 
-//QString    Operation::OPSweep        = tr("Sweep");
-//QString    Operation::OPContour      = tr("Contour");
-//QString    Operation::OPClampingPlug = tr("Contour");
-//QString    Operation::OPDrill        = tr("Drill");
-QString    Operation::OTRoughing     = tr("Roughing");
-QString    Operation::OTFinish       = tr("Finish");
 TDFactory* Operation::tdFactory      = nullptr;
 WSFactory* Operation::wsFactory      = nullptr;

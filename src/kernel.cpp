@@ -56,12 +56,14 @@
 #include <QMap>
 #include <QPluginLoader>
 #include <QSplitter>
+#include <QTranslator>
 
 
 Kernel::Kernel(QApplication& app, MainWindow& win)
  : QObject(nullptr)
  , app(app)
  , win(win)
+ , curLocale(nullptr)
  , configData(QSettings::UserScope, "SRD", app.applicationName())
  , helper(nullptr)
  , selHdr(nullptr)
@@ -153,6 +155,13 @@ void Kernel::getPostProcessors() {
 
 
 void Kernel::initialize() {
+  QDir dir(QCoreApplication::applicationDirPath());
+
+  dir.cd("i18n");
+  langDir = dir.absolutePath();
+  processAppArgs(app.arguments());
+  curLocale = setupTranslators();
+
   win.initialize();
   getPostProcessors();
   loadConfig();
@@ -372,4 +381,47 @@ void Kernel::onShutdown(QCloseEvent* ce) {
      qDebug() << "possibly have to delete temporary project file ...";
      QFile::remove(tfn);
      }
+  }
+
+
+void Kernel::processAppArgs(const QStringList& args) {
+  int mx = args.size();
+
+  for (int i=0; i < mx; ++i) {
+      if (args[i]      == "-i18n" && mx > (i+1)) langDir = args[++i];
+      else if (args[i] == "-noi18n") langDir = "/tmp";
+      }
+  }
+
+
+QLocale* Kernel::setupTranslators() {
+  QLocale           sysLocale;
+  QLocale::Language lang    = sysLocale.language();
+  QLocale::Country  country = sysLocale.country();
+  QLocale*          curLocale = new QLocale(lang, country);
+  QDir              i18nDir(langDir);
+  const auto        entryList = i18nDir.entryList(QDir::Files);
+  bool              ok;
+
+  qDebug() << "language:" << lang;
+  qDebug() << "country:" << country;
+  qDebug() << "syslocale:" << sysLocale.name() << "\tcurrent locale:" << curLocale->name();
+
+  for (const QString& s : entryList) {
+      if (!s.endsWith(".qm")) continue;
+      int          ndx  = s.indexOf('_');
+      QString      name = s.mid(0, ndx);
+      QTranslator* tr   = new QTranslator();
+
+      ok = tr->load(*curLocale, name, "_", i18nDir.absolutePath());
+
+      qDebug() << "translation-messages:" << name << (ok ? "loaded" : "FAILED to load");
+
+      if (ok) {
+         app.installTranslator(tr);
+         break;
+         }
+      else delete tr;
+      }
+  return curLocale;
   }
