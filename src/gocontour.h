@@ -48,7 +48,6 @@ public:
   virtual QString           toString() const override;
   TopoDS_Shape              toWire(double z = 0);
 
-//  GraphicObject*               add(TopoDS_Shape s, double gap = kute::MinDelta);
   bool                         add(GraphicObject* o);
   bool                         add(GOContour* other);
   double                       a0() const;
@@ -58,6 +57,7 @@ public:
   double                       distStart() const;
   double                       distEnd() const;
   GraphicObject&               extendBy(double length);
+  bool                         isClosed() const;
   int                          order() const;
   int                          size() const;
   std::vector<GraphicObject*>& segments();

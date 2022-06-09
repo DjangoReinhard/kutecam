@@ -89,7 +89,7 @@ void CutParmToolEditor::cutParamChanged(const QItemSelection &selected, const QI
   QModelIndexList il = selected.indexes();
   QModelIndex     mi = il.at(0);
 
-  qDebug() << "current material changed: #" << mi.row();
+//  qDebug() << "current material changed: #" << mi.row();
 
   curCutParams = toolEntry->cutParameter(mi.row());
 

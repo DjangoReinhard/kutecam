@@ -79,57 +79,6 @@ SubOPSweep::SubOPSweep(OperationListModel* olm, TargetDefListModel* tdModel, QWi
   }
 
 
-//std::vector<Handle(AIS_Shape)> SubOPSweep::createCutPlanes(Operation* op) {
-//  std::vector<Handle(AIS_Shape)> cutPlanes;
-
-//  if (op->cutPart.IsNull()) return cutPlanes;
-//  if (!op->cutDepth()) {
-//     qDebug() << "can't increment depth without cut-depth value!";
-//     return cutPlanes;
-//     }
-//  Bnd_Box bb = curOP->cutPart->BoundingBox();
-//  double startZ = bb.CornerMax().Z();
-//  double lastZ  = curOP->finalDepth() + curOP->offset();
-//  double curZ   = startZ;
-//  gp_Dir dir(0, 0, 1);
-//  gp_Pnt pos(bb.CornerMin().X(), bb.CornerMin().Y(), curZ);
-//  gp_Pln plane;
-
-//  qDebug() << "VM - final depth:" << curOP->finalDepth() << "\tlast cut depth:" << lastZ;
-
-//  curZ -= op->cutDepth();
-//  while (curZ > lastZ) {
-//        qDebug() << "cut depth is" << curZ;
-//        pos.SetZ(curZ);
-//        plane = gp_Pln(pos, dir);
-//        BRepBuilderAPI_MakeFace mf(plane, -500, 500, -500, 500);
-//        Handle(AIS_Shape) wc    = new AIS_Shape(Core().helper3D()->intersect(op->cutPart->Shape(), mf.Shape()));
-//        Bnd_Box           bbC   = wc->BoundingBox();
-
-//        qDebug() << "cut-plane is from"
-//                 << bbC.CornerMin().X() << "/" << bbC.CornerMin().Y() << "/" << bbC.CornerMin().Z()
-//                 << "\tto\t"
-//                 << bbC.CornerMax().X() << "/" << bbC.CornerMax().Y() << "/" << bbC.CornerMax().Z();
-//        wc->SetColor(Quantity_NOC_LIGHTGOLDENRODYELLOW);
-//        cutPlanes.push_back(wc);
-//        curOP->cShapes.push_back(wc);
-//        curZ -= op->cutDepth();
-//        }
-//  if (!kute::isEqual(curZ, lastZ)) {
-//     qDebug() << "last cut depth is" << lastZ;
-//     pos.SetZ(lastZ);
-//     plane = gp_Pln(pos, dir);
-//     BRepBuilderAPI_MakeFace mf(plane, -500, 500, -500, 500);
-//     Handle(AIS_Shape) wc = new AIS_Shape(Core().helper3D()->intersect(op->cutPart->Shape(), mf.Shape()));
-
-//     wc->SetColor(Quantity_NOC_LIGHTGOLDENRODYELLOW);
-//     cutPlanes.push_back(wc);
-//     curOP->cShapes.push_back(wc);
-//     }
-//  return cutPlanes;
-//  }
-
-
 // prepare toolpath creation for sweepBigC...
 void SubOPSweep::createHorizontalToolpaths(const std::vector<Handle(AIS_Shape)>& cutPlanes) {
   Work*  work = Core().workData();
@@ -237,6 +186,8 @@ void SubOPSweep::processSelection() {
   Bnd_Box           bbCP;
 
   if (Core().view3D()->selection().size() > 1) {
+     // multiple selections should be some vertical faces or
+     // some edges that will lead to a vertical cutface
      contour = Core().selectionHandler()->createContourFromSelection(curOP);
      if (!contour) return;
      contour->extendBy(50);
@@ -266,6 +217,7 @@ void SubOPSweep::processSelection() {
         qDebug() << "contour of selection: " << contour->toString();
         }
      std = new SweepTargetDefinition(contour);
+//     std->setBaseIsBorder(true);
      curOP->setVertical(true);
      curOP->cShapes.push_back(aw);
      curOP->cShapes.push_back(aCF);
@@ -322,7 +274,6 @@ void SubOPSweep::processSelection() {
 
               if (!curOP->workPiece.IsNull()) {
                  TopoDS_Shape master = BRepAlgoAPI_Common(contour->toWire(), curOP->workPiece->Shape());
-                 //TODO: replace contour!
                  contour->setContour(master);
                  }
               std = new SweepTargetDefinition(pos, dir);
@@ -352,8 +303,10 @@ void SubOPSweep::processSelection() {
   cutPart->SetTransparency(0.8);
   std->setBaseDir(baseNormal);
   std->setBaseDelim(baseFace->BoundingBox());
-  std->setZMin(bbCP.CornerMin().Z());
-  std->setZMax(bbCP.CornerMax().Z());
+//  std->setZMin(bbCP.CornerMin().Z());
+//  std->setZMax(bbCP.CornerMax().Z());
+  curOP->setUpperZ(bbCP.CornerMax().Z());
+  curOP->setLowerZ(std->pos().Z());
   tdModel->append(std);
   curOP->cShapes.push_back(cutPart);
   Core().view3D()->showShapes(curOP->cShapes);
@@ -361,9 +314,6 @@ void SubOPSweep::processSelection() {
   }
 
 
-// "3;50.0000/-77.7558/-17.3484;-50.0000/-77.7558/-17.3484;0.0000/-15.2976/15.7157;0|1;50.0000/-77.7558/-17.3484;50.0000/5.0000/-17.3484|1;50.0000/5.0000/-17.3484;25.0000/30.0000/-17.3484|1;25.0000/30.0000/-17.3484;-25.0000/30.0000/-17.3484|1;-25.0000/30.0000/-17.3484;-50.0000/5.0000/-17.3484|1;-50.0000/5.0000/-17.3484;-50.0000/-77.7558/-17.3484"
-// "3;50.0000/-87.7558/90.1355;-50.0000/-87.7558/90.1355;0.0000/-15.2976/15.7157;0|1;50.0000/-87.7558/90.1355;50.0000/5.0000/90.1355|1;50.0000/5.0000/90.1355;25.0000/30.0000/90.1355|1;25.0000/30.0000/90.1355;-25.0000/30.0000/90.1355|1;-25.0000/30.0000/90.1355;-50.0000/5.0000/90.1355|1;-50.0000/5.0000/90.1355;-50.0000/-87.7558/90.1355"
-//
 void SubOPSweep::processTargets() {
   if (!tdModel->rowCount()) return;
   //sweep operations shall have one target definition only!
@@ -408,32 +358,6 @@ void SubOPSweep::processTargets() {
      }
   Core().view3D()->refresh();
   }
-
-
-//void SubOPSweep::showToolPath() {
-//  if (!curOP->workSteps().size()) return;
-//  Handle(AIS_Shape) as;
-
-//  for (auto ws : curOP->workSteps()) {
-//      ws->dump();
-//      switch (ws->type()) {
-//        case WTTraverse:
-//             curOP->toolPaths.push_back(Core().helper3D()->genFastMove(ws->startPos(), ws->endPos()));
-//             break;
-//        case WTStraightMove:
-//             curOP->toolPaths.push_back(Core().helper3D()->genWorkLine(ws->startPos(), ws->endPos()));
-//             break;
-//        case WTArc: {
-//             WSArc* wa = static_cast<WSArc*>(ws);
-
-//             curOP->toolPaths.push_back(Core().helper3D()->genWorkArc(ws->startPos(), ws->endPos(), wa->centerPos(), wa->isCCW()));
-//             } break;
-//        default: break;
-//        }
-//      }
-//  Core().view3D()->showShapes(curOP->toolPaths);
-//  Core().view3D()->refresh();
-//  }
 
 
 gp_Pnt SubOPSweep::sweepBigClockwise(const Bnd_Box& bb, const gp_Pnt& lastTO) {
@@ -579,6 +503,7 @@ void SubOPSweep::toolPath() {
 
         qDebug() << "OP sweep - gonna create ROUND toolpath ...";
 
+        //TODO: round toolpaths with external lead-in!
         curOP->workSteps() = pathBuilder()->genRoundToolpaths(curOP, cutPlanes);
         }
      else {

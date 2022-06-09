@@ -998,32 +998,32 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationspage.cpp" line="201"/>
+        <location filename="../src/operationspage.cpp" line="202"/>
         <source>Delete Target Definition?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationspage.cpp" line="202"/>
+        <location filename="../src/operationspage.cpp" line="203"/>
         <source>&lt;p&gt;You&apos;re going to delete the selected target definition. This operation can not be undone.&lt;/p&gt;&lt;p&gt;Proceed?&lt;/p&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationspage.cpp" line="219"/>
+        <location filename="../src/operationspage.cpp" line="220"/>
         <source>Delete Operation?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationspage.cpp" line="220"/>
+        <location filename="../src/operationspage.cpp" line="221"/>
         <source>&lt;p&gt;You&apos;re going to delete the selected Operation.&lt;/p&gt;&lt;p&gt;Proceed?&lt;/p&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationspage.cpp" line="248"/>
+        <location filename="../src/operationspage.cpp" line="249"/>
         <source>GCode Files (*.%1)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationspage.cpp" line="250"/>
+        <location filename="../src/operationspage.cpp" line="251"/>
         <source>QFileDialog::getSaveFileName()</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1338,7 +1338,7 @@
 <context>
     <name>SubOPSweep</name>
     <message>
-        <location filename="../src/subopsweep.cpp" line="217"/>
+        <location filename="../src/subopsweep.cpp" line="166"/>
         <source>Sweep #%1</source>
         <translation type="unfinished"></translation>
     </message>

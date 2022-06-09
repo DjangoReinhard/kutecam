@@ -116,9 +116,13 @@ gp_Pnt GOCircle::center() const {
 
 
 void GOCircle::createCircle() {
-  gp_Circ     rawCircle(gp_Ax2(centerPnt, axis), r);
+  gp_Circ rawCircle(gp_Ax2(centerPnt, axis), r);
+  gp_Pnt  s = startPoint();
+  gp_Pnt  e = endPoint();
   TopoDS_Edge tmp;
 
+  s.SetZ(centerPnt.Z());
+  e.SetZ(centerPnt.Z());
   try {
       if (kute::isEqual(startPoint(), endPoint())) {
          qDebug() << "create full circle ...";
@@ -126,7 +130,7 @@ void GOCircle::createCircle() {
          }
       else {
          qDebug() << "create some arc ...";
-         tmp = BRepBuilderAPI_MakeEdge(rawCircle, startPoint(), endPoint());
+         tmp = BRepBuilderAPI_MakeEdge(rawCircle, s, e);
          }
       }
   catch (const StdFail_NotDone& e) {
@@ -136,14 +140,8 @@ void GOCircle::createCircle() {
   gp_Pnt s0 = curve->Value(p0);
   gp_Pnt e0 = curve->Value(p1);
 
-  if (!kute::isEqual(s0, startPoint())) {
-     qDebug() << "failed to create circle - startpoints don't match!";
-     setStartPoint(s0);
-     }
-  if (!kute::isEqual(e0, endPoint())) {
-     qDebug() << "failed to create circle - endpoints don't match!";
-     setEndPoint(e0);
-     }
+  setStartPoint(s0);
+  setEndPoint(e0);
   }
 
 

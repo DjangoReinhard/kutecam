@@ -146,7 +146,7 @@ TopoDS_Shape SelectionHandler::createBaseContour(const gp_Pnt& pos, const gp_Dir
   }
 
 
-Handle(AIS_Shape) SelectionHandler::createCutPart(TopoDS_Shape cf, Operation* op) {
+Handle(AIS_Shape) SelectionHandler::createCutPart(TopoDS_Shape cf, Operation* op, bool wantFirst) {
   Handle(AIS_Shape) curWP = Core().helper3D()->fixRotation(Core().workData()->workPiece->Shape()
                                                          , op->operationA()
                                                          , op->operationB()
@@ -189,8 +189,8 @@ Handle(AIS_Shape) SelectionHandler::createCutPart(TopoDS_Shape cf, Operation* op
         op->cShapes.push_back(as0);
         op->cShapes.push_back(as1);
         }
-     if (op->isOutside()) rv = as1;
-     else                 rv = as0;
+     if (wantFirst) rv = as0;
+     else           rv = as1;
      }
   return rv;
   }

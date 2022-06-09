@@ -36,6 +36,7 @@
 #include "operation.h"
 #include "operationlistmodel.h"
 #include "operationsubpage.h"
+//#include "selectioninfohandler.h"
 #include "subopcontour.h"
 #include "subopclampingplug.h"
 #include "subopdrill.h"

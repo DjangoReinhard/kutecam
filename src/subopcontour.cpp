@@ -106,7 +106,7 @@ void SubOPContour::processSelection() {
      gp_Vec            prismVec(0, 0, 1000);
 
      cuttingFace = BRepPrimAPI_MakePrism(cutWire, prismVec);
-     cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP);
+     cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP, curOP->isOutside());
      ui->spDepth->setValue(bbCP.CornerMin().Z());
 
      aw->SetColor(Quantity_NOC_ORANGE);
@@ -134,8 +134,9 @@ void SubOPContour::processSelection() {
             curOP->setUpperZ(bbSel.CornerMax().Z());
             ui->spDepth->setValue(curOP->finalDepth());
             ui->cAbsolute->setChecked(true);
-            curOP->setOutside(!ui->cInside->isChecked());
+            bool wantOutside = !ui->cInside->isChecked();
 
+            curOP->setOutside(wantOutside);
             for (auto e : edges) {
                 if (BRep_Tool::IsGeometric(e)) {
                    double first, last;
@@ -151,7 +152,7 @@ void SubOPContour::processSelection() {
                       if (kute::isVertical(dir)) {         // OK, first horizontal circle will do
                          pos.SetZ(-500);
                          cuttingFace = BRepPrimAPI_MakeCylinder(gp_Ax2(pos, dir), radius, 1000);
-                         cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP);
+                         cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP, wantOutside);
                          bbCP    = cutPart->BoundingBox();
                          double dx = bbCP.CornerMax().X() - bbCP.CornerMin().X();
                          double dy = bbCP.CornerMax().Y() - bbCP.CornerMin().Y();
@@ -160,6 +161,7 @@ void SubOPContour::processSelection() {
                          qDebug() << "cutpart has extend:" << bbCP.CornerMin().X() << " / " << bbCP.CornerMin().Y() << " / " << bbCP.CornerMin().Z()
                                   << "   to:" << bbCP.CornerMax().X() << " / " << bbCP.CornerMax().Y() << " / " << bbCP.CornerMax().Z();
                          qDebug() << "cutOP is" << (curOP->isOutside() ? "OUTSIDE" : "INSIDE");
+
                          if (dx > (2.0 * radius + 1)
                           || dy > (2.0 * radius + 1)) curOP->setOutside(true);
                          else                         curOP->setOutside(false);
@@ -204,7 +206,7 @@ void SubOPContour::processTargets() {
      gp_Vec            prismVec(0, 0, 1000);
 
      cuttingFace = BRepPrimAPI_MakePrism(cutWire, prismVec);
-     curOP->cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP);
+     curOP->cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP, curOP->isOutside());
      }
   else if (ctd->radius() < 0) {
      // possibly contour from selected faces ...
@@ -213,7 +215,7 @@ void SubOPContour::processTargets() {
      gp_Vec            prismVec(0, 0, 1000);
 
      cuttingFace = BRepPrimAPI_MakePrism(cutWire, prismVec);
-     curOP->cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP);
+     curOP->cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP, curOP->isOutside());
      }
   else {
      // possibly cylindrical face selection
@@ -222,7 +224,7 @@ void SubOPContour::processTargets() {
 
      pos.SetZ(-500);
      cuttingFace = BRepPrimAPI_MakeCylinder(gp_Ax2(pos, {0, 0, 1}), ctd->radius(), 1000);
-     curOP->cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP);
+     curOP->cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP, outside);
      Bnd_Box bbCP = curOP->cutPart->BoundingBox();
      double dx = bbCP.CornerMax().X() - bbCP.CornerMin().X();
      double dy = bbCP.CornerMax().Y() - bbCP.CornerMin().Y();
@@ -236,8 +238,8 @@ void SubOPContour::processTargets() {
                    || dy > (2.0 * ctd->radius() + 1)))) {
         // we got wrong part of workpiece as cutpart,
         // so flip outside flag and try again ...
-        curOP->setOutside(!curOP->isOutside());
-        curOP->cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP);
+        outside = !outside;
+        curOP->cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP, outside);
         bbCP = curOP->cutPart->BoundingBox();
         dx   = bbCP.CornerMax().X() - bbCP.CornerMin().X();
         dy   = bbCP.CornerMax().Y() - bbCP.CornerMin().Y();
@@ -246,7 +248,7 @@ void SubOPContour::processTargets() {
                       || dy > (2.0 * ctd->radius() + 1)))
         || (!outside && (dx < (2.0 * ctd->radius() + 1)
                       || dy < (2.0 * ctd->radius() + 1)))) {
-           curOP->setOutside(outside);
+           qDebug() << "selection/cutPart should be ok now!?!";
            }
         else curOP->cutPart.Nullify();
         }

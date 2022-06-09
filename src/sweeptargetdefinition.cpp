@@ -39,7 +39,7 @@ SweepTargetDefinition::SweepTargetDefinition(const gp_Pnt& pos, const gp_Dir& di
 
 
 SweepTargetDefinition::SweepTargetDefinition(GOContour* c, QObject* parent)
- : TargetDefinition(gp_Pnt(), 0, parent)
+ : TargetDefinition(c->centerPoint(), 0, parent)
  , baseIsBorder(false) {
   setContour(c);
   }
@@ -51,15 +51,7 @@ SweepTargetDefinition::SweepTargetDefinition(QSettings& s, QObject* parent)
   double x = s.value("std-dirX").toDouble();
   double y = s.value("std-dirY").toDouble();
   double z = s.value("std-dirZ").toDouble();
-//  QString cSrc = s.value("contour").toString();
-
-//  if (!cSrc.isEmpty()) {
-//     GraphicObject* go = Core().helper3D()->parseGraphicObject(s.value("contour").toString());
-
-//     cc = static_cast<GOContour*>(go);
-//     }
   soDir = gp_Dir(x, y, z);
-//  r = s.value("std-r").toDouble();
   x = s.value("std-bdX").toDouble();
   y = s.value("std-bdY").toDouble();
   z = s.value("std-bdZ").toDouble();
@@ -74,15 +66,12 @@ SweepTargetDefinition::SweepTargetDefinition(QSettings& s, QObject* parent)
   z = s.value("std-bZmax").toDouble();
   bbBase = Bnd_Box(min, {x, y, z});
   baseIsBorder = s.value("std-bib").toBool();
-//  zmin = s.value("std-zMin").toDouble();
-//  zmax = s.value("std-zMax").toDouble();
   }
 
 
 void SweepTargetDefinition::store(QSettings &s) {
   s.setValue("tdType", "SweepTarget");
   TargetDefinition::store(s);
-//  s.setValue("std-r", radius());
   s.setValue("std-dirX", soDir.X());
   s.setValue("std-dirY", soDir.Y());
   s.setValue("std-dirZ", soDir.Z());
@@ -96,9 +85,6 @@ void SweepTargetDefinition::store(QSettings &s) {
   s.setValue("std-bYmax", bbBase.CornerMax().Y());
   s.setValue("std-bZmax", bbBase.CornerMax().Z());
   s.setValue("std-bib",  baseIsBorder);
-//  s.setValue("std-zMin", zMin());
-//  s.setValue("std-zMax", zMax());
-//  if (cc) s.setValue("contour", cc->toString());
   }
 
 
