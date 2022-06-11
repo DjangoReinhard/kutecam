@@ -27,6 +27,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "ui_status.h"
+#include "aboutdialog.h"
 #include "core.h"
 #include "editorpage.h"
 #include "util3d.h"
@@ -55,12 +56,19 @@ MainWindow::MainWindow(QWidget *parent)
  , stack(new QStackedWidget())
  , timer(nullptr)
  , preview(nullptr)
+ , dlgAbout(nullptr)
  , bbModel(nullptr) {
   }
 
 
 MainWindow::~MainWindow() {
   delete ui;
+  }
+
+
+void MainWindow::about() {
+  if (!dlgAbout) dlgAbout = new AboutDialog(this);
+  dlgAbout->show();
   }
 
 
@@ -94,6 +102,7 @@ void MainWindow::createConnections() {
   connect(ui->actionProjectSave,   &QAction::triggered, this,  [=](){ saveProject(); });
   connect(ui->actionProjectSaveAs, &QAction::triggered, this,  [=](){ saveProject(true); });
   connect(ui->actionExit,          &QAction::triggered, this,  &QWidget::close);
+  connect(ui->actionAbout,         &QAction::triggered, this,  &MainWindow::about);
 
   connect(ui->actionHideModel,     &QAction::triggered, this,  &MainWindow::showModel);
 

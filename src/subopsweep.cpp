@@ -208,13 +208,13 @@ void SubOPSweep::processSelection() {
         TopoDS_Shape master = BRepAlgoAPI_Common(contour->toWire(0), curOP->workPiece->Shape());
         Handle(AIS_Shape) asM = new AIS_Shape(master);
 
+        qDebug() << "contour of selection: " << contour->toString();
+
         asM->SetColor(Quantity_NOC_ORANGE);
         asM->SetWidth(3);
 
-        Core().view3D()->showShape(asM);
-        //TODO: replace contour!
+        curOP->cShapes.push_back(asM);
         contour->setContour(master);
-        qDebug() << "contour of selection: " << contour->toString();
         }
      std = new SweepTargetDefinition(contour);
 //     std->setBaseIsBorder(true);
@@ -354,9 +354,9 @@ void SubOPSweep::processTargets() {
      curOP->cutPart->SetColor(Quantity_NOC_CYAN);
      curOP->cutPart->SetTransparency(0.8);
      curOP->cShapes.push_back(curOP->cutPart);
-     Core().view3D()->showShapes(curOP->cShapes, false);
+//     Core().view3D()->showShapes(curOP->cShapes, false);
      }
-  Core().view3D()->refresh();
+//  Core().view3D()->refresh();
   }
 
 
@@ -524,8 +524,5 @@ void SubOPSweep::toolPath() {
            }
         }
      }
-  Core().view3D()->showShapes(curOP->toolPaths, false);
-  if (curOP->showCutParts) Core().view3D()->showShapes(curOP->cShapes, false);
-  Core().view3D()->refresh();
   showToolPath(curOP);
   }

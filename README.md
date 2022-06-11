@@ -14,6 +14,7 @@
 ## Status
 actually working:
 - different kinds of selections for drill cycles
+- preview with speedcontrol
 - mill a clamping plug
 - mill plane faces
 - mill open pockets / concave contours
@@ -21,7 +22,7 @@ actually working:
 - mill circular pockets
 - mill cylinder
 
-Postprocessors:
+Postprocessors (implemented as Qt-plugin):
 - Fanuc
 - Heidenhain
 - Sinumeric
@@ -37,7 +38,8 @@ small video clips for download
 - [![simple sweep](sample/simple_Sweep.mkv)]
 
 ## Screenshot
-- **drill holes in rotated part**
-![first step](sample/kc005.jpg)
+- **mill contour with open pockets**
 
-## Read more in [kuteCAM Wiki](https://github.com/DjangoReinhard/kutecam/wiki)
+ ![first step](sample/kc013.jpg)
+
+### Read more in [kuteCAM Wiki](https://github.com/DjangoReinhard/kutecam/wiki)

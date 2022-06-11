@@ -16,6 +16,7 @@ set(SOURCE_FILES
     mainwindow.ui
     misc.ui
     opSub.ui
+    opSim.ui
     operations.ui
     preview.ui
     setup.ui
@@ -28,6 +29,7 @@ set(SOURCE_FILES
     HHelixCurveAdaptor.cpp
     HelixCurveAdaptor.cpp
     HelixCurveAdaptor_CylinderEvaluator.cpp
+    aboutdialog.cpp
     applicationwindow.cpp
     cctargetdefinition.cpp
     cfggcode.cpp
@@ -72,6 +74,7 @@ set(SOURCE_FILES
     subopcontour.cpp
     subopdrill.cpp
     subopsweep.cpp
+    subsimulation.cpp
     sweeptargetdefinition.cpp
     targetdefinition.cpp
     targetdeflistmodel.cpp

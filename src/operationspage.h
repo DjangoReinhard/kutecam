@@ -29,6 +29,7 @@
 #include "applicationwindow.h"
 #include "operation.h"
 #include <TopoDS_Shape.hxx>
+#include <QBasicTimer>
 #include <QMap>
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -55,6 +56,7 @@ public:
 
   void clear();
   void closeEvent(QCloseEvent* e) override;
+  void createTool(int toolNum);
   bool eventFilter(QObject *obj, QEvent *event) override;
   void loadOperation(Operation* op);
   void loadProject(ProjectFile* pf);
@@ -71,6 +73,8 @@ public slots:
   void reSelect();
   void sel2Horizontal();
   void sel2Vertical();
+  void simulate();
+  void toggleToolpath();
   void toolPath();
 
 signals:

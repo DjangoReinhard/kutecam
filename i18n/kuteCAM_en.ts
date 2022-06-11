@@ -2,6 +2,29 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="en_US">
 <context>
+    <name>AboutDialog</name>
+    <message>
+        <location filename="../src/aboutdialog.cpp" line="44"/>
+        <source>General</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/aboutdialog.cpp" line="45"/>
+        <source>GL-Info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/aboutdialog.cpp" line="46"/>
+        <source>Plugins</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/aboutdialog.cpp" line="50"/>
+        <source>&lt;h3&gt;kuteCAM&lt;/h3&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>ClipDialog</name>
     <message>
         <location filename="../src/clip.ui" line="32"/>
@@ -346,6 +369,22 @@
     </message>
 </context>
 <context>
+    <name>GLInfoTab</name>
+    <message>
+        <location filename="../src/aboutdialog.cpp" line="95"/>
+        <source>GL capabilities: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>GeneralTab</name>
+    <message>
+        <location filename="../src/aboutdialog.cpp" line="64"/>
+        <source>&lt;h2&gt;kuteCAM&lt;/h2&gt;&lt;p&gt;is an application to create toolpaths from CAD model.&lt;/p&gt;&lt;p&gt;Load a CAD model (actually *.brep or *.step), select the part(s) you want to mill and let &lt;b&gt;kuteCAM&lt;/b&gt; generate the toolpath and write the code for your machine.&lt;/p&gt;&lt;p&gt;Code generation is performed by postprocessors, which are Qt-plugins loaded at runtime. See &quot;Plugins&quot;-tab for list of available postprocessors.&lt;/p&gt;&lt;p&gt;&lt;b&gt;kuteCAM&lt;/b&gt; was built with these external components:&lt;ul&gt;&lt;li&gt;&lt;a href=&quot;%1&quot;&gt;Open CASCADE Technology v.%2&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;%3&quot;&gt;Qt Toolkit v.%4&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/p&gt;&lt;p&gt;&lt;/p&gt;&lt;h3&gt;More Info at&lt;/h3&gt;&lt;p&gt;&lt;ul&gt;&lt;li&gt;&lt;a href=&quot;%5&quot;&gt;kuteCAM Wiki&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/p&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>GeomNode</name>
     <message>
         <location filename="../src/geomnodemodel.cpp" line="123"/>
@@ -429,264 +468,274 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="473"/>
+        <location filename="../src/mainwindow.ui" line="474"/>
         <source>Help</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="479"/>
-        <location filename="../src/mainwindow.ui" line="625"/>
+        <location filename="../src/mainwindow.ui" line="480"/>
+        <location filename="../src/mainwindow.ui" line="627"/>
         <source>Operations</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="483"/>
+        <location filename="../src/mainwindow.ui" line="484"/>
         <source>&amp;New</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="495"/>
+        <location filename="../src/mainwindow.ui" line="496"/>
         <source>&amp;Selection</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="512"/>
+        <location filename="../src/mainwindow.ui" line="514"/>
         <source>Setup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="527"/>
+        <location filename="../src/mainwindow.ui" line="529"/>
         <source>open &amp;CAD File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="538"/>
+        <location filename="../src/mainwindow.ui" line="540"/>
         <source>&amp;Orthografic</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="543"/>
+        <location filename="../src/mainwindow.ui" line="545"/>
         <source>&amp;Top</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="548"/>
+        <location filename="../src/mainwindow.ui" line="550"/>
         <source>&amp;Front</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="553"/>
+        <location filename="../src/mainwindow.ui" line="555"/>
         <source>&amp;Left</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="558"/>
+        <location filename="../src/mainwindow.ui" line="560"/>
         <source>&amp;Bottom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="563"/>
+        <location filename="../src/mainwindow.ui" line="565"/>
         <source>Back</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="566"/>
+        <location filename="../src/mainwindow.ui" line="568"/>
         <source>B&amp;ack</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="571"/>
+        <location filename="../src/mainwindow.ui" line="573"/>
         <source>&amp;Right</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="576"/>
+        <location filename="../src/mainwindow.ui" line="578"/>
         <source>Zoom &amp;fit to Window</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="581"/>
+        <location filename="../src/mainwindow.ui" line="583"/>
         <source>E&amp;xit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="586"/>
+        <location filename="../src/mainwindow.ui" line="588"/>
         <source>Iso&amp;1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="591"/>
+        <location filename="../src/mainwindow.ui" line="593"/>
         <source>About</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="596"/>
+        <location filename="../src/mainwindow.ui" line="598"/>
         <source>Iso&amp;2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="601"/>
+        <location filename="../src/mainwindow.ui" line="603"/>
         <source>open &amp;Project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="609"/>
+        <location filename="../src/mainwindow.ui" line="611"/>
         <source>sa&amp;ve Project as</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="612"/>
+        <location filename="../src/mainwindow.ui" line="614"/>
         <source>save Project as</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="617"/>
+        <location filename="../src/mainwindow.ui" line="619"/>
         <source>Model</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="630"/>
-        <location filename="../src/mainwindow.ui" line="742"/>
+        <location filename="../src/mainwindow.ui" line="632"/>
+        <location filename="../src/mainwindow.ui" line="744"/>
         <source>Preferences</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="635"/>
+        <location filename="../src/mainwindow.ui" line="637"/>
         <source>open &amp;Tools</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="640"/>
+        <location filename="../src/mainwindow.ui" line="642"/>
         <source>&amp;save Tools</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="648"/>
+        <location filename="../src/mainwindow.ui" line="650"/>
         <source>hide Model</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="651"/>
+        <location filename="../src/mainwindow.ui" line="653"/>
         <source>&amp;hide Model</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="656"/>
+        <location filename="../src/mainwindow.ui" line="658"/>
         <source>Info</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="664"/>
+        <location filename="../src/mainwindow.ui" line="666"/>
         <source>Wireframe</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="669"/>
+        <location filename="../src/mainwindow.ui" line="671"/>
         <source>&amp;Create Toolpath</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="674"/>
+        <location filename="../src/mainwindow.ui" line="676"/>
         <source>&amp;Generate GCode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="679"/>
+        <location filename="../src/mainwindow.ui" line="681"/>
         <source>Remo&amp;ve</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="684"/>
+        <location filename="../src/mainwindow.ui" line="686"/>
         <source>Contou&amp;r</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="689"/>
+        <location filename="../src/mainwindow.ui" line="691"/>
         <source>&amp;Drill Cycle</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="694"/>
+        <location filename="../src/mainwindow.ui" line="696"/>
         <source>S&amp;weep</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="699"/>
+        <location filename="../src/mainwindow.ui" line="701"/>
         <source>Misc</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="704"/>
+        <location filename="../src/mainwindow.ui" line="706"/>
         <source>Iso&amp;3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="709"/>
+        <location filename="../src/mainwindow.ui" line="711"/>
         <source>Iso&amp;4</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="714"/>
+        <location filename="../src/mainwindow.ui" line="716"/>
         <source>Test</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="719"/>
+        <location filename="../src/mainwindow.ui" line="721"/>
         <source>&amp;Reprocess Selection</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="724"/>
+        <location filename="../src/mainwindow.ui" line="726"/>
         <source>Clamping &amp;Plug</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="732"/>
+        <location filename="../src/mainwindow.ui" line="734"/>
         <source>&amp;vertical</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="737"/>
+        <location filename="../src/mainwindow.ui" line="739"/>
         <source>&amp;horizontal</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="750"/>
+        <location filename="../src/mainwindow.ui" line="752"/>
         <source>clip View</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="758"/>
+        <location filename="../src/mainwindow.ui" line="760"/>
         <source>Clip-Y</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="766"/>
+        <location filename="../src/mainwindow.ui" line="768"/>
         <source>save Project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="81"/>
+        <location filename="../src/mainwindow.ui" line="776"/>
+        <source>hide Toolpath</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="781"/>
+        <source>&amp;Simulate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="89"/>
         <source>load Project or CAD model</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="128"/>
+        <location filename="../src/mainwindow.cpp" line="137"/>
         <source>Preview</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="129"/>
+        <location filename="../src/mainwindow.cpp" line="138"/>
         <source>Editor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="145"/>
+        <location filename="../src/mainwindow.cpp" line="154"/>
         <source>QFileDialog::getOpenFileName()</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="147"/>
+        <location filename="../src/mainwindow.cpp" line="156"/>
         <source>Project Files (*.prj)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -783,6 +832,24 @@
     <message>
         <location filename="../src/misc.ui" line="217"/>
         <source>B-axis moves workpiece (Table)</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>OpSim</name>
+    <message>
+        <location filename="../src/opSim.ui" line="26"/>
+        <source>Restart</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/opSim.ui" line="33"/>
+        <source>Stop</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/opSim.ui" line="40"/>
+        <source> Resume </source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -885,77 +952,77 @@
 <context>
     <name>OperationSubPage</name>
     <message>
-        <location filename="../src/operationsubpage.cpp" line="60"/>
+        <location filename="../src/operationsubpage.cpp" line="62"/>
         <source>Roughing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationsubpage.cpp" line="61"/>
+        <location filename="../src/operationsubpage.cpp" line="63"/>
         <source>Finish</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationsubpage.cpp" line="65"/>
+        <location filename="../src/operationsubpage.cpp" line="67"/>
         <source>parallel feed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationsubpage.cpp" line="66"/>
+        <location filename="../src/operationsubpage.cpp" line="68"/>
         <source>against feed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationsubpage.cpp" line="67"/>
+        <location filename="../src/operationsubpage.cpp" line="69"/>
         <source>don&apos;t care</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationsubpage.cpp" line="75"/>
+        <location filename="../src/operationsubpage.cpp" line="77"/>
         <source>No cooling</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationsubpage.cpp" line="76"/>
+        <location filename="../src/operationsubpage.cpp" line="78"/>
         <source>Mist cooling</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationsubpage.cpp" line="77"/>
+        <location filename="../src/operationsubpage.cpp" line="79"/>
         <source>Flood cooling</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationsubpage.cpp" line="291"/>
+        <location filename="../src/operationsubpage.cpp" line="298"/>
         <source>G80 - no Cycle</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationsubpage.cpp" line="292"/>
+        <location filename="../src/operationsubpage.cpp" line="299"/>
         <source>G76 - fine Boring Cycle</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationsubpage.cpp" line="293"/>
+        <location filename="../src/operationsubpage.cpp" line="300"/>
         <source>G81 - Spot Drill Cycle</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationsubpage.cpp" line="294"/>
+        <location filename="../src/operationsubpage.cpp" line="301"/>
         <source>G82 - Drill with Dwell</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationsubpage.cpp" line="295"/>
+        <location filename="../src/operationsubpage.cpp" line="302"/>
         <source>G83 - Peck Drilling</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationsubpage.cpp" line="296"/>
+        <location filename="../src/operationsubpage.cpp" line="303"/>
         <source>G84 - Tapping</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationsubpage.cpp" line="297"/>
+        <location filename="../src/operationsubpage.cpp" line="304"/>
         <source>G85 - Boring Cycle</source>
         <translation type="unfinished"></translation>
     </message>
@@ -998,32 +1065,32 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationspage.cpp" line="202"/>
+        <location filename="../src/operationspage.cpp" line="210"/>
         <source>Delete Target Definition?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationspage.cpp" line="203"/>
+        <location filename="../src/operationspage.cpp" line="211"/>
         <source>&lt;p&gt;You&apos;re going to delete the selected target definition. This operation can not be undone.&lt;/p&gt;&lt;p&gt;Proceed?&lt;/p&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationspage.cpp" line="220"/>
+        <location filename="../src/operationspage.cpp" line="228"/>
         <source>Delete Operation?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationspage.cpp" line="221"/>
+        <location filename="../src/operationspage.cpp" line="229"/>
         <source>&lt;p&gt;You&apos;re going to delete the selected Operation.&lt;/p&gt;&lt;p&gt;Proceed?&lt;/p&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationspage.cpp" line="249"/>
+        <location filename="../src/operationspage.cpp" line="257"/>
         <source>GCode Files (*.%1)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationspage.cpp" line="251"/>
+        <location filename="../src/operationspage.cpp" line="259"/>
         <source>QFileDialog::getSaveFileName()</source>
         <translation type="unfinished"></translation>
     </message>

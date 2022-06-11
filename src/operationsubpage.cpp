@@ -26,6 +26,7 @@
  */
 #include "operationsubpage.h"
 #include "mainwindow.h"
+#include "ui_mainwindow.h"
 #include "ui_opSub.h"
 #include "core.h"
 #include "cuttingparameters.h"
@@ -45,16 +46,17 @@
 #include <QDebug>
 
 
-OperationSubPage::OperationSubPage(OperationListModel* olm, TargetDefListModel* tdModel, QWidget *parent)
+OperationSubPage::OperationSubPage(OperationListModel* olm, TargetDefListModel* tdModel, QWidget *parent, bool wantUI)
  : QWidget(parent)
- , ui(new Ui::OpSub)
+ , wantUI(wantUI)
+ , ui(wantUI ? new Ui::OpSub : nullptr)
  , olm(olm)
  , curOP(nullptr)
  , activeTool(nullptr)
  , pPathBuilder(new PathBuilder)
  , tdModel(tdModel)
  , opTypes(nullptr) {
-  ui->setupUi(this);
+  if (wantUI) ui->setupUi(this);
   QStringList items;
 
   items << tr("Roughing")
@@ -89,12 +91,14 @@ OperationSubPage::OperationSubPage(OperationListModel* olm, TargetDefListModel* 
         << "G59.2"
         << "G59.3";
   fixModel = new QStringListModel(items, this);
-  ui->cbTool->setModel(Core().toolListModel());
-  ui->cbCooling->setModel(coolingModes);
-  ui->cbFixture->setModel(fixModel);
-  ui->cbCycle->setModel(drillCycles);
-  ui->cbDir->setModel(dirModel);
-  ui->cbType->setModel(opTypes);
+  if (wantUI) {
+     ui->cbTool->setModel(Core().toolListModel());
+     ui->cbCooling->setModel(coolingModes);
+     ui->cbFixture->setModel(fixModel);
+     ui->cbCycle->setModel(drillCycles);
+     ui->cbDir->setModel(dirModel);
+     ui->cbType->setModel(opTypes);
+     }
   }
 
 
@@ -104,6 +108,7 @@ void OperationSubPage::absToggled(const QVariant& v) {
 
 
 void OperationSubPage::connectSignals() {
+  if (!wantUI) return;
   connect(ui->cAbsolute, &QCheckBox::toggled, this, &OperationSubPage::absToggled);
   connect(ui->cInside,   &QCheckBox::toggled, this, &OperationSubPage::outToggled);
   connect(ui->cbTool,    QOverload<int>::of(&QComboBox::currentIndexChanged), this, &OperationSubPage::toolChanged);
@@ -211,6 +216,7 @@ void OperationSubPage::cutDepthChanged(double v) {
 
 void OperationSubPage::cutFeedChanged(double v) {
   curOP->setFeedPerTooth(v);
+  if (!wantUI) return;
   if (!activeTool) return;
   double ss = curOP->speed() * 1000 / M_PI / activeTool->fluteDiameter();
   double cf = ss * activeTool->numFlutes() * curOP->feedPerTooth();
@@ -221,6 +227,7 @@ void OperationSubPage::cutFeedChanged(double v) {
 
 void OperationSubPage::cutSpeedChanged(double v) {
   curOP->setSpeed(v);
+  if (!wantUI) return;
   if (!activeTool) return;
   double ss = curOP->speed() * 1000 / M_PI / activeTool->fluteDiameter();
 
@@ -307,6 +314,11 @@ void OperationSubPage::loadOP(Operation *op) {
   curOP = op;
   int ti = Core().toolListModel()->findToolNum(op->toolNum());
 
+  if (!wantUI) {
+     qDebug() << "don't load OP without UI";
+
+     return;
+     }
   qDebug() << "load operation, tool #" << op->toolNum() << "\t(" << ti << ")";
 
   if (ti >= 0) {
@@ -384,6 +396,7 @@ void OperationSubPage::r2Changed(double v) {
 void OperationSubPage::toolChanged(const QVariant &i) {
   activeTool = Core().toolListModel()->tool(i.toInt());
 
+  if (!wantUI) return;
   if (!activeTool) return;
   curOP->setToolNum(activeTool->toolNumber());
   if (kute::isEqual(curOP->speed(), 0)) {
@@ -400,6 +413,7 @@ void OperationSubPage::toolChanged(const QVariant &i) {
 
 void OperationSubPage::showToolPath(Operation* op) {
   if (!op->workSteps().size()) return;
+  if (Core().uiMainWin()->actionHideToolpath->isChecked()) return;
   Handle(AIS_Shape) as;
   gp_Pnt lastPos = op->workSteps().at(0)->startPos();
 
@@ -434,6 +448,9 @@ void OperationSubPage::showToolPath(Operation* op) {
         }
       lastPos = ws->endPos();
       }
+  if (curOP->showCutParts) {
+     Core().view3D()->showShapes(curOP->cShapes, false);
+     }
   Core().view3D()->showShapes(op->toolPaths);
   Core().view3D()->refresh();
   }

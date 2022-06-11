@@ -10,6 +10,7 @@
         <file>src/tool.ui</file>
         <file>src/misc.ui</file>
         <file>src/opSub.ui</file>
+        <file>src/opSim.ui</file>
         <file>src/operations.ui</file>
     </qresource>
 </RCC>

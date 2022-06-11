@@ -36,6 +36,7 @@ class MainWindow;
 class StatusPos;
 }
 QT_END_NAMESPACE
+class AboutDialog;
 class Bnd_Box;
 class EditorPage;
 class OcctQtViewer;
@@ -67,6 +68,7 @@ public:
   void            setPage(QWidget* page);
 
 public slots:
+  void about();
   void refresh(const Bnd_Box& bb);
   void setStatusMessage(const QString& msg);
   void showModel();
@@ -89,6 +91,7 @@ private:
   QTimer*         timer;
   Preview3D*      preview;
   EditorPage*     editor;
+  AboutDialog*    dlgAbout;
   Bnd_Box*        bbModel;
   friend class Core;
   friend class Kernel;

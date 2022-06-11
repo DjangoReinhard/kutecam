@@ -45,7 +45,7 @@ class OperationSubPage : public QWidget
 {
   Q_OBJECT
 public:
-  explicit OperationSubPage(OperationListModel* olm, TargetDefListModel* tdModel, QWidget *parent = nullptr);
+  explicit OperationSubPage(OperationListModel* olm, TargetDefListModel* tdModel, QWidget *parent = nullptr, bool wantUi = true);
   virtual ~OperationSubPage() = default;
 
   std::vector<Handle(AIS_Shape)> createCutPlanes(Operation* op);
@@ -86,6 +86,7 @@ signals:
   void modelChanged(const Bnd_Box& bb);
 
 protected:
+  bool                wantUI;
   Ui::OpSub*          ui;
   OperationListModel* olm;
   Operation*          curOP;

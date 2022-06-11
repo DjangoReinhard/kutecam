@@ -63,6 +63,7 @@ public:
 
   const Handle(AIS_InteractiveContext)& context() const { return myContext; }
   Handle(AIS_InteractiveContext)        context()       { return myContext; }
+  Handle(AIS_InteractiveContext)        altContext()    { return myAltContext; }
   void createAxisCross(const gp_Pnt& /* = gp_Pnt() */, double lineLen = 500, QVector<Handle(AIS_Shape)>* pV = nullptr, Quantity_Color c = Quantity_NOC_GRAY);
   void genLine(Handle(Geom_Line) l, double first, double last);
   void genCircle(Handle(Geom_Circle) l, double first, double last);
@@ -75,12 +76,15 @@ public:
   void setMainShape(Handle(AIS_Shape) s);
   void setWorkpiece(Handle(AIS_Shape) wp);
 
+  void showAltShape(Handle(AIS_Shape) s, bool selectable = true);
   void showShape(Handle(AIS_Shape) s, bool selectable = true);
   void showShapes(const QVector<Handle(AIS_Shape)>& v, bool selectable = true);
   void showShapes(const std::vector<Handle(AIS_Shape)>& v, bool selectable = true);
   void removeShape(Handle(AIS_Shape) s, bool updateView = false);
   void removeShapes(QVector<Handle(AIS_Shape)>& v);
   void removeShapes(const std::vector<Handle(AIS_Shape)>& v);
+  const Handle(V3d_Viewer)& viewer() const { return myViewer; }
+  const Handle(V3d_View)&   view() const   { return myView; }
 
 public slots:
   void clipView(const gp_Pnt& p, const gp_Dir& d);
@@ -122,8 +126,6 @@ protected:
   virtual void wheelEvent(QWheelEvent* e) override;
 //  virtual void evaluateSelection();
 
-  const Handle(V3d_Viewer)&             viewer() const    { return myViewer; }
-  const Handle(V3d_View)&               view() const      { return myView; }
   Handle(AIS_ViewCube)                  cube() const      { return myViewCube; }
   Handle(AIS_Shape)                     cone()            { return myCone; }
 

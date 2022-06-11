@@ -32,14 +32,15 @@
 #include "drilltargetdefinition.h"
 #include "gcodewriter.h"
 #include "geomnodemodel.h"
+#include "HelixCurveAdaptor.h"
 #include "occtviewer.h"
 #include "operation.h"
 #include "operationlistmodel.h"
 #include "operationsubpage.h"
-//#include "selectioninfohandler.h"
 #include "subopcontour.h"
 #include "subopclampingplug.h"
 #include "subopdrill.h"
+#include "subsimulation.h"
 #include "subopsweep.h"
 #include "sweeptargetdefinition.h"
 #include "postprocessor.h"
@@ -54,6 +55,7 @@
 
 #include <BRep_Tool.hxx>
 #include <GeomAdaptor_Surface.hxx>
+#include <GeomAbs_CurveType.hxx>
 #include <Geom_Plane.hxx>
 #include <Geom_Surface.hxx>
 #include <gp_Vec.hxx>
@@ -62,6 +64,8 @@
 #include <BRepAlgoAPI_Common.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
+#include <BRepBuilderAPI_Transform.hxx>
+#include <BRepPrimAPI_MakeCone.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
 #include <BRepPrimAPI_MakeCylinder.hxx>
 #include <ShapeAnalysis_FreeBounds.hxx>
@@ -76,6 +80,7 @@
 #include <QMessageBox>
 #include <QStackedLayout>
 #include <QStringListModel>
+#include <QThread>
 #include <QVector3D>
 #include <QDebug>
 
@@ -94,8 +99,10 @@ OperationsPage::OperationsPage(QWidget *parent)
   ui->lstOperations->setModel(olm);
   ui->geomTree->setModel(infoModel);
   connect(Core().uiMainWin()->actionToolPath, &QAction::triggered, this, &OperationsPage::toolPath);
+  connect(Core().uiMainWin()->actionHideToolpath, &QAction::triggered, this, &OperationsPage::toggleToolpath);
   connect(Core().uiMainWin()->actionSelReprocess, &QAction::triggered, this, &OperationsPage::reSelect);
   connect(Core().uiMainWin()->actionGenerate_GCode, &QAction::triggered, this, &OperationsPage::genGCode);
+  connect(Core().uiMainWin()->actionSimulate, &QAction::triggered, this, &OperationsPage::simulate);
   connect(Core().uiMainWin()->actionSelection2Horizontal, &QAction::triggered, this, &OperationsPage::sel2Horizontal);
   connect(Core().uiMainWin()->actionSelection2Vertical, &QAction::triggered, this, &OperationsPage::sel2Vertical);
   connect(ui->lstOperations->selectionModel(),  &QItemSelectionModel::selectionChanged, this, &OperationsPage::opSelected);
@@ -109,10 +116,11 @@ OperationsPage::OperationsPage(QWidget *parent)
   ui->lstOperations->installEventFilter(this);
   ui->lstTarget->setModel(tdModel);
   ui->lstTarget->installEventFilter(this);
-  pages["Drill"]     = new SubOPDrill(olm,   tdModel);
-  pages["Contour"]   = new SubOPContour(olm, tdModel);
-  pages["Sweep"]     = new SubOPSweep(olm,   tdModel);
-  pages["ClampPlug"] = new SubOPClampingPlug(olm, tdModel);
+  pages["Drill"]      = new SubOPDrill(olm,   tdModel);
+  pages["Contour"]    = new SubOPContour(olm, tdModel);
+  pages["Sweep"]      = new SubOPSweep(olm,   tdModel);
+  pages["ClampPlug"]  = new SubOPClampingPlug(olm, tdModel);
+  pages["Simulation"] = new SubSimulation(olm, tdModel);
 
   for (QMap<QString, OperationSubPage*>::const_iterator i = pages.constBegin()
      ; i != pages.constEnd()
@@ -305,11 +313,8 @@ void OperationsPage::loadOperation(Operation* op) { // don't touch old operation
   subPage->loadOP(currentOperation);
 
   ui->dsCut->setValue(op->waterlineDepth());
-  if (currentOperation) {
-     if (currentOperation->cShapes.size())     Core().view3D()->showShapes(currentOperation->cShapes, false);
-     if (currentOperation->workSteps().size()) subPage->showToolPath(currentOperation);
-     Core().view3D()->refresh();
-     }
+  if (currentOperation && currentOperation->workSteps().size())
+     subPage->showToolPath(currentOperation);
   }
 
 
@@ -432,6 +437,17 @@ void OperationsPage::sel2Vertical() {
   }
 
 
+void OperationsPage::simulate() {
+  if (currentOperation->toolPaths.size()) {
+     subPage = pages["Simulation"];
+     opStack->setCurrentWidget(subPage);
+
+     subPage->loadOP(currentOperation);
+     subPage->toolPath();
+     }
+  }
+
+
 void OperationsPage::shapeSelected(const TopoDS_Shape &shape) {
   qDebug() << "shape selection changed ...";
   Handle(AIS_Shape) tmp = new AIS_Shape(shape);
@@ -452,6 +468,27 @@ void OperationsPage::selectionChanged() {
   }
 
 
+void OperationsPage::toggleToolpath() {
+  if (Core().uiMainWin()->actionHideToolpath->isChecked()) {
+     if (currentOperation->toolPaths.size()) {
+        Core().view3D()->removeShapes(currentOperation->toolPaths);
+        }
+     if (currentOperation->cShapes.size()) {
+        Core().view3D()->removeShapes(currentOperation->cShapes);
+        }
+     }
+  else {
+     if (currentOperation->toolPaths.size()) {
+        Core().view3D()->showShapes(currentOperation->toolPaths /*, false */);
+        }
+     if (currentOperation->cShapes.size()) {
+        Core().view3D()->showShapes(currentOperation->cShapes /*, false */);
+        }
+     }
+  Core().view3D()->refresh();
+  }
+
+
 void OperationsPage::toolPath() {
   if (!currentOperation) return;
   if (currentOperation->toolPaths.size()) {
@@ -464,6 +501,7 @@ void OperationsPage::toolPath() {
      }
   if (currentOperation->workSteps().size()) currentOperation->workSteps().clear();
   if (subPage) {
+     Core().uiMainWin()->actionHideToolpath->setChecked(false);
      subPage->fixit();
      subPage->toolPath();
      }

@@ -412,7 +412,7 @@
      <x>0</x>
      <y>0</y>
      <width>1200</width>
-     <height>31</height>
+     <height>32</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -466,6 +466,7 @@
     <addaction name="actionClip"/>
     <addaction name="separator"/>
     <addaction name="actionHideModel"/>
+    <addaction name="actionHideToolpath"/>
     <addaction name="actionWireframe"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -500,6 +501,7 @@
     <addaction name="menu_New"/>
     <addaction name="actionSelReprocess"/>
     <addaction name="actionToolPath"/>
+    <addaction name="actionSimulate"/>
     <addaction name="actionGenerate_GCode"/>
     <addaction name="separator"/>
     <addaction name="actionRemove"/>
@@ -764,6 +766,19 @@
    </property>
    <property name="text">
     <string>save Project</string>
+   </property>
+  </action>
+  <action name="actionHideToolpath">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>hide Toolpath</string>
+   </property>
+  </action>
+  <action name="actionSimulate">
+   <property name="text">
+    <string>&amp;Simulate</string>
    </property>
   </action>
  </widget>

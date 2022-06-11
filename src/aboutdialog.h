@@ -1,12 +1,12 @@
 /* 
  * **************************************************************************
  * 
- *  file:       wscycle.cpp
+ *  file:       aboutdialog.h
  *  project:    kuteCAM
  *  subproject: main application
  *  purpose:    create a graphical application, that assists in identify
- *              and process model elements                        
- *  created:    10.4.2022 by Django Reinhard
+ *              and process model elements
+ *  created:    22.1.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
@@ -24,39 +24,50 @@
  * 
  * **************************************************************************
  */
-#include "wscycle.h"
-#include <QSettings>
-#include <QDebug>
+#ifndef ABOUTDIALOG_H
+#define ABOUTDIALOG_H
+#include <QDialog>
+
+class QDialogButtonBox;
+class QTabWidget;
+class QListView;
 
 
-WSCycle::WSCycle(int cycle, const gp_Pnt& from, const gp_Pnt& to, QObject* parent)
- : Workstep(WTCycle, from, to, parent)
- , cycle(cycle) {
-  }
+class GeneralTab : public QWidget
+{
+  Q_OBJECT
+public:
+  explicit GeneralTab(QWidget* parent = nullptr);
+  };
 
 
-WSCycle::WSCycle(QSettings& s, QObject* parent)
- : Workstep(WTCycle, s, parent) {
-  cycle = s.value("wsCycle").toInt();
-  }
+class GLInfoTab : public QWidget
+{
+  Q_OBJECT
+public:
+  explicit GLInfoTab(QWidget* parent = nullptr);
+  };
 
 
-QString WSCycle::className() const {
-  return "WSCycle";
-  }
+class PluginsTab : public QWidget
+{
+  Q_OBJECT
+public:
+  explicit PluginsTab(QWidget* parent = nullptr);
+
+private:
+  QListView* list;
+  };
 
 
-int WSCycle::drillCycle() const {
-  return cycle;
-  }
+class AboutDialog : public QDialog
+{
+  Q_OBJECT
+public:
+  AboutDialog(QWidget* parent = nullptr);
 
-
-void WSCycle::dump() const {
-  qDebug() << "WSCycle(" << cycle << ") ";
-  }
-
-
-void WSCycle::store(QSettings& s) {
-  Workstep::store(s);
-  s.setValue("wsCycle", drillCycle());
-  }
+private:
+  QTabWidget*       tw;
+  QDialogButtonBox* bb;
+  };
+#endif // ABOUTDIALOG_H

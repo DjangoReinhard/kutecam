@@ -583,6 +583,15 @@ void OcctQtViewer::setBounds(const Bnd_Box &bounds) {
   }
 
 
+void OcctQtViewer::showAltShape(Handle(AIS_Shape) s, bool selectable) {
+  myAltContext->Display(s
+                      , 1 // displayMode
+                      , selectable ? 0 : -1 // selectionMode
+                      , false);
+  refresh();
+  }
+
+
 void OcctQtViewer::showShape(Handle(AIS_Shape) s, bool selectable) {
   shapes3D.append(s);
   context()->Display(s
@@ -591,7 +600,6 @@ void OcctQtViewer::showShape(Handle(AIS_Shape) s, bool selectable) {
                    , false);
   refresh();
   }
-
 
 void OcctQtViewer::showShapes(const std::vector<Handle(AIS_Shape)>& v, bool selectable) {
   if (!v.size()) return;

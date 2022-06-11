@@ -189,6 +189,8 @@ void SubOPContour::processSelection() {
   cutPart->SetTransparency(0.8);
   curOP->cShapes.push_back(cutPart);
   curOP->cShapes.push_back(aCF);
+  Core().view3D()->showShapes(curOP->cShapes);
+  Core().view3D()->refresh();
   }
 
 
@@ -257,9 +259,9 @@ void SubOPContour::processTargets() {
      curOP->cutPart->SetColor(Quantity_NOC_CYAN);
      curOP->cutPart->SetTransparency(0.8);
      curOP->cShapes.push_back(curOP->cutPart);
-     Core().view3D()->showShapes(curOP->cShapes, false);
+//     Core().view3D()->showShapes(curOP->cShapes, false);
      }
-  Core().view3D()->refresh();
+//  Core().view3D()->refresh();
   }
 
 
@@ -324,12 +326,7 @@ void SubOPContour::toolPath() {
            }
         }
      }
-  curOP->cutPart->SetColor(Quantity_NOC_CYAN);
-  curOP->cutPart->SetTransparency(0.8);
-  Core().view3D()->showShape(curOP->cutPart, false);
-  if (curOP->showCutParts) Core().view3D()->showShapes(curOP->cShapes, false);
   showToolPath(curOP);
-  Core().view3D()->refresh();
   }
 
 
@@ -346,6 +343,5 @@ void SubOPContour::updateCut(double d) {
   work->modCut = new AIS_Shape(Core().helper3D()->intersect(mf.Shape(), model->Shape()));
   work->modCut->SetColor(Quantity_NOC_PURPLE);
   Core().view3D()->showShape(work->modCut);
-
   Core().view3D()->refresh();
   }
