@@ -206,6 +206,7 @@ std::vector<Workstep*> PathBuilder::genFlatPaths(Operation* op, std::vector<Hand
           else {
              if (a0 < a1) c->invert();
              }
+          if (c->isClosed()) c->changeStart2Close(e);
 //          c->simplify(curZ);
           s = c->startPoint();
 
@@ -465,8 +466,7 @@ std::vector<Workstep*> PathBuilder::genPath4Pockets(Operation* op, const Bnd_Box
           for (int j=0; j < mx; ++j) {
               GOContour* c   = p->contours().at(j);
 
-              if (kute::isEqual(c->startPoint(), c->endPoint()))
-                 c->changeStart2Close(e);
+              if (c->isClosed()) c->changeStart2Close(e);
               c->simplify(curZ);
               s = c->startPoint();
               if (roundWorkPiece) genRoundInterMove(toolPath, e, s, bb, xtend + i + j);
@@ -694,6 +694,7 @@ std::vector<Workstep*> PathBuilder::genRoundToolpaths(Operation* op, const std::
      Bnd_Box           bb = s->BoundingBox(); bb.SetGap(0);
 
      to.SetZ(bb.CornerMin().Z());
+     topZ = to.Z(); // we're already there!
      }
   workSteps.push_back(new WSTraverse(from, to));
   c    = to;
@@ -720,21 +721,22 @@ std::vector<Workstep*> PathBuilder::genRoundToolpaths(Operation* op, const std::
                << "\tto\t"
                << bb.CornerMax().X() << "/" << bb.CornerMax().Y() << "/" << bb.CornerMax().Z();
 
-      if (from.Y() > oC.Y()) {
-         to = gp_Pnt(oC.X(), oC.Y() - curR, nextZ);
+      if (!kute::isEqual(from.Z(), bb.CornerMin().Z())) {
+         if (from.Y() > oC.Y()) {
+            to = gp_Pnt(oC.X(), oC.Y() - curR, nextZ);
+            c.SetY(from.Y() - (from.Y() - to.Y()) / 2);
+  //          c.SetZ(nextZ);
+            workSteps.push_back(new WSArc(from, to, c, ccw));
+  //          genArc(from, to, c, ccw);
+
+            from = to;
+            }
+         to = gp_Pnt(oC.X(), oC.Y() + curR, bb.CornerMin().Z());
          c.SetY(from.Y() - (from.Y() - to.Y()) / 2);
-//         c.SetZ(nextZ);
+         c.SetZ(from.Z());
          workSteps.push_back(new WSArc(from, to, c, ccw));
-//         genArc(from, to, c, ccw);
-
-         from = to;
+  //       genArc(from, to, c, ccw);
          }
-      to = gp_Pnt(oC.X(), oC.Y() + curR, bb.CornerMin().Z());
-      c.SetY(from.Y() - (from.Y() - to.Y()) / 2);
-      c.SetZ(from.Z());
-      workSteps.push_back(new WSArc(from, to, c, ccw));
-//      genArc(from, to, c, ccw);
-
       from = to;
       to   = gp_Pnt(oC.X(), oC.Y() - curR, bb.CornerMin().Z());
       c.SetY(from.Y() - (from.Y() - to.Y()) / 2);
@@ -790,13 +792,13 @@ std::vector<Workstep*> PathBuilder::genRoundToolpaths(Operation* op, const std::
       from = to;
       to   = gp_Pnt(oC.X(), oC.Y() + curR, bb.CornerMin().Z());
       c.SetY(from.Y() - (from.Y() - to.Y()) / 2);
-      workSteps.push_back(new WSArc(from, to, c, ccw));
+      if (!kute::isEqual(from, to)) workSteps.push_back(new WSArc(from, to, c, ccw));
 //      genArc(from, to, c, ccw);
 
       from = to;
       to = gp_Pnt(oC.X(), oC.Y() - curR, bb.CornerMin().Z());
       c.SetY(from.Y() - (from.Y() - to.Y()) / 2);
-      workSteps.push_back(new WSArc(from, to, c, ccw));
+      if (!kute::isEqual(from, to)) workSteps.push_back(new WSArc(from, to, c, ccw));
 //      genArc(from, to, c, ccw);
       from = to;
       }

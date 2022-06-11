@@ -50,10 +50,10 @@
       </sizepolicy>
      </property>
      <property name="maximum">
-      <number>90</number>
+      <number>100</number>
      </property>
      <property name="value">
-      <number>10</number>
+      <number>15</number>
      </property>
      <property name="invertedAppearance">
       <bool>false</bool>

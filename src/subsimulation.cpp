@@ -31,10 +31,13 @@
 #include "toolentry.h"
 #include "toollistmodel.h"
 #include <AIS_Shape.hxx>
+#include <BRepAdaptor_Curve.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRepPrimAPI_MakeCone.hxx>
 #include <BRepPrimAPI_MakeCylinder.hxx>
+#include <GCPnts_AbscissaPoint.hxx>
+#include <QDebug>
 
 
 SubSimulation::SubSimulation(OperationListModel* olm, TargetDefListModel* tdModel, QWidget* parent)
@@ -133,11 +136,51 @@ void SubSimulation::stopSimulation() {
 
 void SubSimulation::timerEvent(QTimerEvent *e) {
   if (e->timerId() == timer.timerId()) {
-     double speed = (double)ui->dStep->value() / 15.0;
+     double delta = (double)ui->dStep->value() / 10.0;
      gp_Pnt pos;
 
      for (;;) {
          Handle(AIS_Shape) curSeg = curOP->toolPaths.at(timerShapeIndex);
+#ifndef REDNOSE
+         BRepAdaptor_Curve bac(TopoDS::Edge(curSeg->Shape()));
+         double            first = bac.FirstParameter();
+         double            last  = bac.LastParameter();
+
+
+         if (kute::isEqual(timerCurveOffset, 0)) {
+            timerCurveOffset = first;
+            }
+         if (timerCurveOffset < last) {
+            try {
+                GCPnts_AbscissaPoint nextPoint(bac, delta, timerCurveOffset);
+
+                if (nextPoint.IsDone()) {
+                   timerCurveOffset = nextPoint.Parameter();
+                   if (timerCurveOffset > last) {
+                      timerCurveOffset = last;
+                      pos = bac.Value(timerCurveOffset);
+                      timerCurveOffset = last * 2;
+                      }
+                   else pos = bac.Value(timerCurveOffset);
+                   }
+                }
+            catch (Standard_Failure const& f) {
+                qDebug() << f.GetMessageString();
+                }
+            }
+         else {
+            if (++timerShapeIndex >= curOP->toolPaths.size()) {
+               timer.stop();
+               Core().view3D()->removeShape(asTool);
+               Core().view3D()->refresh();
+               asTool.Nullify();
+
+               return;
+               }
+            timerCurveOffset = 0;
+            continue;
+            }
+#else
          TopoDS_Edge e = TopoDS::Edge(curSeg->Shape());
          double p0, p1;
          Handle(Geom_Curve) c = BRep_Tool::Curve(e, p0, p1);
@@ -146,17 +189,17 @@ void SubSimulation::timerEvent(QTimerEvent *e) {
             Handle(Geom_Circle) circle = Handle(Geom_Circle)::DownCast(c);
             double radius = circle->Radius();
 
-            timerCurveOffset += speed / radius;
+            timerCurveOffset += delta / radius;
             }
          else if (c->DynamicType() == STANDARD_TYPE(Geom_Line)) {
             Quantity_Color c;
             curSeg->Color(c);
 
-            if (c == Quantity_NOC_CYAN) timerCurveOffset += 5 * speed;
-            else                        timerCurveOffset += speed;
+            if (c == Quantity_NOC_CYAN) timerCurveOffset += 5 * delta;
+            else                        timerCurveOffset += delta;
             }
          else {
-            timerCurveOffset += speed / 70;
+            timerCurveOffset += delta / 70;
             }
          if ((p0 + timerCurveOffset) > p1) {
             if (++timerShapeIndex >= curOP->toolPaths.size()) {
@@ -170,6 +213,7 @@ void SubSimulation::timerEvent(QTimerEvent *e) {
             continue;
             }
          pos = c->Value(p0 + timerCurveOffset);
+#endif
          break;
          }
      emit updatePosition(pos);
