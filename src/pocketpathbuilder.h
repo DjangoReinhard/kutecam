@@ -1,12 +1,11 @@
 /* 
  * **************************************************************************
  * 
- *  file:       subopdrill.h
+ *  file:       pocketpathbuilder.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create a graphical application, that assists in identify
- *              and process model elements                        
- *  created:    7.4.2022 by Django Reinhard
+ *  purpose:    create gcode for toolpaths created from CAD models
+ *  created:    11.7.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
@@ -24,28 +23,25 @@
  * 
  * **************************************************************************
  */
-#ifndef SUBOPDRILL_H
-#define SUBOPDRILL_H
-#include "operationsubpage.h"
-class PathBuilder;
+#ifndef POCKETPATHBUILDER_H
+#define POCKETPATHBUILDER_H
+#include <vector>
+class Bnd_Box;
+class gp_Dir;
+class GOPocket;
+class Workstep;
+class Operation;
+class PathBuilderUtil;
 
 
-class SubOPDrill : public OperationSubPage
+class PocketPathBuilder
 {
-  Q_OBJECT
 public:
-  explicit SubOPDrill(OperationListModel* olm, TargetDefListModel* tdModel, PathBuilder* pb, QWidget *parent = nullptr);
-  virtual ~SubOPDrill() = default;
+  PocketPathBuilder(PathBuilderUtil* pbu);
 
-  virtual void genRoughingToolPath();
-  virtual void genFinishingToolPath();
+  std::vector<Workstep*> genPath(Operation* op, const Bnd_Box& bb, const gp_Dir& baseNorm, const std::vector<std::vector<GOPocket*>>& pool, double curZ, double xtend);
 
-public slots:
-  void createOP();
-
-protected:
-  void processSelection() override;
-  void showToolPath(Operation* op) override;
-  bool validateDrillTargets();
+private:
+  PathBuilderUtil* pbu;
   };
-#endif // SUBOPDRILL_H
+#endif // POCKETPATHBUILDER_H

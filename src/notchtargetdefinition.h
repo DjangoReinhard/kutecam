@@ -1,12 +1,11 @@
 /* 
  * **************************************************************************
  * 
- *  file:       subopdrill.h
+ *  file:       notchtargetdefinition.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create a graphical application, that assists in identify
- *              and process model elements                        
- *  created:    7.4.2022 by Django Reinhard
+ *  purpose:    create gcode for toolpaths created from CAD models
+ *  created:    21.6.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
@@ -24,28 +23,28 @@
  * 
  * **************************************************************************
  */
-#ifndef SUBOPDRILL_H
-#define SUBOPDRILL_H
-#include "operationsubpage.h"
-class PathBuilder;
+#ifndef NOTCHTARGETDEFINITION_H
+#define NOTCHTARGETDEFINITION_H
+#include "targetdefinition.h"
+#include <gp_Pln.hxx>
+#include <Geom_Curve.hxx>
 
 
-class SubOPDrill : public OperationSubPage
+class NotchTargetDefinition : public TargetDefinition
 {
   Q_OBJECT
 public:
-  explicit SubOPDrill(OperationListModel* olm, TargetDefListModel* tdModel, PathBuilder* pb, QWidget *parent = nullptr);
-  virtual ~SubOPDrill() = default;
+  explicit NotchTargetDefinition(gp_Pln face, const gp_Pnt& p0, const gp_Pnt& p1, const gp_Pnt& p2, const gp_Pnt& p3, QObject *parent = nullptr);
+  explicit NotchTargetDefinition(QSettings& settings, QObject* parent = nullptr);
+  virtual ~NotchTargetDefinition() = default;
 
-  virtual void genRoughingToolPath();
-  virtual void genFinishingToolPath();
+  gp_Pln             bottom() const;
+  gp_Pnt             borderPoint(int index) const;
+  void               store(QSettings& s) override;
+  QString            toString() const override;
 
-public slots:
-  void createOP();
-
-protected:
-  void processSelection() override;
-  void showToolPath(Operation* op) override;
-  bool validateDrillTargets();
+private:
+  gp_Pln             btmFace;
+  gp_Pnt             bp[4];
   };
-#endif // SUBOPDRILL_H
+#endif // NOTCHTARGETDEFINITION_H

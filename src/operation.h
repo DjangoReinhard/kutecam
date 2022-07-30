@@ -46,9 +46,11 @@ class WSFactory;
 enum OperationType
 {
   ContourOperation
-, DrillOperation
+, DrillOperation  
 , SweepOperation
 , ClampingPlugOP
+, NotchOperation
+, Face3DOperation
   };
 
 
@@ -114,6 +116,7 @@ public:
   double        safeZ1() const;
   double        speed() const;
   int           toolNum() const;
+  ToolEntry*    toolEntry() const;
   QString       toString() const;
   double        topZ() const;
   double        upperZ() const;

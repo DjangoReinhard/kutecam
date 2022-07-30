@@ -1,12 +1,11 @@
 /* 
  * **************************************************************************
  * 
- *  file:       subopdrill.h
+ *  file:       sweeppathbuilder.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create a graphical application, that assists in identify
- *              and process model elements                        
- *  created:    7.4.2022 by Django Reinhard
+ *  purpose:    create gcode for toolpaths created from CAD models
+ *  created:    15.7.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
@@ -24,28 +23,27 @@
  * 
  * **************************************************************************
  */
-#ifndef SUBOPDRILL_H
-#define SUBOPDRILL_H
-#include "operationsubpage.h"
-class PathBuilder;
+#ifndef SWEEPPATHBUILDER_H
+#define SWEEPPATHBUILDER_H
+#include <AIS_Shape.hxx>
+#include <vector>
+class Operation;
+class PathBuilderUtil;
+class ToolEntry;
 
 
-class SubOPDrill : public OperationSubPage
+class SweepPathBuilder
 {
-  Q_OBJECT
 public:
-  explicit SubOPDrill(OperationListModel* olm, TargetDefListModel* tdModel, PathBuilder* pb, QWidget *parent = nullptr);
-  virtual ~SubOPDrill() = default;
+  SweepPathBuilder(PathBuilderUtil* pbu);
 
-  virtual void genRoughingToolPath();
-  virtual void genFinishingToolPath();
-
-public slots:
-  void createOP();
+  void createHorizontalToolpaths(Operation* op, const std::vector<Handle(AIS_Shape)>& cutPlanes);
 
 protected:
-  void processSelection() override;
-  void showToolPath(Operation* op) override;
-  bool validateDrillTargets();
+  gp_Pnt sweepBigClockwise(Operation* op, ToolEntry* activeTool, const Bnd_Box& bb, const gp_Pnt& lastTO);
+  gp_Pnt sweepBigCounterClockwise(Operation* op, ToolEntry* activeTool, const Bnd_Box& bb, const gp_Pnt& lastTO);
+
+private:
+  PathBuilderUtil* pbu;
   };
-#endif // SUBOPDRILL_H
+#endif // SWEEPPATHBUILDER_H

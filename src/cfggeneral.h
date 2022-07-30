@@ -1,12 +1,11 @@
 /* 
  * **************************************************************************
  * 
- *  file:       subopdrill.h
+ *  file:       cfggcode.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create a graphical application, that assists in identify
- *              and process model elements                        
- *  created:    7.4.2022 by Django Reinhard
+ *  purpose:    create gcode for toolpaths created from CAD models
+ *  created:    15.5.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
@@ -24,28 +23,36 @@
  * 
  * **************************************************************************
  */
-#ifndef SUBOPDRILL_H
-#define SUBOPDRILL_H
-#include "operationsubpage.h"
-class PathBuilder;
+#ifndef CFGGCODE_H
+#define CFGGCODE_H
+#include <QWidget>
+QT_BEGIN_NAMESPACE
+namespace Ui {
+class GeneralConfig;
+}
+QT_END_NAMESPACE
+class ConfigPage;
+class QSortFilterProxyModel;
 
 
-class SubOPDrill : public OperationSubPage
+class CfgGeneral : public QWidget
 {
   Q_OBJECT
 public:
-  explicit SubOPDrill(OperationListModel* olm, TargetDefListModel* tdModel, PathBuilder* pb, QWidget *parent = nullptr);
-  virtual ~SubOPDrill() = default;
-
-  virtual void genRoughingToolPath();
-  virtual void genFinishingToolPath();
+  explicit CfgGeneral(QWidget *parent = nullptr);
 
 public slots:
-  void createOP();
+  void allInOneToggled(const QVariant& v);
+  void autoRotatedChanged();
+  void handleMachineType(int machineType);
+  void updateMachineType();
 
-protected:
-  void processSelection() override;
-  void showToolPath(Operation* op) override;
-  bool validateDrillTargets();
+//signals:
+//  void machineTypeChanged(int machineType);
+
+private:
+  Ui::GeneralConfig*     ui;
+  ConfigPage*            master;
+  QSortFilterProxyModel* ppProxy;
   };
-#endif // SUBOPDRILL_H
+#endif // CFGGCODE_H

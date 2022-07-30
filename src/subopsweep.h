@@ -30,6 +30,7 @@
 #include <TopoDS_Wire.hxx>
 class SweepTargetDefinition;
 class OperationsListModel;
+class PathBuilder;
 class TargetDefListModel;
 class QWidget;
 
@@ -38,23 +39,22 @@ class SubOPSweep : public OperationSubPage
 {
   Q_OBJECT
 public:
-  explicit SubOPSweep(OperationListModel* olm, TargetDefListModel* tdModel, QWidget* parent = nullptr);
+  explicit SubOPSweep(OperationListModel* olm, TargetDefListModel* tdModel, PathBuilder* pb, QWidget* parent = nullptr);
   virtual ~SubOPSweep() = default;
 
-  virtual void toolPath() override;
+  virtual void genRoughingToolPath();
+  virtual void genFinishingToolPath();
 
 public slots:
   void createOP();
 
 protected:
-  void createHorizontalToolpaths(const std::vector<Handle(AIS_Shape)>& cutPlanes);
+//  void createHorizontalToolpaths(const std::vector<Handle(AIS_Shape)>& cutPlanes);
   void createRoundToolpaths(const std::vector<Handle(AIS_Shape)>& cutPlanes);
   void createVerticalToolpaths(Operation* op, Handle(AIS_Shape) cutPart);
-//  Handle(AIS_Shape) genPathOffset(TopoDS_Wire wire, double off);
   void processSelection() override;
   void processTargets() override;
-//  void showToolPath() override;
-  gp_Pnt sweepBigClockwise(const Bnd_Box& bb, const gp_Pnt& lastTO);
-  gp_Pnt sweepBigCounterClockwise(const Bnd_Box& bb, const gp_Pnt& lastTO);
+//  gp_Pnt sweepBigClockwise(const Bnd_Box& bb, const gp_Pnt& lastTO);
+//  gp_Pnt sweepBigCounterClockwise(const Bnd_Box& bb, const gp_Pnt& lastTO);
   };
 #endif // SUBOPSWEEP_H

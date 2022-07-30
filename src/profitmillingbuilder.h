@@ -1,12 +1,11 @@
 /* 
  * **************************************************************************
  * 
- *  file:       subopdrill.h
+ *  file:       profitmillingbuilder.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create a graphical application, that assists in identify
- *              and process model elements                        
- *  created:    7.4.2022 by Django Reinhard
+ *  purpose:    create gcode for toolpaths created from CAD models
+ *  created:    30.7.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
@@ -24,28 +23,26 @@
  * 
  * **************************************************************************
  */
-#ifndef SUBOPDRILL_H
-#define SUBOPDRILL_H
-#include "operationsubpage.h"
-class PathBuilder;
+#ifndef PROFITMILLINGBUILDER_H
+#define PROFITMILLINGBUILDER_H
+#include <AIS_Shape.hxx>
+#include <Geom_Line.hxx>
+#include <TopoDS_Edge.hxx>
+class NotchTargetDefinition;
+class Operation;
+class PathBuilderUtil;
+class Workstep;
 
 
-class SubOPDrill : public OperationSubPage
+class ProfitMillingBuilder
 {
-  Q_OBJECT
 public:
-  explicit SubOPDrill(OperationListModel* olm, TargetDefListModel* tdModel, PathBuilder* pb, QWidget *parent = nullptr);
-  virtual ~SubOPDrill() = default;
+  ProfitMillingBuilder(PathBuilderUtil* pbu);
 
-  virtual void genRoughingToolPath();
-  virtual void genFinishingToolPath();
+  std::vector<Workstep*> genToolPath(Operation* op, Handle(AIS_Shape) cutPart, std::vector<Handle(AIS_Shape)> cutPlanes);
+  TopoDS_Edge determineCenterLine(const NotchTargetDefinition* ntd, Handle(Geom_Line) gl0, Handle(Geom_Line) gl1, TopoDS_Shape cutPart);
 
-public slots:
-  void createOP();
-
-protected:
-  void processSelection() override;
-  void showToolPath(Operation* op) override;
-  bool validateDrillTargets();
+private:
+  PathBuilderUtil* pbu;
   };
-#endif // SUBOPDRILL_H
+#endif // PROFITMILLINGBUILDER_H

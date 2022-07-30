@@ -25,6 +25,9 @@
  * **************************************************************************
  */
 #include "pathbuilder.h"
+#include "pathbuilderutil.h"
+#include "pocketpathbuilder.h"
+#include "profitmillingbuilder.h"
 #include "core.h"
 #include "gocircle.h"
 #include "gocontour.h"
@@ -34,6 +37,7 @@
 #include "occtviewer.h"
 #include "operation.h"
 #include "contourtargetdefinition.h"
+#include "sweeppathbuilder.h"
 #include "sweeptargetdefinition.h"
 #include "toolentry.h"
 #include "toollistmodel.h"
@@ -65,7 +69,8 @@ static bool cmpContour(GOContour* l, GOContour* r) {
   }
 
 
-PathBuilder::PathBuilder() {
+PathBuilder::PathBuilder(PathBuilderUtil* pbu)
+ : pbu(pbu) {
   }
 
 
@@ -99,14 +104,8 @@ double PathBuilder::calcAdditionalOffset(SweepTargetDefinition* std, GOContour* 
   }
 
 
-void PathBuilder::cleanup(std::vector<Workstep*>& tp) {
-  for (int i=0; i < tp.size(); ++i) {
-      Workstep* ws = tp.at(i);
-
-      if (kute::isEqual(ws->startPos(), ws->endPos())) {
-         tp.erase(tp.begin() + i--);
-         }
-      }
+void PathBuilder::createHorizontalToolpaths(Operation* op, const std::vector<Handle(AIS_Shape)>& cutPlanes) {
+  pbu->sweepPathBuilder()->createHorizontalToolpaths(op, cutPlanes);
   }
 
 
@@ -146,7 +145,7 @@ std::vector<Workstep*> PathBuilder::genBasicPath(std::vector<std::vector<GOConto
       for (int k=0; k < contours.size(); ++k) {
           auto& c = contours.at(k);
 
-          processContour(toolPath, c);
+          pbu->processContour(toolPath, c);
           }
       }
   return toolPath;
@@ -213,9 +212,9 @@ std::vector<Workstep*> PathBuilder::genFlatPaths(Operation* op, std::vector<Hand
           //TODO: block region for intermediate moves!
 
                             //TODO: remove debug offset from xtend
-          genInterMove(toolPath, e, s, c->centerPoint(), bb, xtend + i);
+          pbu->genInterMove(toolPath, e, s, c->centerPoint(), bb, xtend + i);
 //          drawDebugContour(op, c, curZ);
-          e = processContour(toolPath, c);
+          e = pbu->processContour(toolPath, c);
 //          e = c->endPoint();
           }
       s = e;
@@ -228,424 +227,14 @@ std::vector<Workstep*> PathBuilder::genFlatPaths(Operation* op, std::vector<Hand
   }
 
 
-//TODO: block region
-gp_Pnt PathBuilder::genInterMove(std::vector<Workstep*>& ws, const gp_Pnt& from, const gp_Pnt& to, const gp_Pnt& center, const Bnd_Box& bb, double xtend) {
-  int reg0 = region(from, bb);
-  int reg1 = region(to, bb);
-  gp_Pnt   e=to, s=from, tmp=from;
-
-//  center.SetZ(to.Z());
-  if (reg1 & Top    && e.Y() < (bb.CornerMax().Y() + xtend))
-     e.SetY(bb.CornerMax().Y() + xtend);
-  else if (reg1 & Bottom && e.Y() > (bb.CornerMin().Y() - xtend))
-     e.SetY(bb.CornerMin().Y() - xtend);
-  else if (reg1 & Left   && e.X() > (bb.CornerMin().X() - xtend))
-     e.SetX(bb.CornerMin().X() - xtend);
-  else if (reg1 & Right  && e.X() < (bb.CornerMax().X() + xtend))
-     e.SetX(bb.CornerMax().X() + xtend);
-  double check0 = e.Z() - tmp.Z();
-  double check1 = tmp.Z() - e.Z();
-
-  if ((tmp.Z() - e.Z()) > kute::MinDelta) {
-     tmp = e;
-     tmp.SetZ(s.Z());
-     if (!kute::isEqual(s, tmp)) {
-        ws.push_back(new WSTraverse(s, tmp));
-        s = tmp;
-        }
-     }
-  else {
-     if (reg0 & Top && tmp.Y()    < (bb.CornerMax().Y() + xtend))
-        s.SetY(bb.CornerMax().Y() + xtend);
-     else if (reg0 & Bottom && tmp.Y() > (bb.CornerMin().Y() - xtend))
-        s.SetY(bb.CornerMin().Y() - xtend);
-     else if (reg0 & Left && tmp.X()   > (bb.CornerMin().X() - xtend))
-        s.SetX(bb.CornerMin().X() - xtend);
-     else if (reg0 & Right && tmp.X()  < (bb.CornerMax().X() + xtend))
-        s.SetX(bb.CornerMax().X() + xtend);
-     else if (!reg0 && reg1) {
-        if (reg1 & Top && s.Y() > center.Y())
-           s.SetY(bb.CornerMax().Y() + xtend);
-        else if (reg1 & Bottom && s.Y() < center.Y())
-           s.SetY(bb.CornerMin().Y() - xtend);
-        else if (reg1 & Left && s.X() < center.X())
-           s.SetX(bb.CornerMin().X() - xtend);
-        else if (reg1 & Right && s.X() > center.X())
-           s.SetX(bb.CornerMax().X() + xtend);
-        }
-     if (!kute::isEqual(s, from)) {
-        ws.push_back(new WSStraightMove(from, s));
-        tmp = s;
-        }
-     }
-
-  if (!reg0 && !reg1) {                         // both points are inside workpiece!
-     ws.push_back(new WSStraightMove(from, to));
-     }
-  else if (reg0 & reg1) {                         // both points are inside same region outside
-                                                  // s and e are both in safe area
-     if (!kute::isEqual(s, e))  ws.push_back(new WSTraverse(s, e));
-     if (!kute::isEqual(e, to)) ws.push_back(new WSStraightMove(e, to));
-     }
-  else if (!kute::isEqual(s.Z(), e.Z())) {
-     ws.push_back(new WSTraverse(s, e));
-     if (!kute::isEqual(e, to)) ws.push_back(new WSStraightMove(e, to));
-     }
-  else {                                        // both points are in different regions
-     // have to move from s to e (both in safe area)
-     if (reg0 & Top) {
-        int q1 = 0;
-
-        if (!reg1) q1 = quadrant(e) + 1;
-        if (reg1 & Left || q1 == 2) {
-           tmp.SetX(bb.CornerMin().X() - xtend);
-           if (!kute::isEqual(s, tmp)) {
-              ws.push_back(new WSTraverse(s, tmp));
-              s = tmp;
-              }
-           tmp.SetY(e.Y());
-           }
-        else if (reg1 & Right || q1 == 1) {
-           tmp.SetX(bb.CornerMax().X() + xtend);
-           if (!kute::isEqual(s, tmp)) {
-              ws.push_back(new WSTraverse(s, tmp));
-              s = tmp;
-              }
-           tmp.SetY(e.Y());
-           }
-        else {
-           if (e.X() < center.X()) tmp.SetX(bb.CornerMin().X() - xtend);
-           else                    tmp.SetX(bb.CornerMax().X() + xtend);
-           if (!kute::isEqual(s, tmp)) {
-              ws.push_back(new WSTraverse(s, tmp));
-              s = tmp;
-              }
-           tmp.SetY(bb.CornerMin().Y() - xtend);
-           if (!kute::isEqual(s, tmp)) {
-              ws.push_back(new WSTraverse(s, tmp));
-              s = tmp;
-              }
-           tmp.SetX(e.X());
-           }
-        }
-     else if (reg0 & Bottom) {
-        int q1 = 0;
-
-        if (!reg1) q1 = quadrant(e) + 1;
-        if (reg1 & Left || q1 == 3) {
-           tmp.SetX(bb.CornerMin().X() - xtend);
-           if (!kute::isEqual(s, tmp)) {
-              ws.push_back(new WSTraverse(s, tmp));
-              s = tmp;
-              }
-           tmp.SetY(e.Y());
-           }
-        else if (reg1 & Right || q1 == 4) {
-           tmp.SetX(bb.CornerMax().X() + xtend);
-           if (!kute::isEqual(s, tmp)) {
-              ws.push_back(new WSTraverse(s, tmp));
-              s = tmp;
-              }
-           tmp.SetY(e.Y());
-           }
-        else {
-           if (e.X() < center.X()) tmp.SetX(bb.CornerMin().X() - xtend);
-           else                    tmp.SetX(bb.CornerMax().X() + xtend);
-           if (!kute::isEqual(s, tmp)) {
-              ws.push_back(new WSTraverse(s, tmp));
-              s = tmp;
-              }
-           tmp.SetY(bb.CornerMax().Y() + xtend);
-           if (!kute::isEqual(s, tmp)) {
-              ws.push_back(new WSTraverse(s, tmp));
-              s = tmp;
-              }
-           tmp.SetX(e.X());
-           }
-        }
-     else if (reg0 & Left) {
-        int q1 = 0;
-
-        if (!reg1) q1 = quadrant(e) + 1;
-        if (reg1 & Top || q1 == 2) {
-           tmp.SetY(bb.CornerMax().Y() + xtend);
-           if (!kute::isEqual(s, tmp)) {
-              ws.push_back(new WSTraverse(s, tmp));
-              s = tmp;
-              }
-           tmp.SetX(e.X());
-           }
-        else if (reg1 & Bottom || q1 == 3) {
-           tmp.SetY(bb.CornerMin().Y() - xtend);
-           if (!kute::isEqual(s, tmp)) {
-              ws.push_back(new WSTraverse(s, tmp));
-              s = tmp;
-              }
-           tmp.SetX(e.X());
-           }
-        else {
-           if (e.Y() < center.Y()) tmp.SetY(bb.CornerMin().Y() - xtend);
-           else                    tmp.SetY(bb.CornerMax().Y() + xtend);
-           if (!kute::isEqual(s, tmp)) {
-              ws.push_back(new WSTraverse(s, tmp));
-              s = tmp;
-              }
-           tmp.SetX(bb.CornerMax().X() + xtend);
-           if (!kute::isEqual(s, tmp)) {
-              ws.push_back(new WSTraverse(s, tmp));
-              s = tmp;
-              }
-           tmp.SetY(e.Y());
-           }
-        }
-     else if (reg0 & Right) {
-        int q1 = 0;
-
-        if (!reg1) q1 = quadrant(e) + 1;
-        if (reg1 & Top || q1 == 1) {
-           tmp.SetY(bb.CornerMax().Y() + xtend);
-           if (!kute::isEqual(s, tmp)) {
-              ws.push_back(new WSTraverse(s, tmp));
-              s = tmp;
-              }
-           tmp.SetX(e.X());
-           }
-        else if (reg1 & Bottom || q1 == 4) {
-           tmp.SetY(bb.CornerMin().Y() - xtend);
-           if (!kute::isEqual(s, tmp)) {
-              ws.push_back(new WSTraverse(s, tmp));
-              s = tmp;
-              }
-           tmp.SetX(e.X());
-           }
-        else {
-           if (e.Y() < center.Y()) tmp.SetY(bb.CornerMin().Y() - xtend);
-           else                    tmp.SetY(bb.CornerMax().Y() + xtend);
-           if (!kute::isEqual(s, tmp)) {
-              ws.push_back(new WSTraverse(s, tmp));
-              s = tmp;
-              }
-           tmp.SetX(bb.CornerMin().X() - xtend);
-           if (!kute::isEqual(s, tmp)) {
-              ws.push_back(new WSTraverse(s, tmp));
-              s = tmp;
-              }
-           tmp.SetY(e.Y());
-           }
-        }
-     if (!kute::isEqual(s, tmp)) ws.push_back(new WSTraverse(s, tmp));
-     if (!kute::isEqual(tmp, e)) {
-        if (!reg1) ws.push_back(new WSStraightMove(tmp, e));
-        else       ws.push_back(new WSTraverse(tmp, e));
-        }
-     if (!kute::isEqual(e, to)) ws.push_back(new WSStraightMove(e, to));
-     }
-  return to;
-  }
-
-
-std::vector<Workstep*> PathBuilder::genPath4Pockets(Operation* op, const Bnd_Box& bb, const gp_Dir& baseNorm, const std::vector<std::vector<GOPocket*>>& pool, double curZ, double xtend) {
-  double radius = 0;
-  gp_Pnt center(bb.CornerMin().X() + (bb.CornerMax().X() - bb.CornerMin().X()) / 2
-              , bb.CornerMin().Y() + (bb.CornerMax().Y() - bb.CornerMin().Y()) / 2
-              , bb.CornerMin().Z() + (bb.CornerMax().Z() - bb.CornerMin().Z()) / 2);
-  bool roundWorkPiece = Core().workData()->roundWorkPiece;
-  std::vector<Workstep*> toolPath;
-  int iMin = 0, iMax = 99;
-  gp_Pnt  s(0, 0, 300);
-  gp_Pnt  e = s, tmp;
-
-  for (auto levelParts : pool) {
-      int mxI = fmin(iMax, levelParts.size());
-
-      for (int i=iMin; i < mxI; ++i) {
-          GOPocket* p = levelParts.at(i);
-          int mx = p->contours().size();
-
-          p->dump();
-          for (int j=0; j < mx; ++j) {
-              GOContour* c   = p->contours().at(j);
-
-              if (c->isClosed()) c->changeStart2Close(e);
-              c->simplify(curZ);
-              s = c->startPoint();
-              if (roundWorkPiece) genRoundInterMove(toolPath, e, s, bb, xtend + i + j);
-              else                genInterMove(toolPath, e, s, center, bb, xtend + i + j);
-//              drawDebugContour(op, c, curZ);
-              processContour(toolPath, c);
-              e = c->endPoint();
-              }
-          s = e;
-          e.SetZ(bb.CornerMax().Z() + op->safeZ1());
-          if (!kute::isEqual(s, e)) toolPath.push_back(new WSTraverse(s, e));
-          }
-      curZ -= op->cutDepth();
-      }
-  cleanup(toolPath);
-
-  return toolPath;
-  }
-
-
-gp_Pnt PathBuilder::genRoundInterMove(std::vector<Workstep*>& ws, const gp_Pnt& from, const gp_Pnt& to, const Bnd_Box& bb, double xtend) {
-  gp_Pnt c(bb.CornerMin().X() + (bb.CornerMax().X() - bb.CornerMin().X()) / 2
-         , bb.CornerMin().Y() + (bb.CornerMax().Y() - bb.CornerMin().Y()) / 2
-         , bb.CornerMin().Z() + (bb.CornerMax().Z() - bb.CornerMin().Z()) / 2);
-  double r = (bb.CornerMax().X() - bb.CornerMin().X()) / 2;
-  int reg0 = quadrant(from);
-  int reg1 = quadrant(to);
-  double   safeR = r + xtend;
-  gp_Pnt   e=to, s=from, tmp=from;
-
-  qDebug() << "need inter move from (" << reg0 << ")" << s.X() << " / " << s.Y() << " / " << s.Z()
-                        << "   to   (" << reg1 << ")" << e.X() << " / " << e.Y() << " / " << e.Z();
-
-  c.SetZ(to.Z());
-  if (kute::isEqual(from.Z(), to.Z()) && s.Distance(c) < safeR) {      // ensure startpoint is in safe area
-     double p0, p1;
-     TopoDS_Edge        edge = BRepBuilderAPI_MakeEdge(c, s);
-     Handle(Geom_Curve) c    = BRep_Tool::Curve(edge, p0, p1);
-
-     s = c->Value(safeR);
-     }
-  if (e.Distance(c) < safeR) {      // ensure endpoint is in safe area
-     double p0, p1;
-     TopoDS_Edge        edge = BRepBuilderAPI_MakeEdge(c, e);
-     Handle(Geom_Curve) c    = BRep_Tool::Curve(edge, p0, p1);
-
-     e = c->Value(safeR);
-     }
-  if (!kute::isEqual(s, from)) {
-     ws.push_back(new WSStraightMove(from, s));
-     tmp = s;
-     }
-
-  if (tmp.Z() > e.Z()) {            // if startpoint has higher z, it might be safe,
-     tmp = e;                       // so start direct move
-     tmp.SetZ(s.Z());
-     ws.push_back(new WSTraverse(s, tmp));
-     s = tmp;                       // start point is now above endpoint
-     }
-  else if (reg0 == reg1) {          // both points in same region - direct move
-     tmp = s;
-     switch (reg0) {
-       case 0:
-            tmp.SetY(fmax(s.Y(), e.Y()));
-            break;
-       case 1:
-            tmp.SetX(fmin(s.X(), e.X()));
-            break;
-       case 2:
-            tmp.SetY(fmin(s.Y(), e.Y()));
-            break;
-       case 3:
-            tmp.SetX(fmax(s.X(), e.X()));
-            break;
-       }
-     }
-  else {                            // both points are in different regions. Do safe moves
-     tmp = s;
-     switch (reg0) {
-       case 1:
-            if (!reg1) {
-               tmp.SetY(bb.CornerMax().Y() + xtend);
-               ws.push_back(new WSTraverse(s, tmp));
-               s = tmp;
-
-               tmp.SetX(e.X());
-               }
-            else {
-               tmp.SetX(bb.CornerMin().X() - xtend);
-               ws.push_back(new WSTraverse(s, tmp));
-               s = tmp;
-
-               tmp.SetY(bb.CornerMin().Y() - xtend);
-               ws.push_back(new WSTraverse(s, tmp));
-               s = tmp;
-
-               tmp.SetX(e.X());
-               }
-            break;
-       case 2:
-            if (reg1 < 2) {
-               tmp.SetX(bb.CornerMin().X() - xtend);
-               ws.push_back(new WSTraverse(s, tmp));
-               s = tmp;
-
-               tmp.SetY(bb.CornerMax().Y() + xtend);
-               ws.push_back(new WSTraverse(s, tmp));
-               s = tmp;
-
-               tmp.SetX(e.X());
-               }
-            else {
-               tmp.SetY(bb.CornerMin().Y() - xtend);
-               ws.push_back(new WSTraverse(s, tmp));
-               s = tmp;
-
-               tmp.SetX(e.X());
-               }
-            break;
-       case 3:
-            if (reg1 == 2) {
-               tmp.SetY(bb.CornerMin().Y() - xtend);
-               ws.push_back(new WSTraverse(s, tmp));
-               s = tmp;
-
-               tmp.SetX(e.X());
-               }
-            else {
-               tmp.SetX(bb.CornerMax().X() + xtend);
-               ws.push_back(new WSTraverse(s, tmp));
-               s = tmp;
-
-               tmp.SetY(bb.CornerMax().Y() + xtend);
-               ws.push_back(new WSTraverse(s, tmp));
-               s = tmp;
-
-               tmp.SetX(e.X());
-               }
-       default:
-            if (reg1 == 3) {
-               tmp.SetX(bb.CornerMax().X() + xtend);
-               ws.push_back(new WSTraverse(s, tmp));
-               s = tmp;
-
-               tmp.SetY(e.Y());
-               }
-            else {
-               tmp.SetY(bb.CornerMax().Y() + xtend);
-               ws.push_back(new WSTraverse(s, tmp));
-               s = tmp;
-
-               tmp.SetX(bb.CornerMin().X() - xtend);
-               ws.push_back(new WSTraverse(s, tmp));
-               s = tmp;
-
-               tmp.SetY(e.Y());
-               }
-            break;
-       }
-     }
-  if (!kute::isEqual(s, tmp)) {
-     ws.push_back(new WSTraverse(s, tmp));
-     }
-  if (!kute::isEqual(tmp, e)) {
-     ws.push_back(new WSTraverse(tmp, e));
-     }
-  if (!kute::isEqual(e, to)) {
-     ws.push_back(new WSStraightMove(e, to));
-     }
-  return e;
-  }
-
-
 std::vector<Workstep*> PathBuilder::genRoundToolpaths(Operation* op, const std::vector<Handle(AIS_Shape)>& cutPlanes) {
   std::vector<Workstep*> workSteps;
   int                      mx = cutPlanes.size();
   gp_Pnt                   from, tmp, to, startXXPos;
-  ToolEntry*               activeTool  = Core().toolListModel()->tool(Core().toolListModel()->findToolNum(op->toolNum()));
+  ToolEntry*               activeTool  = op->toolEntry();
   TargetDefinition*        td  = op->targets.at(0);
+
+  if (!td) return workSteps;
   ContourTargetDefinition* ctd = dynamic_cast<ContourTargetDefinition*>(td);
   SweepTargetDefinition*   std = dynamic_cast<SweepTargetDefinition*>(td);
   double                   xtend       = activeTool->fluteDiameter() * 0.8;
@@ -812,7 +401,7 @@ std::vector<Workstep*> PathBuilder::genRoundToolpaths(Operation* op, const std::
 std::vector<Workstep*> PathBuilder::genToolPath(Operation* op, Handle(AIS_Shape) cutPart, bool wantPockets) {
   TargetDefinition*        td  = op->targets.at(0);
   SweepTargetDefinition*   std = dynamic_cast<SweepTargetDefinition*>(td);
-  ContourTargetDefinition* ctd = dynamic_cast<ContourTargetDefinition*>(td);
+//  ContourTargetDefinition* ctd = dynamic_cast<ContourTargetDefinition*>(td);
   std::vector<Workstep*>   toolPath;
 
   if (!td) return toolPath;
@@ -825,7 +414,7 @@ std::vector<Workstep*> PathBuilder::genToolPath(Operation* op, Handle(AIS_Shape)
   if (!contour) return toolPath;
   std::vector<std::vector<std::vector<GOContour*>>> clippedParts;
   std::vector<Handle(AIS_Shape)> cutPlanes;
-  ToolEntry*             activeTool    = Core().toolListModel()->tool(Core().toolListModel()->findToolNum(op->toolNum()));
+  ToolEntry*             activeTool    = op->toolEntry();
   double                 xtend         = activeTool->fluteDiameter() * 0.8;
   double                 firstOffset   = op->offset() + activeTool->fluteDiameter() / 2;
   Bnd_Box                bb            = cutPart->BoundingBox();
@@ -882,7 +471,8 @@ std::vector<Workstep*> PathBuilder::genToolPath(Operation* op, Handle(AIS_Shape)
      std::vector<std::vector<GOPocket*>> pool = splitCurves(op, clippedParts);
      gp_Dir workDir = std ? std->baseDir() : gp_Dir(0, 0, 1);
 
-     toolPath = genPath4Pockets(op, op->wpBounds, workDir, pool, curZ, xtend);
+//     toolPath = genPath4Pockets(op, op->wpBounds, workDir, pool, curZ, xtend);
+     toolPath = pbu->pocketPathBuilder()->genPath(op, op->wpBounds, workDir, pool, curZ, xtend);
      }
   else {
      toolPath = genFlatPaths(op, cutPlanes, clippedParts, curZ, xtend);
@@ -910,33 +500,6 @@ void PathBuilder::drawDebugContour(Operation* op, GOContour* c, double z) {
 //      Core().view3D()->showShape(s);
       op->cShapes.push_back(s);
       }
-  }
-
-
-gp_Pnt PathBuilder::processContour(std::vector<Workstep*>& tp, GOContour* c) {
-  qDebug() << "process contour" << c->toString();
-  Workstep* ws = nullptr;
-
-  for (auto& go : c->segments()) {
-      switch (go->type()) {
-        case GTLine:
-             ws = new WSStraightMove(go->startPoint(), go->endPoint());
-             ws->setColor(Quantity_NOC_PURPLE1);
-             tp.push_back(ws);
-             break;
-        case GTCircle: {
-             GOCircle* gc = dynamic_cast<GOCircle*>(go);
-
-             ws = new WSArc(go->startPoint(), go->endPoint(), gc->center(), gc->isCCW());
-             ws->setColor(Quantity_NOC_PURPLE1);
-             tp.push_back(ws);
-             } break;
-        default:
-             throw std::domain_error(QString("unsupported graphic-type %1").arg(go->type()).toStdString());
-             break;
-        }
-      }
-  return ws->endPos();
   }
 
 
@@ -1034,26 +597,8 @@ std::vector<std::vector<GOContour*>> PathBuilder::processCurve(Operation* op, GO
   }
 
 
-int PathBuilder::quadrant(const gp_Pnt &p, const gp_Pnt& center) const {
-  if (p.X() < center.X()) {
-     if (p.Y() < center.Y()) return 2;
-     return 1;
-     }
-  if (p.Y() < center.Y()) return 3;
-
-  return 0;
-  }
-
-
-int PathBuilder::region(const gp_Pnt& p, const Bnd_Box& bb) const {
-  int rv = Inside;
-
-  if      (p.X() < bb.CornerMin().X()) rv |= Left;
-  else if (p.X() > bb.CornerMax().X()) rv |= Right;
-  if      (p.Y() < bb.CornerMin().Y()) rv |= Bottom;
-  else if (p.Y() > bb.CornerMax().Y()) rv |= Top;
-
-  return rv;
+std::vector<Workstep*> PathBuilder::genNotchPath(Operation *op, opencascade::handle<AIS_Shape> cutPart, std::vector<Handle(AIS_Shape)> cutPlanes) {
+  return pbu->profitMillingBuilder()->genToolPath(op, cutPart, cutPlanes);
   }
 
 
@@ -1178,10 +723,3 @@ void PathBuilder::stripPath(GOContour *firstContour, GOContour *masterContour) {
          }
       }
   }
-
-
-const int PathBuilder::Inside = 0;
-const int PathBuilder::Left   = 1;
-const int PathBuilder::Right  = 2;
-const int PathBuilder::Bottom = 4;
-const int PathBuilder::Top    = 8;

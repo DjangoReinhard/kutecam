@@ -146,11 +146,11 @@ TopoDS_Shape SelectionHandler::createBaseContour(const gp_Pnt& pos, const gp_Dir
   }
 
 
-Handle(AIS_Shape) SelectionHandler::createCutPart(TopoDS_Shape cf, Operation* op, bool wantFirst) {
-  Handle(AIS_Shape) curWP = Core().helper3D()->fixRotation(Core().workData()->workPiece->Shape()
-                                                         , op->operationA()
-                                                         , op->operationB()
-                                                         , op->operationC());
+Handle(AIS_Shape) SelectionHandler::createCutPart(Handle(AIS_Shape) src, TopoDS_Shape cf, Operation* op, bool wantFirst) {
+//  Handle(AIS_Shape) curWP = Core().helper3D()->fixRotation(Core().workData()->workPiece->Shape()
+//                                                         , op->operationA()
+//                                                         , op->operationB()
+//                                                         , op->operationC());
   Handle(AIS_Shape) curBF = Core().helper3D()->fixRotation(Core().view3D()->baseFace()->Shape()
                                                          , op->operationA()
                                                          , op->operationB()
@@ -164,7 +164,7 @@ Handle(AIS_Shape) SelectionHandler::createCutPart(TopoDS_Shape cf, Operation* op
   TopTools_ListOfShape splitArgs;
   TopTools_ListOfShape splitTools;
 
-  splitArgs.Append(curWP->Shape());
+  splitArgs.Append(src->Shape());
   splitTools.Append(cf);
   splitter.SetArguments(splitArgs);
   splitter.SetTools(splitTools);

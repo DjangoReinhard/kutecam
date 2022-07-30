@@ -527,53 +527,71 @@ void OcctQtViewer::mouseMoveEvent(QMouseEvent* e) {
 
 void OcctQtViewer::reset2D() {
   myContext->RemoveAll(false);
-  createAxisCross(gp_Pnt());
+  createAxisCross();
   }
 
 
 void OcctQtViewer::reset3D() {
   myContext->RemoveAll(false);
   myContext->Display(myViewCube, false);
-  createAxisCross(gp_Pnt(0, 0, 0.005));
+  createAxisCross();
   }
 
 
 void OcctQtViewer::createAxisCross(const gp_Pnt& p, double lineLen, QVector<Handle(AIS_Shape)>* pV, Quantity_Color c) {
-  TopoDS_Edge       edge   = BRepBuilderAPI_MakeEdge({p.X() - lineLen, p.Y(), p.Z()}
-                                                   , {p.X() + lineLen, p.Y(), p.Z()});
-  Handle(AIS_Shape) sXAxis = new AIS_Shape(edge);
+  TopoDS_Edge       edge   = BRepBuilderAPI_MakeEdge({p.X() - lineLen, p.Y(), p.Z()-0.01}
+                                                   , {p.X() + lineLen, p.Y(), p.Z()-0.01});
+  TopoDS_Edge       sEdge  = BRepBuilderAPI_MakeEdge({p.X() - lineLen*0.2, p.Y(), p.Z()}
+                                                   , {p.X() + lineLen*0.2, p.Y(), p.Z()});
+  Handle(AIS_Shape) sXAxis0 = new AIS_Shape(edge);
+  Handle(AIS_Shape) sXAxis1 = new AIS_Shape(sEdge);
 
-  sXAxis->SetColor(Quantity_NOC_RED);
-  sXAxis->SetWidth(2);
-  edge = BRepBuilderAPI_MakeEdge({p.X(), p.Y() - lineLen, p.Z()}
-                               , {p.X(), p.Y() + lineLen, p.Z()});
-  Handle(AIS_Shape) sYAxis = new AIS_Shape(edge);
+  sXAxis0->SetColor(Quantity_NOC_RED1);
+  sXAxis0->SetWidth(3);
+  sXAxis1->SetColor(Quantity_NOC_RED);
+  sXAxis1->SetWidth(3);
+  edge  = BRepBuilderAPI_MakeEdge({p.X(), p.Y() - lineLen, p.Z()-0.01}
+                                , {p.X(), p.Y() + lineLen, p.Z()-0.01});
+  sEdge = BRepBuilderAPI_MakeEdge({p.X(), p.Y() - lineLen*0.2, p.Z()}
+                                , {p.X(), p.Y() + lineLen*0.2, p.Z()});
+  Handle(AIS_Shape) sYAxis0 = new AIS_Shape(edge);
+  Handle(AIS_Shape) sYAxis1 = new AIS_Shape(sEdge);
 
-  sYAxis->SetColor(Quantity_NOC_GREEN);
-  sYAxis->SetWidth(2);
-  edge= BRepBuilderAPI_MakeEdge({p.X(), p.Y(), p.Z() - lineLen}
-                              , {p.X(), p.Y(), p.Z() + lineLen});
-  Handle(AIS_Shape) sZAxis = new AIS_Shape(edge);
+  sYAxis0->SetColor(Quantity_NOC_GREEN1);
+  sYAxis0->SetWidth(3);
+  sYAxis1->SetColor(Quantity_NOC_GREEN);
+  sYAxis1->SetWidth(3);
+  edge  = BRepBuilderAPI_MakeEdge({p.X()-0.01, p.Y()-0.01, p.Z() - lineLen}
+                                , {p.X()-0.01, p.Y()-0.01, p.Z() + lineLen});
+  sEdge = BRepBuilderAPI_MakeEdge({p.X(), p.Y(), p.Z() - lineLen*0.2}
+                                , {p.X(), p.Y(), p.Z() + lineLen*0.2});
+  Handle(AIS_Shape) sZAxis0 = new AIS_Shape(edge);
+  Handle(AIS_Shape) sZAxis1 = new AIS_Shape(sEdge);
 
-  sZAxis->SetColor(Quantity_NOC_BLUE);
-  sZAxis->SetWidth(2);
+  sZAxis0->SetColor(Quantity_NOC_BLUE1);
+  sZAxis0->SetWidth(3);
+  sZAxis1->SetColor(Quantity_NOC_BLUE);
+  sZAxis1->SetWidth(3);
   if (pV) {
-     sXAxis->SetColor(c);
-     sYAxis->SetColor(c);
-     sZAxis->SetColor(c);
-     pV->append(sXAxis);
-     pV->append(sYAxis);
-     pV->append(sZAxis);
+     sXAxis0->SetColor(c);
+     sYAxis0->SetColor(c);
+     sZAxis0->SetColor(c);
+     pV->append(sXAxis0);
+     pV->append(sYAxis0);
+     pV->append(sZAxis0);
      }
   else {
      if (!c.IsEqual(Quantity_NOC_GRAY)) {
-        sXAxis->SetColor(c);
-        sYAxis->SetColor(c);
-        sZAxis->SetColor(c);
+        sXAxis0->SetColor(c);
+        sYAxis0->SetColor(c);
+        sZAxis0->SetColor(c);
         }
-     myAltContext->Display(sXAxis, 1, -1, false);
-     myAltContext->Display(sYAxis, 1, -1, false);
-     myAltContext->Display(sZAxis, 1, -1, false);
+     myAltContext->Display(sXAxis0, 1, -1, false);
+     myAltContext->Display(sYAxis0, 1, -1, false);
+     myAltContext->Display(sZAxis0, 1, -1, false);
+     myContext->Display(sXAxis1, 1, -1, false);
+     myContext->Display(sYAxis1, 1, -1, false);
+     myContext->Display(sZAxis1, 1, -1, false);
      }
   }
 
@@ -819,6 +837,7 @@ void OcctQtViewer::rotate(double dA, double dB, double dC) {
   gp_Trsf       r;
 
   q.SetEulerAngles(gp_Intrinsic_XYZ, dA, dB, dC);
+//  q.SetEulerAngles(gp_Intrinsic_ZYX, dC, dB, dA);
   r.SetRotation(q);
   TopLoc_Location       tll(r);
   AIS_ListOfInteractive shapes;

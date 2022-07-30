@@ -1,27 +1,27 @@
-/*
+/* 
  * **************************************************************************
- *
+ * 
  *  file:       operationspage.cpp
  *  project:    kuteCAM
  *  subproject: main application
  *  purpose:    create a graphical application, that assists in identify
- *              and process model elements
+ *              and process model elements                        
  *  created:    23.4.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
+ * 
+ *  This program is free software: you can redistribute it and/or modify 
+ *  it under the terms of the GNU General Public License as published by 
+ *  the Free Software Foundation, either version 2 of the License, or 
+ *  (at your option) any later version. 
+ *   
+ *  This program is distributed in the hope that it will be useful, 
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ *  GNU General Public License for more details. 
+ *   
+ *  You should have received a copy of the GNU General Public License 
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- *
+ * 
  * **************************************************************************
  */
 #include "operationspage.h"
@@ -37,9 +37,13 @@
 #include "operation.h"
 #include "operationlistmodel.h"
 #include "operationsubpage.h"
+#include "pathbuilder.h"
+#include "pathbuilderutil.h"
+#include "subop3dface.h"
 #include "subopcontour.h"
 #include "subopclampingplug.h"
 #include "subopdrill.h"
+#include "subopnotch.h"
 #include "subsimulation.h"
 #include "subopsweep.h"
 #include "sweeptargetdefinition.h"
@@ -94,7 +98,7 @@ OperationsPage::OperationsPage(QWidget *parent)
  , infoModel(new GeomNodeModel())
  , subPage(nullptr)
  , tdModel(new TargetDefListModel(&dummy)) {
-  ui->setupUi(this);
+  ui->setupUi(this);  
   ui->Operation->setLayout(opStack);
   ui->lstOperations->setModel(olm);
   ui->geomTree->setModel(infoModel);
@@ -108,6 +112,7 @@ OperationsPage::OperationsPage(QWidget *parent)
   connect(ui->lstOperations->selectionModel(),  &QItemSelectionModel::selectionChanged, this, &OperationsPage::opSelected);
   connect(Core().view3D(), &OcctQtViewer::selectionChanged,  this, &OperationsPage::selectionChanged);
   connect(this,      &OperationsPage::raiseMessage, Core().mainWin(), &MainWindow::setStatusMessage);
+  connect(infoModel, &GeomNodeModel::raiseMessage, Core().mainWin(), &MainWindow::setStatusMessage);
   connect(ui->spA,   &QDoubleSpinBox::valueChanged, this, &OperationsPage::rotate);
   connect(ui->spB,   &QDoubleSpinBox::valueChanged, this, &OperationsPage::rotate);
   connect(ui->spC,   &QDoubleSpinBox::valueChanged, this, &OperationsPage::rotate);
@@ -116,17 +121,30 @@ OperationsPage::OperationsPage(QWidget *parent)
   ui->lstOperations->installEventFilter(this);
   ui->lstTarget->setModel(tdModel);
   ui->lstTarget->installEventFilter(this);
-  pages["Drill"]      = new SubOPDrill(olm,   tdModel);
-  pages["Contour"]    = new SubOPContour(olm, tdModel);
-  pages["Sweep"]      = new SubOPSweep(olm,   tdModel);
-  pages["ClampPlug"]  = new SubOPClampingPlug(olm, tdModel);
-  pages["Simulation"] = new SubSimulation(olm, tdModel);
+  pathBuilder         = new PathBuilder(new PathBuilderUtil());
+  pages["Drill"]      = new SubOPDrill(olm,   tdModel, pathBuilder);
+  pages["Contour"]    = new SubOPContour(olm, tdModel, pathBuilder);
+  pages["Notch"]      = new SubOPNotch(olm,   tdModel, pathBuilder);
+  pages["3D-surf"]    = new SubOP3DFace(olm,  tdModel, pathBuilder);
+  pages["Sweep"]      = new SubOPSweep(olm,   tdModel, pathBuilder);
+  pages["ClampPlug"]  = new SubOPClampingPlug(olm, tdModel, pathBuilder);
+  pages["Simulation"] = new SubSimulation(olm, tdModel, pathBuilder);
 
   for (QMap<QString, OperationSubPage*>::const_iterator i = pages.constBegin()
      ; i != pages.constEnd()
      ; ++i) {
     opStack->addWidget(i.value());
     connect(i.value(), &OperationSubPage::opCreated, this, &OperationsPage::addOperation);
+    }  
+  switch (Core().machineType()) {
+    case 1:
+         ui->spB->setEnabled(false);
+         break;
+    case 2:
+         ui->spA->setEnabled(false);
+         break;
+    default:
+         break;
     }
   }
 
@@ -152,6 +170,37 @@ void OperationsPage::addOperation(Operation* op) { // op stil not current operat
   qDebug() << "set current (operation) index to" << mi.row();
 
   ui->lstOperations->setCurrentIndex(mi);
+  }
+
+
+void OperationsPage::calcRotation4(const gp_Dir &n, double& aA, double& aB, double& aC) {
+  double angles[3]   = {0};
+  int    machineType = Core().machineType();
+  gp_Pnt norm(n.X(), n.Y(), 0); // start with C-axis (projection to XY-plane)
+  double a0  = atan2(norm.X(), norm.Y());
+  double a1  = machineType == 2 ? atan2(1, 0) : atan2(0, 1);
+  double len = norm.Distance({0, 0, 0});
+
+  // angles[0] rotates the model around C-axis until norm-vector
+  // points towards A- or B-axis (depending on machine type
+  // z was set to 0 on projection, x or y is set to 0 by rotation
+  angles[2] = a0 - a1;
+
+  if (machineType == 2) { // B-axis is main rotation axis
+     norm = gp_Pnt(len, 0, n.Z());
+     a0 = atan2(norm.Z(), norm.X());
+     a1 = atan2(1, 0);
+     angles[1] = a0 - a1;
+     }
+  else {  // treat A-axis as main rotation axis
+     norm = gp_Pnt(0, len, n.Z());
+     a0 = atan2(norm.Z(), norm.Y());
+     a1 = atan2(1, 0);
+     angles[0] = a1 - a0;
+     }
+  aA = angles[0];
+  aB = angles[1];
+  aC = angles[2];
   }
 
 
@@ -286,6 +335,27 @@ void OperationsPage::genGCode() {
   }
 
 
+void OperationsPage::handleMachineType(int machineType) {
+  Core().setMachineType(machineType);
+
+  qDebug() << "OP::machine-type: " << machineType;
+  switch (machineType) {
+    case 1:
+         ui->spA->setEnabled(true);
+         ui->spB->setEnabled(false);
+         break;
+    case 2:
+         ui->spA->setEnabled(false);
+         ui->spB->setEnabled(true);
+         break;
+    case 3:
+         ui->spA->setEnabled(true);
+         ui->spB->setEnabled(true);
+         break;
+    }
+  }
+
+
 void OperationsPage::loadOperation(Operation* op) { // don't touch old operation any more!
   if (!op) return;
   if (currentOperation) {
@@ -304,6 +374,7 @@ void OperationsPage::loadOperation(Operation* op) { // don't touch old operation
   switch (op->kind()) {
     case ContourOperation: subPage = pages["Contour"];   break;
     case DrillOperation:   subPage = pages["Drill"];     break;
+    case NotchOperation:   subPage = pages["Notch"];     break;
     case SweepOperation:   subPage = pages["Sweep"];     break;
     case ClampingPlugOP:   subPage = pages["ClampPlug"]; break;
     }
@@ -382,62 +453,62 @@ void OperationsPage::saveOperations() {
 
 
 void OperationsPage::sel2Horizontal() {
-  if (!Core().view3D()->selection().size()) return;
-  TopoDS_Shape            selectedShape = Core().view3D()->selection().at(0);
-  Handle(Geom_Surface)    selectedFace  = BRep_Tool::Surface(TopoDS::Face(selectedShape));
-  GeomAdaptor_Surface     selectedSurface(selectedFace);
-  gp_Pln                  pln = selectedSurface.Plane();
-  gp_Dir                  dir = Core().helper3D()->deburr(pln.Axis().Direction());
-  gp_Vec                  v;
-  double                  a;
+//  if (!Core().view3D()->selection().size()) return;
+//  TopoDS_Shape            selectedShape = Core().view3D()->selection().at(0);
+//  Handle(Geom_Surface)    selectedFace  = BRep_Tool::Surface(TopoDS::Face(selectedShape));
+//  GeomAdaptor_Surface     selectedSurface(selectedFace);
+//  gp_Pln                  pln = selectedSurface.Plane();
+//  gp_Dir                  dir = Core().helper3D()->deburr(pln.Axis().Direction());
+//  gp_Vec                  v;
+//  double                  a;
 
-  qDebug() << "selected face has normal:" << dir.X() << " / " << dir.Y() << " / " << dir.Z();
+//  qDebug() << "selected face has normal:" << dir.X() << " / " << dir.Y() << " / " << dir.Z();
 
 
-  if (!kute::isEqual(dir.X(), 0)) {
-     v = gp_Vec(dir.X(), 0, 0);
-     a = v.Angle({0, 0, 1});
-     ui->spA->setValue(kute::rad2deg(a));
-    }
-  if (!kute::isEqual(dir.Y(), 0)) {
-     v = gp_Vec(0, dir.Y(), 0);
-     a = v.Angle({0, 0, 1});
-     ui->spB->setValue(kute::rad2deg(a));
-     }
-  if (!kute::isEqual(dir.Z(), 1)) {
-     v = gp_Vec(0, 0, dir.Z());
-     a = v.Angle({0, 0, 1});
-     ui->spC->setValue(kute::rad2deg(a));
-     }
+//  if (!kute::isEqual(dir.X(), 0)) {
+//     v = gp_Vec(dir.X(), 0, 0);
+//     a = v.Angle({0, 0, 1});
+//     ui->spA->setValue(kute::rad2deg(a));
+//    }
+//  if (!kute::isEqual(dir.Y(), 0)) {
+//     v = gp_Vec(0, dir.Y(), 0);
+//     a = v.Angle({0, 0, 1});
+//     ui->spB->setValue(kute::rad2deg(a));
+//     }
+//  if (!kute::isEqual(dir.Z(), 1)) {
+//     v = gp_Vec(0, 0, dir.Z());
+//     a = v.Angle({0, 0, 1});
+//     ui->spC->setValue(kute::rad2deg(a));
+//     }
   }
 
 
 void OperationsPage::sel2Vertical() {
-  if (!Core().view3D()->selection().size()) return;
-  TopoDS_Shape            selectedShape = Core().view3D()->selection().at(0);
-  Handle(Geom_Surface)    selectedFace  = BRep_Tool::Surface(TopoDS::Face(selectedShape));
-  GeomAdaptor_Surface     selectedSurface(selectedFace);
-  gp_Pln                  pln = selectedSurface.Plane();
-  gp_Dir                  dir = Core().helper3D()->deburr(pln.Axis().Direction());
+//  if (!Core().view3D()->selection().size()) return;
+//  TopoDS_Shape            selectedShape = Core().view3D()->selection().at(0);
+//  Handle(Geom_Surface)    selectedFace  = BRep_Tool::Surface(TopoDS::Face(selectedShape));
+//  GeomAdaptor_Surface     selectedSurface(selectedFace);
+//  gp_Pln                  pln = selectedSurface.Plane();
+//  gp_Dir                  dir = Core().helper3D()->deburr(pln.Axis().Direction());
 
-  qDebug() << "selected face has normal:" << dir.X() << " / " << dir.Y() << " / " << dir.Z();
+//  qDebug() << "selected face has normal:" << dir.X() << " / " << dir.Y() << " / " << dir.Z();
 
-  gp_Vec                  v(dir.X(), 0, 0);
-  double                  a = v.Angle({1, 0, 0});
+//  gp_Vec                  v(dir.X(), 0, 0);
+//  double                  a = v.Angle({1, 0, 0});
 
-  ui->spA->setValue(kute::rad2deg(a));
+//  ui->spA->setValue(kute::rad2deg(a));
 
-  v = gp_Vec(0, dir.Y(), 0);
-  a = v.Angle({1, 0, 0});
-  ui->spB->setValue(kute::rad2deg(a));
+//  v = gp_Vec(0, dir.Y(), 0);
+//  a = v.Angle({1, 0, 0});
+//  ui->spB->setValue(kute::rad2deg(a));
 
-  v = gp_Vec(0, 0, dir.Z());
-  a = v.Angle({1, 0, 0});
-  ui->spC->setValue(kute::rad2deg(a));
+//  v = gp_Vec(0, 0, dir.Z());
+//  a = v.Angle({1, 0, 0});
+//  ui->spC->setValue(kute::rad2deg(a));
   }
 
 
-void OperationsPage::simulate() {
+void OperationsPage::simulate() {       
   if (currentOperation->toolPaths.size()) {
      subPage = pages["Simulation"];
      opStack->setCurrentWidget(subPage);
@@ -460,9 +531,39 @@ void OperationsPage::shapeSelected(const TopoDS_Shape &shape) {
   }
 
 
+void OperationsPage::rotateIfFace(const std::vector<TopoDS_Shape> &selection) {
+  if (selection.size() != 1) return;
+  auto s = selection.at(0);
+
+  if (s.ShapeType() == TopAbs_FACE) {
+     qDebug() << "selection is face ...";
+
+     Handle(Geom_Surface) selectedFace = BRep_Tool::Surface(TopoDS::Face(s));
+     GeomNode* node = nullptr;
+
+     if (selectedFace->IsKind(STANDARD_TYPE(Geom_Plane))) {
+        GeomAdaptor_Surface selectedSurface(selectedFace);
+        gp_Pln              pln = selectedSurface.Plane();
+        gp_Pnt              pos = Core().helper3D()->deburr(pln.Location());
+        gp_Dir              dir = Core().helper3D()->deburr(pln.Axis().Direction());
+        double              aA = 0, aB = 0, aC = 0;
+
+        //TODO: respect actual angle settings
+        calcRotation4(dir, aA, aB, aC);
+
+        ui->spA->setValue(kute::rad2deg(aA));
+        ui->spB->setValue(kute::rad2deg(aB));
+        ui->spC->setValue(kute::rad2deg(aC));
+        Core().view3D()->rotate(aA, aB, aC);
+        }
+     }
+  }
+
+
 void OperationsPage::selectionChanged() {
   std::vector<TopoDS_Shape> selection = Core().view3D()->selection();
 
+  if (Core().autoRotateSelection()) rotateIfFace(selection);
   infoModel->replaceData(selection);
   ui->geomTree->expandAll();
   }

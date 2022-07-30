@@ -41,8 +41,8 @@
 #include <QDebug>
 
 
-SubOPClampingPlug::SubOPClampingPlug(OperationListModel* olm, TargetDefListModel* tdModel, QWidget* parent)
- : OperationSubPage(olm, tdModel, parent) {
+SubOPClampingPlug::SubOPClampingPlug(OperationListModel* olm, TargetDefListModel* tdModel, PathBuilder* pb, QWidget* parent)
+ : OperationSubPage(olm, tdModel, pb, parent) {
   ui->lCycle->setVisible(false);
   ui->cbCycle->setVisible(false);
   ui->lRetract->setVisible(false);
@@ -147,8 +147,12 @@ void SubOPClampingPlug::processTargets() {
   }
 
 
-// generated worksteps from target definition
-void SubOPClampingPlug::toolPath() {
+void SubOPClampingPlug::genFinishingToolPath() {
+
+  }
+
+
+void SubOPClampingPlug::genRoughingToolPath() {
   if (!curOP->cutDepth()) return;
   processTargets();
   curOP->workSteps() = pathBuilder()->genToolPath(curOP, curOP->cutPart, false);

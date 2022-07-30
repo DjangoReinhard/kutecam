@@ -45,7 +45,7 @@ class OperationSubPage : public QWidget
 {
   Q_OBJECT
 public:
-  explicit OperationSubPage(OperationListModel* olm, TargetDefListModel* tdModel, QWidget *parent = nullptr, bool wantUi = true);
+  explicit OperationSubPage(OperationListModel* olm, TargetDefListModel* tdModel, PathBuilder* pb, QWidget *parent = nullptr, bool wantUi = true);
   virtual ~OperationSubPage() = default;
 
   std::vector<Handle(AIS_Shape)> createCutPlanes(Operation* op);
@@ -53,7 +53,9 @@ public:
   virtual void loadOP(Operation* op);
   virtual void processSelection() = 0;
   virtual void showToolPath(Operation* op);
-  virtual void toolPath() = 0;
+  virtual void genRoughingToolPath() = 0;
+  virtual void genFinishingToolPath() = 0;
+  void toolPath();
 
 public slots:
   void absToggled(const QVariant& v);

@@ -1,12 +1,11 @@
 /* 
  * **************************************************************************
  * 
- *  file:       subopdrill.h
+ *  file:       subopnotch.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create a graphical application, that assists in identify
- *              and process model elements                        
- *  created:    7.4.2022 by Django Reinhard
+ *  purpose:    create gcode for toolpaths created from CAD models
+ *  created:    14.6.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
@@ -24,18 +23,21 @@
  * 
  * **************************************************************************
  */
-#ifndef SUBOPDRILL_H
-#define SUBOPDRILL_H
+#ifndef SUBOPNOTCH_H
+#define SUBOPNOTCH_H
 #include "operationsubpage.h"
+#include <TopoDS_Edge.hxx>
+#include <Geom_Line.hxx>
+class NotchTargetDefinition;
 class PathBuilder;
 
 
-class SubOPDrill : public OperationSubPage
+class SubOPNotch : public OperationSubPage
 {
   Q_OBJECT
 public:
-  explicit SubOPDrill(OperationListModel* olm, TargetDefListModel* tdModel, PathBuilder* pb, QWidget *parent = nullptr);
-  virtual ~SubOPDrill() = default;
+  explicit SubOPNotch(OperationListModel* olm, TargetDefListModel* tdModel, PathBuilder* pb, QWidget* parent = nullptr);
+  virtual ~SubOPNotch() = default;
 
   virtual void genRoughingToolPath();
   virtual void genFinishingToolPath();
@@ -44,8 +46,9 @@ public slots:
   void createOP();
 
 protected:
+  TopoDS_Edge determineCenterLine(const NotchTargetDefinition* ntd, Handle(Geom_Line) gl0, Handle(Geom_Line) gl1);
   void processSelection() override;
-  void showToolPath(Operation* op) override;
-  bool validateDrillTargets();
+  void processTargets() override;
   };
-#endif // SUBOPDRILL_H
+
+#endif // SUBOPNOTCH_H

@@ -485,8 +485,11 @@
      </property>
      <addaction name="actionClamping_Plug"/>
      <addaction name="actionContourNew"/>
-     <addaction name="actionDrillNew"/>
+     <addaction name="action3DFaceNew"/>
+     <addaction name="actionNotchNew"/>
      <addaction name="actionSweepNew"/>
+     <addaction name="separator"/>
+     <addaction name="actionDrillNew"/>
     </widget>
     <widget class="QMenu" name="menuSelection">
      <property name="enabled">
@@ -779,6 +782,16 @@
   <action name="actionSimulate">
    <property name="text">
     <string>&amp;Simulate</string>
+   </property>
+  </action>
+  <action name="actionNotchNew">
+   <property name="text">
+    <string>&amp;Notch</string>
+   </property>
+  </action>
+  <action name="action3DFaceNew">
+   <property name="text">
+    <string>&amp;3D Surface</string>
    </property>
   </action>
  </widget>

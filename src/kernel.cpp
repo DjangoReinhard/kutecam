@@ -72,6 +72,7 @@ Kernel::Kernel(QApplication& app, MainWindow& win)
  , operations(nullptr)
  , config(nullptr)
  , setupPage(nullptr)
+
  , tdFactory(new TDFactory)
  , wsFactory(new WSFactory)
  , matModel(new StringListModel(QStringList()))
@@ -187,6 +188,7 @@ void Kernel::initialize() {
 
   connect(view3D, &OcctQtViewer::clearCurves, this, &Kernel::clearCurves);
   connect(operations, &OperationsPage::fileGenerated, win.editor, &EditorPage::loadFile);
+  connect(config, &ConfigPage::machineTypeChanged, operations, &OperationsPage::handleMachineType);
   configData.setValue("what", "nope");
   }
 
@@ -200,6 +202,8 @@ bool Kernel::loadConfig() {
   BisTable = configData.value("B-is-table").toBool();
   CisTable = configData.value("C-is-table").toBool();
   opAllInOne = configData.value("opAllInOne").toBool();
+  autoRotate = configData.value("autoRotateSelected").toBool();
+  machineType = configData.value("machineType").toInt();
   genSepWithToolChange = configData.value("genSepToolChange").toBool();
   configData.endGroup();
   if (rv) rv = loadViseList();

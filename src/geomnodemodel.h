@@ -79,6 +79,7 @@ public:
   explicit GeomNodeModel(QObject *parent = nullptr);
   virtual ~GeomNodeModel();
 
+//  void          calcRotation4(const gp_Dir& n);
   void          clear();
   int           columnCount(const QModelIndex& parent = QModelIndex()) const override;
   QVariant      data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
@@ -89,7 +90,11 @@ public:
   QModelIndex   parent(const QModelIndex& index) const override;
   //  Handle(Geom_Curve) item(int row = 0) const;
   int           rowCount(const QModelIndex &parent = QModelIndex()) const override;
+//  double        relAngle(const gp_Dir& n, const gp_Dir& ref);
   void          replaceData(const std::vector<TopoDS_Shape>& selection);
+
+signals:
+  void raiseMessage(const QString& msg);
 
 protected:
   void exploreCurve(GeomNode* parent, Handle(Geom_Curve) c, double first, double last);

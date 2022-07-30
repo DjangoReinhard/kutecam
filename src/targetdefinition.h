@@ -53,8 +53,8 @@ public:
   void   setZMin(double z) { zmin = z; }
   void   setZMax(double z) { zmax = z; }
 
-  static bool     compareASC(TargetDefinition* left, TargetDefinition* right);
-  static bool     compareDESC(TargetDefinition* left, TargetDefinition* right);
+  static bool compareASC(TargetDefinition* left, TargetDefinition* right);
+  static bool compareDESC(TargetDefinition* left, TargetDefinition* right);
 
 private:
   gp_Pnt     tdPos;

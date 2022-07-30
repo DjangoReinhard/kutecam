@@ -69,6 +69,7 @@ public:
   void                     addCurve(Handle(AIS_Shape) s);
   QString                  appName() const;
   QApplication&            application() const;
+  bool                     autoRotateSelection() const;
   Ui::MainWindow*          uiMainWin();
   MainWindow*              mainWin();
   QSettings&               cfg();
@@ -89,6 +90,7 @@ public:
   bool                     loadProject(const QString& fileName);
   bool                     loadTools(const QString& fileName);
   void                     loadVise(ViseEntry* vise, Handle(AIS_Shape)& left, Handle(AIS_Shape)& middle, Handle(AIS_Shape)& right);
+  int                      machineType() const;
   bool                     move2Backup(const QString& fileName);
   void                     onShutdown(QCloseEvent* ce);
   QString                  postProcessor() const;
@@ -99,9 +101,11 @@ public:
   ShapeFix_ShapeTolerance& shapeFix();
   SelectionHandler*        selectionHandler();
   void                     setAllInOneOperation(bool value);
+  void                     setAutoRotateSelection(bool value);
   void                     setAAxisIsTable(bool value);
   void                     setBAxisIsTable(bool value);
   void                     setCAxisIsTable(bool value);
+  void                     setMachineType(int mt);
   void                     setPostProcessor(const QString& ppName);
   void                     setProjectFile(ProjectFile* pf);
   void                     setSepWithToolChange(bool value);

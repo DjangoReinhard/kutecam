@@ -11,6 +11,11 @@
 
 ## [Wiki](https://github.com/DjangoReinhard/kutecam/wiki)  contains informations about how to build and use kuteCAM
 
+## Screenshot
+- **mill contour with open pockets**
+
+ ![first step](sample/kc013.jpg)
+
 ## Status
 actually working:
 - different kinds of selections for drill cycles
@@ -36,10 +41,5 @@ small video clips for download
 - [![model setup](sample/model_Setup.mkv)]
 - [![drill cycles](sample/drill_Cycles.mkv)]
 - [![simple sweep](sample/simple_Sweep.mkv)]
-
-## Screenshot
-- **mill contour with open pockets**
-
- ![first step](sample/kc013.jpg)
 
 ### Read more in [kuteCAM Wiki](https://github.com/DjangoReinhard/kutecam/wiki)

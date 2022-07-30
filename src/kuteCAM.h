@@ -52,6 +52,11 @@ inline bool isEqual(const gp_Pnt& a, const gp_Pnt& b) {
   }
 
 
+inline bool isEqual(const gp_Pnt2d& a, const gp_Pnt2d& b) {
+  return a.Distance(b) < kute::MinDelta;
+  }
+
+
 inline bool isVertical(const gp_Dir& d) {
   if (abs(d.X()) < kute::MinDelta
    && abs(d.Y()) < kute::MinDelta

@@ -48,6 +48,9 @@ public slots:
   void loadTools();
   void saveTools();
 
+signals:
+  void machineTypeChanged(int machineType);
+
 private:
   QToolBox*        pages;
   ToolListModel*   tools;

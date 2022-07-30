@@ -59,8 +59,8 @@
 #include <QDebug>
 
 
-SubOPContour::SubOPContour(OperationListModel* olm, TargetDefListModel* tdModel, QWidget *parent)
- : OperationSubPage(olm, tdModel, parent) {
+SubOPContour::SubOPContour(OperationListModel* olm, TargetDefListModel* tdModel, PathBuilder* pb, QWidget *parent)
+ : OperationSubPage(olm, tdModel, pb, parent) {
   ui->lCycle->setVisible(false);
   ui->cbCycle->setVisible(false);
   ui->lRetract->setVisible(false);
@@ -106,7 +106,7 @@ void SubOPContour::processSelection() {
      gp_Vec            prismVec(0, 0, 1000);
 
      cuttingFace = BRepPrimAPI_MakePrism(cutWire, prismVec);
-     cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP, curOP->isOutside());
+     cutPart = Core().selectionHandler()->createCutPart(curOP->workPiece, cuttingFace, curOP, curOP->isOutside());
      ui->spDepth->setValue(bbCP.CornerMin().Z());
 
      aw->SetColor(Quantity_NOC_ORANGE);
@@ -152,7 +152,7 @@ void SubOPContour::processSelection() {
                       if (kute::isVertical(dir)) {         // OK, first horizontal circle will do
                          pos.SetZ(-500);
                          cuttingFace = BRepPrimAPI_MakeCylinder(gp_Ax2(pos, dir), radius, 1000);
-                         cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP, wantOutside);
+                         cutPart = Core().selectionHandler()->createCutPart(curOP->workPiece, cuttingFace, curOP, wantOutside);
                          bbCP    = cutPart->BoundingBox();
                          double dx = bbCP.CornerMax().X() - bbCP.CornerMin().X();
                          double dy = bbCP.CornerMax().Y() - bbCP.CornerMin().Y();
@@ -208,7 +208,7 @@ void SubOPContour::processTargets() {
      gp_Vec            prismVec(0, 0, 1000);
 
      cuttingFace = BRepPrimAPI_MakePrism(cutWire, prismVec);
-     curOP->cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP, curOP->isOutside());
+     curOP->cutPart = Core().selectionHandler()->createCutPart(curOP->workPiece, cuttingFace, curOP, curOP->isOutside());
      }
   else if (ctd->radius() < 0) {
      // possibly contour from selected faces ...
@@ -217,7 +217,7 @@ void SubOPContour::processTargets() {
      gp_Vec            prismVec(0, 0, 1000);
 
      cuttingFace = BRepPrimAPI_MakePrism(cutWire, prismVec);
-     curOP->cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP, curOP->isOutside());
+     curOP->cutPart = Core().selectionHandler()->createCutPart(curOP->workPiece, cuttingFace, curOP, curOP->isOutside());
      }
   else {
      // possibly cylindrical face selection
@@ -226,7 +226,7 @@ void SubOPContour::processTargets() {
 
      pos.SetZ(-500);
      cuttingFace = BRepPrimAPI_MakeCylinder(gp_Ax2(pos, {0, 0, 1}), ctd->radius(), 1000);
-     curOP->cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP, outside);
+     curOP->cutPart = Core().selectionHandler()->createCutPart(curOP->workPiece, cuttingFace, curOP, outside);
      Bnd_Box bbCP = curOP->cutPart->BoundingBox();
      double dx = bbCP.CornerMax().X() - bbCP.CornerMin().X();
      double dy = bbCP.CornerMax().Y() - bbCP.CornerMin().Y();
@@ -241,7 +241,7 @@ void SubOPContour::processTargets() {
         // we got wrong part of workpiece as cutpart,
         // so flip outside flag and try again ...
         outside = !outside;
-        curOP->cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP, outside);
+        curOP->cutPart = Core().selectionHandler()->createCutPart(curOP->workPiece, cuttingFace, curOP, outside);
         bbCP = curOP->cutPart->BoundingBox();
         dx   = bbCP.CornerMax().X() - bbCP.CornerMin().X();
         dy   = bbCP.CornerMax().Y() - bbCP.CornerMin().Y();
@@ -265,10 +265,15 @@ void SubOPContour::processTargets() {
   }
 
 
+void SubOPContour::genFinishingToolPath() {
+
+  }
+
+
 // curOP->waterlineDepth() tells where to take the waterline.
 // It says nothing about milling depth or the like
-void SubOPContour::toolPath() {    
-  qDebug() << "OP contour - gonna create toolpath ...";  
+void SubOPContour::genRoughingToolPath() {
+  qDebug() << "OP contour - gonna create toolpath ...";
   if (!curOP->cutDepth()) return;         // user didn't choose valid tool settings
   processTargets();
   if (!Core().workData()->modCut.IsNull() && curOP->waterlineDepth()) {
@@ -290,7 +295,7 @@ void SubOPContour::toolPath() {
         }
      gp_Pln cutPlane({center.X(), center.Y(), curOP->finalDepth()}, {0, 0, 1});
      BRepBuilderAPI_MakeFace mf(cutPlane, -500, 500, -500, 500);
-     curOP->cutPart = Core().selectionHandler()->createCutPart(mf.Shape(), curOP);
+     curOP->cutPart = Core().selectionHandler()->createCutPart(curOP->workPiece, mf.Shape(), curOP);
      curOP->workSteps() = pathBuilder()->genToolPath(curOP, curOP->cutPart, true);
      }
   // try to cut selection based contour

@@ -75,6 +75,11 @@ QApplication& Core::application() const {
   }
 
 
+bool Core::autoRotateSelection() const {
+  return k->autoRotate;
+  }
+
+
 QSettings& Core::cfg() {
   return k->configData;
   }
@@ -207,6 +212,11 @@ void Core::loadVise(ViseEntry* vise, Handle(AIS_Shape)& left, Handle(AIS_Shape)&
   }
 
 
+int Core::machineType() const {
+  return k->machineType;
+  }
+
+
 MainWindow* Core::mainWin() {
   return &k->win;
   }
@@ -279,6 +289,11 @@ void Core::setAllInOneOperation(bool value) {
   }
 
 
+void Core::setAutoRotateSelection(bool value) {
+  k->autoRotate = value;
+  }
+
+
 void Core::setAAxisIsTable(bool value) {
   k->AisTable = value;
   }
@@ -291,6 +306,11 @@ void Core::setBAxisIsTable(bool value) {
 
 void Core::setCAxisIsTable(bool value) {
   k->CisTable = value;
+  }
+
+
+void Core::setMachineType(int mt) {
+  k->machineType = mt;
   }
 
 

@@ -47,6 +47,9 @@
      <property name="alignment">
       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
+     <property name="decimals">
+      <number>3</number>
+     </property>
      <property name="minimum">
       <double>-360.000000000000000</double>
      </property>
@@ -84,6 +87,9 @@
     <widget class="QDoubleSpinBox" name="spB">
      <property name="alignment">
       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="decimals">
+      <number>3</number>
      </property>
      <property name="minimum">
       <double>-360.000000000000000</double>
@@ -274,6 +280,9 @@
     <widget class="QDoubleSpinBox" name="spA">
      <property name="alignment">
       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="decimals">
+      <number>3</number>
      </property>
      <property name="minimum">
       <double>-360.000000000000000</double>

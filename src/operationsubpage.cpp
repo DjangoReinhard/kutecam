@@ -46,14 +46,14 @@
 #include <QDebug>
 
 
-OperationSubPage::OperationSubPage(OperationListModel* olm, TargetDefListModel* tdModel, QWidget *parent, bool wantUI)
+OperationSubPage::OperationSubPage(OperationListModel* olm, TargetDefListModel* tdModel, PathBuilder* pb, QWidget *parent, bool wantUI)
  : QWidget(parent)
  , wantUI(wantUI)
  , ui(wantUI ? new Ui::OpSub : nullptr)
  , olm(olm)
  , curOP(nullptr)
  , activeTool(nullptr)
- , pPathBuilder(new PathBuilder)
+ , pPathBuilder(pb)
  , tdModel(tdModel)
  , opTypes(nullptr) {
   if (wantUI) ui->setupUi(this);
@@ -242,6 +242,18 @@ void OperationSubPage::cutWidthChanged(double v) {
 
 
 void OperationSubPage::cycleChanged(const QVariant& v) {
+  int cycle = v.toInt();
+
+  if (cycle == 4) {
+     ui->spAe->setValue(3);
+     ui->spAp->setValue(5);
+     ui->spOff->setValue(1);
+     }
+  else {
+     ui->spAe->setValue(0);
+     ui->spAp->setValue(0);
+     ui->spOff->setValue(0);
+     }
   curOP->setDrillCycle(v.toInt());
   }
 
@@ -393,24 +405,6 @@ void OperationSubPage::r2Changed(double v) {
   }
 
 
-void OperationSubPage::toolChanged(const QVariant &i) {
-  activeTool = Core().toolListModel()->tool(i.toInt());
-
-  if (!wantUI) return;
-  if (!activeTool) return;
-  curOP->setToolNum(activeTool->toolNumber());
-  if (kute::isEqual(curOP->speed(), 0)) {
-     CuttingParameters* cp = activeTool->cutParameter(Core().workData()->material);
-
-     if (!cp) return;
-     ui->spVc->setValue(cp->cuttingSpeed());
-     ui->spFz->setValue(cp->toothFeed());
-     ui->spAe->setValue(cp->widthOfCut());
-     ui->spAp->setValue(cp->depthOfCut());
-     }
-  }
-
-
 void OperationSubPage::showToolPath(Operation* op) {
   if (!op->workSteps().size()) return;
   if (Core().uiMainWin()->actionHideToolpath->isChecked()) return;
@@ -456,9 +450,34 @@ void OperationSubPage::showToolPath(Operation* op) {
   }
 
 
+void OperationSubPage::toolChanged(const QVariant &i) {
+  activeTool = Core().toolListModel()->tool(i.toInt());
+
+  if (!wantUI) return;
+  if (!activeTool) return;
+  curOP->setToolNum(activeTool->toolNumber());
+  if (kute::isEqual(curOP->speed(), 0)) {
+     CuttingParameters* cp = activeTool->cutParameter(Core().workData()->material);
+
+     if (!cp) return;
+     ui->spVc->setValue(cp->cuttingSpeed());
+     ui->spFz->setValue(cp->toothFeed());
+     ui->spAe->setValue(cp->widthOfCut());
+     ui->spAp->setValue(cp->depthOfCut());
+     }
+  }
+
+
+void OperationSubPage::toolPath() {
+  switch (curOP->cutType()) {
+     case 1:  genFinishingToolPath(); break;
+     default: genRoughingToolPath(); break;
+     }
+  }
+
 // switch between roughing and finishing
 void OperationSubPage::typeChanged(const QVariant& v) {
   CutType ct = static_cast<CutType>(v.toInt());
 
-  curOP->setCutType(ct);
+  curOP->setCutType(ct);  
   }

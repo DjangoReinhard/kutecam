@@ -25,8 +25,10 @@
  * **************************************************************************
  */
 #include "operation.h"
+#include "core.h"
 #include "targetdefinition.h"
 #include "tdfactory.h"
+#include "toollistmodel.h"
 #include "workstep.h"
 #include "wsfactory.h"
 #include <QSettings>
@@ -200,6 +202,8 @@ QString Operation::kindAsString() const {
     case ClampingPlugOP:    return xstr(ClampingPlugOP);
     case DrillOperation:    return xstr(DrillOperation);
     case SweepOperation:    return xstr(SweepOperation);
+    case NotchOperation:    return xstr(NotchOperation);
+    case Face3DOperation:   return xstr(Face3DOperation);
     }
   return QString();
   }
@@ -376,6 +380,12 @@ void Operation::setKind(const QString& kindName) {
      }
   else if (!kindName.compare(xstr(SweepOperation))) {
      opKind = SweepOperation;
+     }
+  else if (!kindName.compare(xstr(NotchOperation))) {
+     opKind = NotchOperation;
+     }
+  else if (!kindName.compare(xstr(Face3DOperation))) {
+     opKind = Face3DOperation;
      }
   }
 
@@ -564,6 +574,14 @@ void Operation::store(QSettings& s) {
 
 int Operation::toolNum() const {
   return curTool;
+  }
+
+
+ToolEntry* Operation::toolEntry() const {
+  ToolEntry* rv = nullptr;
+  int toolIndex = Core().toolListModel()->findToolNum(toolNum());
+
+  return Core().toolListModel()->tool(toolIndex);
   }
 
 

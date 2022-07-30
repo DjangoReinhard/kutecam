@@ -40,8 +40,8 @@
 #include <QDebug>
 
 
-SubSimulation::SubSimulation(OperationListModel* olm, TargetDefListModel* tdModel, QWidget* parent)
- : OperationSubPage(olm, tdModel, parent, false)
+SubSimulation::SubSimulation(OperationListModel* olm, TargetDefListModel* tdModel, PathBuilder* pb, QWidget* parent)
+ : OperationSubPage(olm, tdModel, pb, parent, false)
  , ui(new Ui::OpSim) {
   ui->setupUi(this);
   connect(ui->pbStop,    &QPushButton::clicked, this, &SubSimulation::stopSimulation);
@@ -141,7 +141,6 @@ void SubSimulation::timerEvent(QTimerEvent *e) {
 
      for (;;) {
          Handle(AIS_Shape) curSeg = curOP->toolPaths.at(timerShapeIndex);
-#ifndef REDNOSE
          BRepAdaptor_Curve bac(TopoDS::Edge(curSeg->Shape()));
          double            first = bac.FirstParameter();
          double            last  = bac.LastParameter();
@@ -180,40 +179,6 @@ void SubSimulation::timerEvent(QTimerEvent *e) {
             timerCurveOffset = 0;
             continue;
             }
-#else
-         TopoDS_Edge e = TopoDS::Edge(curSeg->Shape());
-         double p0, p1;
-         Handle(Geom_Curve) c = BRep_Tool::Curve(e, p0, p1);
-
-         if (c->DynamicType() == STANDARD_TYPE(Geom_Circle)) {
-            Handle(Geom_Circle) circle = Handle(Geom_Circle)::DownCast(c);
-            double radius = circle->Radius();
-
-            timerCurveOffset += delta / radius;
-            }
-         else if (c->DynamicType() == STANDARD_TYPE(Geom_Line)) {
-            Quantity_Color c;
-            curSeg->Color(c);
-
-            if (c == Quantity_NOC_CYAN) timerCurveOffset += 5 * delta;
-            else                        timerCurveOffset += delta;
-            }
-         else {
-            timerCurveOffset += delta / 70;
-            }
-         if ((p0 + timerCurveOffset) > p1) {
-            if (++timerShapeIndex >= curOP->toolPaths.size()) {
-               timer.stop();
-               Core().view3D()->removeShape(asTool);
-               Core().view3D()->refresh();
-
-               return;
-               }
-            timerCurveOffset = 0;
-            continue;
-            }
-         pos = c->Value(p0 + timerCurveOffset);
-#endif
          break;
          }
      emit updatePosition(pos);
@@ -221,7 +186,11 @@ void SubSimulation::timerEvent(QTimerEvent *e) {
   }
 
 
+void SubSimulation::genFinishingToolPath() {
+  }
+
+
 // could this work? - start simulation from toolpath call?
-void SubSimulation::toolPath() {
+void SubSimulation::genRoughingToolPath() {
   restartSimulation();
   }

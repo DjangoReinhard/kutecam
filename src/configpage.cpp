@@ -27,7 +27,7 @@
 #include "configpage.h"
 #include "ui_misc.h"
 #include "ui_mainwindow.h"
-#include "cfggcode.h"
+#include "cfggeneral.h"
 #include "cfgmaterial.h"
 #include "cfgvise.h"
 #include "core.h"
@@ -92,6 +92,8 @@ void ConfigPage::closeEvent(QCloseEvent *e) {
   cfg.setValue("B-is-table", Core().isBAxisTable());
   cfg.setValue("C-is-table", Core().isCAxisTable());
   cfg.setValue("opAllInOne", Core().isAllInOneOperation());
+  cfg.setValue("autoRotateSelected", Core().autoRotateSelection());
+  cfg.setValue("machineType", Core().machineType());
   cfg.setValue("genSepToolChange", Core().isSepWithToolChange());
   cfg.beginWriteArray("Vises");
   mx = vises->rowCount();
@@ -115,14 +117,14 @@ void ConfigPage::closeEvent(QCloseEvent *e) {
 
 void ConfigPage::initialize() {
   tools = Core().toolListModel();
-  ToolEditor* te = new ToolEditor(matModel, tools);
+  ToolEditor* te = new ToolEditor(matModel, tools, this);
 
   te->initialize();
   connect(te, &ToolEditor::teActivated, Core().mainWin()->preview3D(), &Preview3D::toolHint);
-  pages->addItem(new CfgGCode(), tr("GCode-Settings"));
-  pages->addItem(new CfgMaterial(matModel), tr("Material"));
+  pages->addItem(new CfgGeneral(this), tr("General Settings"));
+  pages->addItem(new CfgMaterial(matModel, this), tr("Material"));
   pages->addItem(te, tr("Tools"));
-  pages->addItem(new CfgVise(vises), tr("Vises"));
+  pages->addItem(new CfgVise(vises, this), tr("Vises"));
   }
 
 

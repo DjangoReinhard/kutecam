@@ -32,14 +32,14 @@ namespace Ui {
 class OpSim;
 }
 QT_END_NAMESPACE
-
+class PathBuilder;
 
 
 class SubSimulation : public OperationSubPage
 {
   Q_OBJECT
 public:
-  explicit SubSimulation(OperationListModel* olm, TargetDefListModel* tdModel, QWidget* parent = nullptr);
+  explicit SubSimulation(OperationListModel* olm, TargetDefListModel* tdModel, PathBuilder* pb, QWidget* parent = nullptr);
   virtual ~SubSimulation() = default;
 
   void createTool(int toolNum);
@@ -48,7 +48,8 @@ public:
   void restartSimulation();
   void stopSimulation();
   void resumeSimulation();
-  virtual void toolPath() override;
+  virtual void genRoughingToolPath();
+  virtual void genFinishingToolPath();
 
 public slots:
   void moveCone(const gp_Pnt& pos);

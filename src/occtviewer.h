@@ -64,7 +64,7 @@ public:
   const Handle(AIS_InteractiveContext)& context() const { return myContext; }
   Handle(AIS_InteractiveContext)        context()       { return myContext; }
   Handle(AIS_InteractiveContext)        altContext()    { return myAltContext; }
-  void createAxisCross(const gp_Pnt& /* = gp_Pnt() */, double lineLen = 500, QVector<Handle(AIS_Shape)>* pV = nullptr, Quantity_Color c = Quantity_NOC_GRAY);
+  void createAxisCross(const gp_Pnt& = gp_Pnt(), double lineLen = 500, QVector<Handle(AIS_Shape)>* pV = nullptr, Quantity_Color c = Quantity_NOC_GRAY);
   void genLine(Handle(Geom_Line) l, double first, double last);
   void genCircle(Handle(Geom_Circle) l, double first, double last);
   void genEllipse(Handle(Geom_Ellipse), double first, double last);

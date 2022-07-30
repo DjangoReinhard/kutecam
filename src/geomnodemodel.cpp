@@ -26,6 +26,7 @@
  */
 #include "geomnodemodel.h"
 #include "core.h"
+#include "kuteCAM.h"
 #include "util3d.h"
 #include <BRep_Tool.hxx>
 #include <GeomAdaptor_Surface.hxx>
@@ -140,6 +141,56 @@ GeomNodeModel::GeomNodeModel(QObject *parent)
 
 GeomNodeModel::~GeomNodeModel() {
   delete root;
+  }
+
+
+//void GeomNodeModel::calcRotation4(const gp_Dir &n) {
+//  double angles[3]   = {0};
+//  int    machineType = Core().machineType();
+//  gp_Pnt norm(n.X(), n.Y(), 0); // start with C-axis (projection to XY-plane)
+//  double a0  = atan2(norm.X(), norm.Y());
+//  double a1  = machineType == 2 ? atan2(1, 0) : atan2(0, 1);
+//  double len = norm.Distance({0, 0, 0});
+
+//  // angles[0] rotates the model around C-axis until norm-vector
+//  // points towards A- or B-axis (depending on machine type
+//  // z was set to 0 on projection, x or y is set to 0 by rotation
+//  angles[2] = a0 - a1;
+
+//  if (machineType == 2) { // B-axis is main rotation axis
+//     norm = gp_Pnt(len, 0, n.Z());
+//     a0 = atan2(norm.Z(), norm.X());
+//     a1 = atan2(1, 0);
+//     angles[1] = a0 - a1;
+//     }
+//  else {  // treat A-axis as main rotation axis
+//     norm = gp_Pnt(0, len, n.Z());
+//     a0 = atan2(norm.Z(), norm.Y());
+//     a1 = atan2(1, 0);
+//     angles[0] = a1 - a0;
+//     }
+//  emit raiseMessage(QString("try A:%1 - B: %2 and C:%3")
+//                   .arg(kute::rad2deg(angles[0]), 0, 'f', 3)
+//                   .arg(kute::rad2deg(angles[1]), 0, 'f', 3)
+//                   .arg(kute::rad2deg(angles[2]), 0, 'f', 3));
+//  }
+
+
+//void GeomNodeModel::calcRotation4(const gp_Dir &n) {
+//  double aC = relAngle(n, {0, 1, 0});
+//  double aA = relAngle(n, {0, 0, 1});
+
+
+//  emit raiseMessage(QString("try A:%1 and C:%2")
+//                   .arg(kute::rad2deg(aA), 0, 'f', 3)
+//                   .arg(kute::rad2deg(aC), 0, 'f', 3));
+//  }
+
+
+void GeomNodeModel::clear() {
+  beginResetModel();
+  root->clear();
+  endResetModel();
   }
 
 
@@ -278,21 +329,33 @@ QModelIndex GeomNodeModel::parent(const QModelIndex &index) const {
   }
 
 
-int GeomNodeModel::rowCount(const QModelIndex &parent) const {
-  GeomNode* parentItem;
+//double GeomNodeModel::relAngle(const gp_Dir& n, const gp_Dir& refAxis) {
+//  Base::Vector3d norm(n.X(), n.Y(), n.Z());  // # copy vec so we don't alter original
+//  Base::Vector3d plane;
+//  gp_Pnt vRef(refAxis.X(), refAxis.Y(), refAxis.Z());
+//  Base::Vector3d ref(vRef.X(), vRef.Y(), vRef.Z());
+//  const gp_Pnt xDir(1, 0, 0);
+//  const gp_Pnt yDir(0, 1, 0);
 
-  if (parent.column() > 0) return 0;
-  if (!parent.isValid()) parentItem = root;
-  else                   parentItem = static_cast<GeomNode*>(parent.internalPointer());
-  return parentItem->childCount();
-  }
+//  if (kute::isEqual(vRef, xDir))
+//      plane = Base::Vector3d(0, 1, 0);
+//  else if (kute::isEqual(vRef, yDir))
+//      plane = Base::Vector3d(0, 0, 1);
+//  else
+//      plane = Base::Vector3d(1, 0, 0);
+//  norm.ProjectToPlane(Base::Vector3d(0, 0, 0), plane);
 
+////  ref = ref.value();
+//  Base::Rotation rot = Base::Rotation(norm, ref);
+//  Base::Vector3d axis;
+//  double ang;
 
-void GeomNodeModel::clear() {
-  beginResetModel();
-  root->clear();
-  endResetModel();
-  }
+//  rot.getRawValue(axis, ang);
+
+//  double angle = ang * plane.Dot(axis);
+
+//  return angle;
+//  }
 
 
 void GeomNodeModel::replaceData(const std::vector<TopoDS_Shape>& selection) {
@@ -311,6 +374,7 @@ void GeomNodeModel::replaceData(const std::vector<TopoDS_Shape>& selection) {
             gp_Pnt              pos = Core().helper3D()->deburr(pln.Location());
             gp_Dir              dir = Core().helper3D()->deburr(pln.Axis().Direction());
 
+//            calcRotation4(dir);
             node = new GeomNode(Geom_PLANE, pos, dir);
             }
          else {
@@ -330,4 +394,14 @@ void GeomNodeModel::replaceData(const std::vector<TopoDS_Shape>& selection) {
          }
       }
   endResetModel();
+  }
+
+
+int GeomNodeModel::rowCount(const QModelIndex &parent) const {
+  GeomNode* parentItem;
+
+  if (parent.column() > 0) return 0;
+  if (!parent.isValid()) parentItem = root;
+  else                   parentItem = static_cast<GeomNode*>(parent.internalPointer());
+  return parentItem->childCount();
   }

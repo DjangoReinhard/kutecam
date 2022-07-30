@@ -105,7 +105,7 @@ int GCodeWriter::processSingleOPs(const QString& baseName, const Bnd_Box& wpBoun
 
 
 void GCodeWriter::processOperation(QTextStream &out, int n, const QString& opName, const Bnd_Box& wpBounds, const Operation *op, const Operation *nxtOP, bool genTC) {
-  ToolEntry* curTool = Core().toolListModel()->tool(Core().toolListModel()->findToolNum(op->toolNum()));
+  ToolEntry* curTool = op->toolEntry();
 
   if (genTC) {
      if (!n) writeLine(out

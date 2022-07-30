@@ -48,14 +48,20 @@
 #include <QDebug>
 
 
-SubOPDrill::SubOPDrill(OperationListModel* olm, TargetDefListModel* tdModel, QWidget *parent)
- : OperationSubPage(olm, tdModel, parent) {
+SubOPDrill::SubOPDrill(OperationListModel* olm, TargetDefListModel* tdModel, PathBuilder* pb, QWidget *parent)
+ : OperationSubPage(olm, tdModel, pb, parent) {
   ui->lDir->setVisible(false);
   ui->cbDir->setVisible(false);
   ui->lStep->setText(tr("[min/max]"));
-  ui->cInside->setVisible(false);
+  QLabel* lDeltaDec = new QLabel(tr("reduce drilldepth by"));
+
+  ui->gridLayoutX->addWidget(lDeltaDec, 8, 0, 1, 2);
+  ui->label_3->setText(tr("Drilldepth"));
+  //TODO: add label to replace "cInside"
+  ui->cInside->setVisible(false); // row:8 col:0
   ui->cbType->setVisible(false);
-  ui->spOff->setVisible(false);
+  //TODO: use spOff as delta decrement
+//  ui->spOff->setVisible(false);
   connect(Core().uiMainWin()->actionDrillNew, &QAction::triggered, this, &SubOPDrill::createOP);
   }
 
@@ -235,7 +241,12 @@ void SubOPDrill::showToolPath(Operation* op) {
   }
 
 
-void SubOPDrill::toolPath() {
+void SubOPDrill::genFinishingToolPath() {
+  genRoughingToolPath();
+  }
+
+
+void SubOPDrill::genRoughingToolPath() {
   double    absDrillDepth = curOP->upperZ() + curOP->finalDepth();
   double    drillStart = curOP->upperZ() + curOP->safeZ0();
 

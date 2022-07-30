@@ -28,6 +28,7 @@
 #include "cctargetdefinition.h"
 #include "contourtargetdefinition.h"
 #include "drilltargetdefinition.h"
+#include "notchtargetdefinition.h"
 #include "sweeptargetdefinition.h"
 #include <QSettings>
 
@@ -39,5 +40,7 @@ TargetDefinition* TDFactory::createTargetDefinition(QSettings &s) {
   else if (type == "SweepTarget")   return new SweepTargetDefinition(s);
   else if (type == "CCTarget")      return new CCTargetDefinition(s);
   else if (type == "ContourTarget") return new ContourTargetDefinition(s);
+  else if (type == "NotchTarget")   return new NotchTargetDefinition(s);
+//  else if (type == "Face3DTarget")  return new Face3DTargetDefinition(s);
   return nullptr;
   }

@@ -8,16 +8,16 @@ set(RESOURCE_FILES
     ../kuteCAM.qrc
     )
 set(SOURCE_FILES
-    GCodeEditor.ui
-    cfgGCode.ui
+    cfgGeneral.ui
     cfgMat.ui
     cfgVise.ui
     clip.ui
+    GCodeEditor.ui
     mainwindow.ui
     misc.ui
-    opSub.ui
-    opSim.ui
     operations.ui
+    opSim.ui
+    opSub.ui
     preview.ui
     setup.ui
     status.ui
@@ -32,7 +32,7 @@ set(SOURCE_FILES
     aboutdialog.cpp
     applicationwindow.cpp
     cctargetdefinition.cpp
-    cfggcode.cpp
+    cfggeneral.cpp
     cfgmaterial.cpp
     cfgvise.cpp
     clipdialog.cpp
@@ -57,24 +57,31 @@ set(SOURCE_FILES
     kuteCAM.cpp
     main.cpp
     mainwindow.cpp
+    notchtargetdefinition.cpp
     occtviewer.cpp
     operation.cpp
     operationlistmodel.cpp
     operationspage.cpp
     operationsubpage.cpp
     pathbuilder.cpp
+    pathbuilderutil.cpp
     pluginlistmodel.cpp
+    pocketpathbuilder.cpp
     preview3d.cpp
+    profitmillingbuilder.cpp
     projectfile.cpp
     selectionhandler.cpp
     setuppage.cpp
     shapelistmodel.cpp
     stringlistmodel.cpp
+    subop3dface.cpp
     subopclampingplug.cpp
     subopcontour.cpp
     subopdrill.cpp
+    subopnotch.cpp
     subopsweep.cpp
     subsimulation.cpp
+    sweeppathbuilder.cpp
     sweeptargetdefinition.cpp
     targetdefinition.cpp
     targetdeflistmodel.cpp

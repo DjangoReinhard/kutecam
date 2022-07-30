@@ -1,16 +1,21 @@
 <RCC>
     <qresource prefix="/">
         <file>sample/ToolDimensions02.png</file>
+        <file>src/cfgGeneral.ui</file>
+        <file>src/cfgMat.ui</file>
+        <file>src/cfgVise.ui</file>
         <file>src/clip.ui</file>
         <file>src/GCodeEditor.ui</file>
         <file>src/mainwindow.ui</file>
-        <file>src/setup.ui</file>
-        <file>src/preview.ui</file>
-        <file>src/status.ui</file>
-        <file>src/tool.ui</file>
         <file>src/misc.ui</file>
-        <file>src/opSub.ui</file>
-        <file>src/opSim.ui</file>
         <file>src/operations.ui</file>
+        <file>src/opSim.ui</file>
+        <file>src/opSub.ui</file>
+        <file>src/preview.ui</file>
+        <file>src/setup.ui</file>
+        <file>src/status.ui</file>
+        <file>src/tCutParm.ui</file>
+        <file>src/tDim.ui</file>
+        <file>src/tool.ui</file>
     </qresource>
 </RCC>

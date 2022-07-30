@@ -99,9 +99,11 @@ private:
   Work*                             work;
   OperationsPage*                   operations;
   ConfigPage*                       config;
+  int                               machineType;
+  bool                              autoRotate;
   bool                              AisTable;
   bool                              BisTable;
-  bool                              CisTable;
+  bool                              CisTable;  
   bool                              genSepWithToolChange;
   bool                              opAllInOne;
   QString                           langDir;

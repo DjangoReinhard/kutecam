@@ -68,95 +68,14 @@
 #include <QDebug>
 
 
-SubOPSweep::SubOPSweep(OperationListModel* olm, TargetDefListModel* tdModel, QWidget *parent)
- : OperationSubPage(olm, tdModel, parent) {
+SubOPSweep::SubOPSweep(OperationListModel* olm, TargetDefListModel* tdModel, PathBuilder* pb, QWidget *parent)
+ : OperationSubPage(olm, tdModel, pb, parent) {
   ui->lCycle->setVisible(false);
   ui->cbCycle->setVisible(false);
   ui->lRetract->setVisible(false);
   ui->spRetract->setVisible(false);
   ui->spDwell->setVisible(false);
   connect(Core().uiMainWin()->actionSweepNew, &QAction::triggered, this, &SubOPSweep::createOP);
-  }
-
-
-// prepare toolpath creation for sweepBigC...
-void SubOPSweep::createHorizontalToolpaths(const std::vector<Handle(AIS_Shape)>& cutPlanes) {
-  Work*  work = Core().workData();
-  gp_Pnt from, to, lastTO;
-  int    cntPaths = 0;
-
-  qDebug() << "create toolpaths for cutplanes:";
-
-  for (auto s : cutPlanes) {
-      Bnd_Box bb = s->BoundingBox(); bb.SetGap(0);
-
-      qDebug() << "workpiece is" << (work->roundWorkPiece ? "round" : "rectangled");
-      qDebug() << "cut plane: "
-               << bb.CornerMin().X() << "/" << bb.CornerMin().Y() << "/" << bb.CornerMin().Z()
-               << "\tto\t"
-               << bb.CornerMax().X() << "/" << bb.CornerMax().Y() << "/" << bb.CornerMax().Z();
-      double deltaX = bb.CornerMax().X() - bb.CornerMin().X();
-      double deltaY = bb.CornerMax().Y() - bb.CornerMin().Y();
-
-      ++cntPaths;
-      if (deltaX > deltaY) {
-         // x toggle, y advance
-         double startX = bb.CornerMin().X() - activeTool->fluteDiameter() * 0.6;
-         double endX   = bb.CornerMax().X() + activeTool->fluteDiameter() * 0.6;
-
-         if (deltaY < curOP->cutWidth()) {
-            // perform trivial toolpath creation - just one pass
-            double curY = bb.CornerMin().Y() + (bb.CornerMax().Y() - bb.CornerMin().Y()) / 2;
-
-            if (cntPaths % 2) {
-               from = gp_Pnt(startX, curY, bb.CornerMin().Z());
-               to   = gp_Pnt(endX,   curY, bb.CornerMin().Z());
-               }
-            else {
-               to   = gp_Pnt(startX, curY, bb.CornerMin().Z());
-               from = gp_Pnt(endX,   curY, bb.CornerMin().Z());
-               }
-            if (kute::isEqual(endX,   lastTO.X())
-             || kute::isEqual(startX, lastTO.X())) {
-               curOP->workSteps().push_back(new WSTraverse(lastTO, from));
-               }
-            curOP->workSteps().push_back(new WSStraightMove(from, to));
-            }
-         else {
-            if (ui->cbDir->currentIndex() == 1) to = sweepBigCounterClockwise(bb, lastTO);
-            else                                to = sweepBigClockwise(bb, lastTO);
-            }
-         }
-      else {
-         // y toggle, x advance
-         double startY = bb.CornerMin().Y() - activeTool->fluteDiameter() * 0.6;
-         double endY   = bb.CornerMax().Y() + activeTool->fluteDiameter() * 0.6;
-
-         if (deltaX < curOP->cutWidth()) {
-           // perform trivial toolpath creation - just one pass
-            double curX = bb.CornerMin().X() + (bb.CornerMax().X() - bb.CornerMin().X()) / 2;
-
-            if (cntPaths % 2) {
-               from = gp_Pnt(curX, startY, bb.CornerMin().Z());
-               to   = gp_Pnt(curX, endY,   bb.CornerMin().Z());
-               }
-            else {
-               to   = gp_Pnt(curX, startY, bb.CornerMin().Z());
-               from = gp_Pnt(curX, endY,   bb.CornerMin().Z());
-               }
-            if (kute::isEqual(endY, lastTO.Y())
-             || kute::isEqual(startY, lastTO.Y())) {
-              curOP->workSteps().push_back(new WSTraverse(lastTO, from));
-              }
-            curOP->workSteps().push_back(new WSStraightMove(from, to));
-            }
-         else {
-            if (ui->cbDir->currentIndex() == 1) to = sweepBigCounterClockwise(bb, lastTO);
-            else                                to = sweepBigClockwise(bb, lastTO);
-            }
-         }
-      lastTO = to;
-      }
   }
 
 
@@ -196,14 +115,26 @@ void SubOPSweep::processSelection() {
      gp_Vec            prismVec(0, 0, 1000);
      TopoDS_Shape      cuttingFace = BRepPrimAPI_MakePrism(cutWire, prismVec);
      Handle(AIS_Shape) aCF         = new AIS_Shape(cuttingFace);
+     gp_Pnt            center;
 
-     cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP);
+     cutPart = Core().selectionHandler()->createCutPart(curOP->workPiece, cuttingFace, curOP, curOP->isOutside());
      bbCP    = cutPart->BoundingBox();
      aCF->SetColor(Quantity_NOC_CYAN);
      aw->SetColor(Quantity_NOC_ORANGE);
      aCF->SetTransparency(0.8);
      aw->SetWidth(3);
 
+     center.SetX(bbCP.CornerMin().X() + (bbCP.CornerMax().X() - bbCP.CornerMin().X()) / 2);
+     center.SetY(bbCP.CornerMin().Y() + (bbCP.CornerMax().Y() - bbCP.CornerMin().Y()) / 2);
+     center.SetZ(bbCP.CornerMin().Z() + (bbCP.CornerMax().Z() - bbCP.CornerMin().Z()) / 2);
+     if (contour->centerPoint().X() < (center.X() - 5))
+        center.SetX(bbCP.CornerMin().X());
+     else if (contour->centerPoint().X() > (center.X() + 5))
+        center.SetX(bbCP.CornerMax().X());
+     if (contour->centerPoint().Y() < (center.Y() - 5))
+        center.SetY(bbCP.CornerMin().Y());
+     else if (contour->centerPoint().Y() > (center.Y() + 5))
+        center.SetY(bbCP.CornerMax().Y());
      if (!curOP->workPiece.IsNull()) {
         TopoDS_Shape master = BRepAlgoAPI_Common(contour->toWire(0), curOP->workPiece->Shape());
         Handle(AIS_Shape) asM = new AIS_Shape(master);
@@ -239,7 +170,7 @@ void SubOPSweep::processSelection() {
 
         // vertical plane (limited by spDepth)
         if (kute::isEqual(dir.Z(), 0)) {
-           cutPart = Core().selectionHandler()->createCutPart(mf.Shape(), curOP);
+           cutPart = Core().selectionHandler()->createCutPart(curOP->workPiece, mf.Shape(), curOP, curOP->isOutside());
            bbCP    = cutPart->BoundingBox();
            contour = Core().selectionHandler()->createContourFromSelection(curOP);
            if (!contour) return;
@@ -265,7 +196,7 @@ void SubOPSweep::processSelection() {
               TopoDS_Shape      cuttingFace = BRepPrimAPI_MakePrism(cutWire, prismVec);
               Handle(AIS_Shape) aCF         = new AIS_Shape(cuttingFace);
 
-              cutPart = Core().selectionHandler()->createCutPart(mf.Shape(), curOP);
+              cutPart = Core().selectionHandler()->createCutPart(curOP->workPiece, mf.Shape(), curOP, curOP->isOutside());
               bbCP    = cutPart->BoundingBox();
               aCF->SetColor(Quantity_NOC_CYAN);
               aw->SetColor(Quantity_NOC_ORANGE);
@@ -285,7 +216,7 @@ void SubOPSweep::processSelection() {
               ui->spDepth->setValue(bbCP.CornerMin().Z());
               }
            else {
-              cutPart = Core().selectionHandler()->createCutPart(mf.Shape(), curOP);
+              cutPart = Core().selectionHandler()->createCutPart(curOP->workPiece, mf.Shape(), curOP, curOP->isOutside());
               cutPart->SetColor(Quantity_NOC_CYAN);
               cutPart->SetTransparency(0.8);
               curOP->cShapes.push_back(cutPart);
@@ -323,7 +254,7 @@ void SubOPSweep::processTargets() {
      gp_Pln                  cutPlane(std->pos(), std->dir());
      BRepBuilderAPI_MakeFace mf(cutPlane, -500, 500, -500, 500);
 
-     curOP->cutPart = Core().selectionHandler()->createCutPart(mf.Shape(), curOP);
+     curOP->cutPart = Core().selectionHandler()->createCutPart(curOP->workPiece, mf.Shape(), curOP, curOP->isOutside());
      }
   else {
      if (std->contour()) {
@@ -341,13 +272,13 @@ void SubOPSweep::processTargets() {
         aw->SetWidth(3);
         curOP->cShapes.push_back(aw);
         curOP->cShapes.push_back(aCF);
-        curOP->cutPart = Core().selectionHandler()->createCutPart(cuttingFace, curOP);
+        curOP->cutPart = Core().selectionHandler()->createCutPart(curOP->workPiece, cuttingFace, curOP, curOP->isOutside());
         }
      else {
         gp_Pln                  cutPlane(std->pos(), std->dir());
         BRepBuilderAPI_MakeFace mf(cutPlane, -500, 500, -500, 500);
 
-        curOP->cutPart = Core().selectionHandler()->createCutPart(mf.Shape(), curOP);
+        curOP->cutPart = Core().selectionHandler()->createCutPart(curOP->workPiece, mf.Shape(), curOP, curOP->isOutside());
         }
      }
   if (!curOP->cutPart.IsNull()) {
@@ -360,136 +291,12 @@ void SubOPSweep::processTargets() {
   }
 
 
-gp_Pnt SubOPSweep::sweepBigClockwise(const Bnd_Box& bb, const gp_Pnt& lastTO) {
-  double xMin = bb.CornerMin().X() + curOP->cutWidth() - activeTool->fluteDiameter() / 2;
-  double xMax = bb.CornerMax().X() - curOP->cutWidth() + activeTool->fluteDiameter() / 2;
-  double yMin = bb.CornerMin().Y() + curOP->cutWidth() - activeTool->fluteDiameter() / 2;
-  double yMax = bb.CornerMax().Y() - curOP->cutWidth() + activeTool->fluteDiameter() / 2;
-  double curX0 = xMin;
-  double curX1 = xMax;
-  double curY0 = yMin;
-  double curY1 = yMax;
-  double curZ  = bb.CornerMin().Z();
-  gp_Pnt startPos(xMax, bb.CornerMax().Y() + 0.6 * activeTool->fluteDiameter(), bb.CornerMin().Z());
-  gp_Pnt from = startPos, to = startPos;
-  TopoDS_Edge tp, fm;
-  Handle(AIS_Shape) path;
-  int               cycle = 0;
+void SubOPSweep::genFinishingToolPath() {
 
-  if (lastTO.X() || lastTO.Y() || lastTO.Z()) {
-     to = from = lastTO;
-     to.SetZ(from.Z() + 5);
-     curOP->workSteps().push_back(new WSTraverse(from, to));
-     from = to;
-     to.SetX(startPos.X());
-     to.SetY(startPos.Y());
-     curOP->workSteps().push_back(new WSTraverse(from, to));
-     from = to;
-     to   = startPos;
-     curOP->workSteps().push_back(new WSTraverse(from, to));
-     }
-  do {
-     from = to;
-     to = gp_Pnt(curX1, curY0, curZ);
-     curOP->workSteps().push_back(new WSStraightMove(from, to));
-     curX1 -= curOP->cutWidth();
-
-     from = to;
-     to   = gp_Pnt(curX0, curY0, curZ);
-     curOP->workSteps().push_back(new WSStraightMove(from, to));
-     curY0 += curOP->cutWidth();
-
-     from = to;
-     to   = gp_Pnt(curX0, curY1, curZ);
-     curOP->workSteps().push_back(new WSStraightMove(from, to));
-     curX0 += curOP->cutWidth();
-
-     if (curX1 < curX0) {
-        qDebug() << "leave cutplane before closing rectangle - last y"
-                 << curY1 << " - y before:" << curY0;
-        from = to;
-        to.SetY(cycle ? curY0 : startPos.Y());
-        curOP->workSteps().push_back(new WSStraightMove(from, to));
-        break;
-        }
-     from = to;
-     to   = gp_Pnt(curX1, curY1, curZ);
-     curOP->workSteps().push_back(new WSStraightMove(from, to));
-     curY1 -= curOP->cutWidth();
-
-     from = to;
-     ++cycle;
-     } while (curY1 > curY0);
-  return to;
   }
 
 
-gp_Pnt SubOPSweep::sweepBigCounterClockwise(const Bnd_Box& bb, const gp_Pnt& lastTO) {
-  double xMin = bb.CornerMin().X() + curOP->cutWidth() - activeTool->fluteDiameter() / 2;
-  double xMax = bb.CornerMax().X() - curOP->cutWidth() + activeTool->fluteDiameter() / 2;
-  double yMin = bb.CornerMin().Y() + curOP->cutWidth() - activeTool->fluteDiameter() / 2;
-  double yMax = bb.CornerMax().Y() - curOP->cutWidth() + activeTool->fluteDiameter() / 2;
-  double curX0 = xMin;
-  double curX1 = xMax;
-  double curY0 = yMin;
-  double curY1 = yMax;
-  double curZ  = bb.CornerMin().Z();
-  gp_Pnt startPos(bb.CornerMax().X() + 0.6 * activeTool->fluteDiameter(), yMax, bb.CornerMin().Z());
-  gp_Pnt from = startPos, to = startPos;
-  TopoDS_Edge tp, fm;
-  Handle(AIS_Shape) path;
-  int               cycle = 0;
-
-  if (lastTO.X() || lastTO.Y() || lastTO.Z()) {
-     to = from = lastTO;
-     to.SetZ(from.Z() + 5);
-     curOP->workSteps().push_back(new WSTraverse(from, to));
-     from = to;
-     to.SetX(startPos.X());
-     to.SetY(startPos.Y());
-     curOP->workSteps().push_back(new WSTraverse(from, to));
-     from = to;
-     to   = startPos;
-     curOP->workSteps().push_back(new WSTraverse(from, to));
-     }
-  do {
-     from = to;
-     to = gp_Pnt(curX0, curY1, curZ);
-     curOP->workSteps().push_back(new WSStraightMove(from, to));
-     curY1 -= curOP->cutWidth();
-
-     from = to;
-     to   = gp_Pnt(curX0, curY0, curZ);
-     curOP->workSteps().push_back(new WSStraightMove(from, to));
-     curX0 += curOP->cutWidth();
-
-     from = to;
-     to   = gp_Pnt(curX1, curY0, curZ);
-     curOP->workSteps().push_back(new WSStraightMove(from, to));
-     curY0 += curOP->cutWidth();
-
-     if (curY1 < curY0) {
-        qDebug() << "leave cutplane before closing rectangle - last y"
-                 << curY1 << " - y before:" << curY0;
-        from = to;
-        to.SetY(cycle ? curY0 : startPos.Y());
-        curOP->workSteps().push_back(new WSStraightMove(from, to));
-        break;
-        }
-     from = to;
-     to   = gp_Pnt(curX1, curY1, curZ);
-     curOP->workSteps().push_back(new WSStraightMove(from, to));
-     curX1 -= curOP->cutWidth();
-
-     from = to;
-     ++cycle;
-     } while (curX1 > curX0);
-  return to;
-  }
-
-
-// parent already called fixit() and cleanup calls
-void SubOPSweep::toolPath() {
+void SubOPSweep::genRoughingToolPath() {
   if (!curOP->cutDepth()) return;
   processTargets();
   if (curOP->isVertical()) {
@@ -520,7 +327,7 @@ void SubOPSweep::toolPath() {
 
            qDebug() << "OP sweep - gonna create HORIZONTAL toolpath ...";
 
-           createHorizontalToolpaths(cutPlanes);
+           pPathBuilder->createHorizontalToolpaths(curOP, cutPlanes);
            }
         }
      }

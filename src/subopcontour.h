@@ -27,17 +27,18 @@
 #ifndef SUBOPCONTOUR_H
 #define SUBOPCONTOUR_H
 #include "operationsubpage.h"
+class PathBuilder;
 
 
 class SubOPContour : public OperationSubPage
 {
   Q_OBJECT
 public:
-  explicit SubOPContour(OperationListModel* olm, TargetDefListModel* tdModel, QWidget *parent = nullptr);
+  explicit SubOPContour(OperationListModel* olm, TargetDefListModel* tdModel, PathBuilder* pb, QWidget *parent = nullptr);
   virtual ~SubOPContour() = default;
 
-  virtual void toolPath() override;
-//  virtual void showToolPath() override;
+  virtual void genRoughingToolPath();
+  virtual void genFinishingToolPath();
   virtual void processTargets() override;
 
 public slots:

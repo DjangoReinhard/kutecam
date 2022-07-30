@@ -27,16 +27,18 @@
 #define SUBOPCLAMPINGPLUG_H
 #include "operationsubpage.h"
 class CCTargetDefinition;
+class PathBuilder;
 
 
 class SubOPClampingPlug : public OperationSubPage
 {
   Q_OBJECT
 public:
-  explicit SubOPClampingPlug(OperationListModel* olm, TargetDefListModel* tdModel, QWidget* parent = nullptr);
+  explicit SubOPClampingPlug(OperationListModel* olm, TargetDefListModel* tdModel, PathBuilder* pb, QWidget* parent = nullptr);
   virtual ~SubOPClampingPlug() = default;
 
-  virtual void toolPath() override;
+  virtual void genRoughingToolPath();
+  virtual void genFinishingToolPath();
 
 public slots:
   void createOP();

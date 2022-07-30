@@ -74,13 +74,13 @@ void SetupPage::changeVise(const QString &vise) {
 
   view3D->removeShape(work->vl);
   if (!work->vm.IsNull()) view3D->removeShape(work->vm);
-  view3D->removeShape(work->vr);
+  if (!work->vr.IsNull()) view3D->removeShape(work->vr);
   int vi = ui->cbVise->currentIndex();
 
   Core().loadVise(vises->vise(vi), work->vl, work->vm, work->vr);
   view3D->showShape(work->vl, false);
   if (!work->vm.IsNull()) view3D->showShape(work->vm, false);
-  view3D->showShape(work->vr, false);
+  if (!work->vr.IsNull()) view3D->showShape(work->vr, false);
   }
 
 
@@ -406,20 +406,14 @@ void SetupPage::fixVise() {
   Work*   work = Core().workData();
   Bnd_Box cBounds = work->clampingPlug->BoundingBox();
   gp_Trsf tVL = work->vl->Transformation();
-  gp_Trsf tVR = work->vr->Transformation();
   gp_Trsf mVL, mVM, mVR;
 
   if (ui->cOnTop->isChecked()) cBounds = work->workPiece->BoundingBox();
   mVL.SetTranslation({0, 0, 0}, {cBounds.CornerMin().X()
                                , ui->yVL->value()
                                , ui->zVL->value()});
-  mVR.SetTranslation({0, 0, 0}, {cBounds.CornerMax().X()
-                               , ui->yVR->value()
-                               , ui->zVR->value()});
   const TopoDS_Shape& bVL    = work->vl->Shape();
-  const TopoDS_Shape& bVR    = work->vr->Shape();
   TopoDS_Shape        nVL    = bVL.Moved(TopLoc_Location(mVL));
-  TopoDS_Shape        nVR    = bVR.Moved(TopLoc_Location(mVR));
   ProjectFile*        pf     = Core().projectFile();
   OcctQtViewer*       view3D = Core().view3D();
 
@@ -429,6 +423,8 @@ void SetupPage::fixVise() {
                                     , ui->yVL->value()
                                     , ui->zVL->value()));
 
+  view3D->removeShape(work->vl);
+  work->vl = new AIS_Shape(nVL);
   if (!work->vm.IsNull()) {
      gp_Trsf tVM = work->vm->Transformation();
 
@@ -447,25 +443,33 @@ void SetupPage::fixVise() {
      work->vm->SetColor(Quantity_NOC_GRAY);
      view3D->showShape(work->vm, false);
      }
-  pf->setValue("vise-right", QVector3D(cBounds.CornerMax().X()
-                                     , ui->yVR->value()
-                                     , ui->zVR->value()));
+  if (!work->vr.IsNull()) {
+     gp_Trsf tVR = work->vr->Transformation();
+
+     mVR.SetTranslation({0, 0, 0}, {cBounds.CornerMax().X()
+                                  , ui->yVR->value()
+                                  , ui->zVR->value()});
+     const TopoDS_Shape& bVR = work->vr->Shape();
+     TopoDS_Shape        nVR = bVR.Moved(TopLoc_Location(mVR));
+
+     pf->setValue("vise-right", QVector3D(cBounds.CornerMax().X()
+                                        , ui->yVR->value()
+                                        , ui->zVR->value()));
+     view3D->removeShape(work->vr);
+     work->vr = new AIS_Shape(nVR);
+     work->vr->SetColor(Quantity_NOC_GRAY);
+     view3D->showShape(work->vr, false);
+     }
   pf->endGroup();
-  view3D->removeShape(work->vl);
-  view3D->removeShape(work->vr);
-  work->vl = new AIS_Shape(nVL);
-  work->vr = new AIS_Shape(nVR);
   Bnd_Box bb = work->vl->BoundingBox();
 
   if (!work->vm.IsNull()) bb.Add(work->vm->BoundingBox());
-  bb.Add(work->vr->BoundingBox());
+  if (!work->vr.IsNull()) bb.Add(work->vr->BoundingBox());
   work->vise = new AIS_Shape(BRepPrimAPI_MakeBox(bb.CornerMin(), bb.CornerMax()).Shape());
   work->vise->SetColor(Quantity_NOC_GRAY);
   work->vise->SetTransparency(0.6);
   work->vl->SetColor(Quantity_NOC_GRAY);
-  work->vr->SetColor(Quantity_NOC_GRAY);
   view3D->showShape(work->vl, false);
-  view3D->showShape(work->vr, false);
   enableVise(false);
   exploreModel(work->model->Shape());
   setupDone();
@@ -597,19 +601,13 @@ void SetupPage::loadProject(ProjectFile* pf, const TopoDS_Shape& mShape) {
   assert(ve != nullptr);
   Core().loadVise(ve, work->vl, work->vm, work->vr);
   qloc = pf->value("vise-left").value<QVector3D>();
-  qrot = pf->value("vise-right").value<QVector3D>();
   gp_Trsf mVL, mVM, mVR;
 
   mVL.SetTranslation({0, 0, 0}, {qloc.x()
                                , qloc.y()
                                , qloc.z()});
-  mVR.SetTranslation({0, 0, 0}, {qrot.x()
-                               , qrot.y()
-                               , qrot.z()});
   tmp = work->vl->Shape().Moved(TopLoc_Location(mVL));
   work->vl  = new AIS_Shape(tmp);
-  tmp = work->vr->Shape().Moved(TopLoc_Location(mVR));
-  work->vr  = new AIS_Shape(tmp);
 
   if (!work->vm.IsNull()) {
      qloc = pf->value("vise-middle").value<QVector3D>();
@@ -621,19 +619,22 @@ void SetupPage::loadProject(ProjectFile* pf, const TopoDS_Shape& mShape) {
      work->vm->SetColor(Quantity_NOC_GRAY);
      view3D->showShape(work->vm, false);
      }
+  if (!work->vr.IsNull()) {
+     qrot = pf->value("vise-right").value<QVector3D>();
+     mVR.SetTranslation({0, 0, 0}, {qrot.x()
+                                  , qrot.y()
+                                  , qrot.z()});
+     tmp = work->vr->Shape().Moved(TopLoc_Location(mVR));
+     work->vr  = new AIS_Shape(tmp);
+     work->vr->SetColor(Quantity_NOC_GRAY);
+     view3D->showShape(work->vr, false);
+     }
   work->vl->SetColor(Quantity_NOC_GRAY);
-  work->vr->SetColor(Quantity_NOC_GRAY);
   view3D->showShape(work->vl, false);
-  view3D->showShape(work->vr, false);
   bb = work->vl->BoundingBox();
   if (!work->vm.IsNull()) bb.Add(work->vm->BoundingBox());
-  bb.Add(work->vr->BoundingBox());
+  if (!work->vr.IsNull()) bb.Add(work->vr->BoundingBox());
   work->vise = new AIS_Shape(BRepPrimAPI_MakeBox(bb.CornerMin(), bb.CornerMax()).Shape());
-//  QFile tfn = pf->value("Tool-file").toString();
-
-//  if (tfn.exists()) {
-//     Core().loadTools(tfn.fileName());
-//     }
   enableModel(false);
   view3D->iso1View();
   pf->endGroup();
@@ -762,12 +763,14 @@ void SetupPage::updateVise() {
      work->vm->SetColor(Quantity_NOC_GRAY);
      view3D->showShape(work->vm, false);
      }
-  mR.SetTranslation({0, 0, 0}, {ui->xVR->value()
-                              , ui->yVR->value()
-                              , ui->zVR->value()});
-  work->vr->SetLocalTransformation(mR);
-  work->vr->SetColor(Quantity_NOC_GRAY);
-  view3D->showShape(work->vr, false);
+  if (!work->vr.IsNull()) {
+     mR.SetTranslation({0, 0, 0}, {ui->xVR->value()
+                                 , ui->yVR->value()
+                                 , ui->zVR->value()});
+     work->vr->SetLocalTransformation(mR);
+     work->vr->SetColor(Quantity_NOC_GRAY);
+     view3D->showShape(work->vr, false);
+     }
   view3D->refresh();
   }
 

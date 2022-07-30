@@ -37,6 +37,7 @@ ContourTargetDefinition::ContourTargetDefinition(const gp_Pnt& pos, double maxRa
 ContourTargetDefinition::ContourTargetDefinition(QSettings& s, QObject* parent)
  : TargetDefinition(s, parent)
  , rMin(0) {
+  rMin = s.value("minRadius").toDouble();
   }
 
 

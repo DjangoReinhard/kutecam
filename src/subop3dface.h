@@ -1,12 +1,11 @@
 /* 
  * **************************************************************************
  * 
- *  file:       subopdrill.h
+ *  file:       subop3dface.h
  *  project:    kuteCAM
  *  subproject: main application
- *  purpose:    create a graphical application, that assists in identify
- *              and process model elements                        
- *  created:    7.4.2022 by Django Reinhard
+ *  purpose:    create gcode for toolpaths created from CAD models
+ *  created:    16.6.2022 by Django Reinhard
  *  copyright:  (c) 2022 Django Reinhard -  all rights reserved
  * 
  *  This program is free software: you can redistribute it and/or modify 
@@ -24,18 +23,18 @@
  * 
  * **************************************************************************
  */
-#ifndef SUBOPDRILL_H
-#define SUBOPDRILL_H
+#ifndef SUBOP3DFACE_H
+#define SUBOP3DFACE_H
 #include "operationsubpage.h"
 class PathBuilder;
 
 
-class SubOPDrill : public OperationSubPage
+class SubOP3DFace : public OperationSubPage
 {
   Q_OBJECT
 public:
-  explicit SubOPDrill(OperationListModel* olm, TargetDefListModel* tdModel, PathBuilder* pb, QWidget *parent = nullptr);
-  virtual ~SubOPDrill() = default;
+  explicit SubOP3DFace(OperationListModel* olm, TargetDefListModel* tdModel, PathBuilder* pb, QWidget* parent = nullptr);
+  virtual ~SubOP3DFace() = default;
 
   virtual void genRoughingToolPath();
   virtual void genFinishingToolPath();
@@ -45,7 +44,6 @@ public slots:
 
 protected:
   void processSelection() override;
-  void showToolPath(Operation* op) override;
-  bool validateDrillTargets();
+  void processTargets() override;
   };
-#endif // SUBOPDRILL_H
+#endif // SUBOP3DFACE_H

@@ -73,38 +73,38 @@
 <context>
     <name>ConfigPage</name>
     <message>
-        <location filename="../src/configpage.cpp" line="122"/>
-        <source>GCode-Settings</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/configpage.cpp" line="123"/>
-        <source>Material</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../src/configpage.cpp" line="124"/>
-        <source>Tools</source>
+        <source>General Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/configpage.cpp" line="125"/>
+        <source>Material</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/configpage.cpp" line="126"/>
+        <source>Tools</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/configpage.cpp" line="127"/>
         <source>Vises</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/configpage.cpp" line="132"/>
+        <location filename="../src/configpage.cpp" line="134"/>
         <source>QFileDialog::getOpenFileName()</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/configpage.cpp" line="134"/>
-        <location filename="../src/configpage.cpp" line="160"/>
+        <location filename="../src/configpage.cpp" line="136"/>
+        <location filename="../src/configpage.cpp" line="162"/>
         <source>XML-Documents (*.xml)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/configpage.cpp" line="158"/>
+        <location filename="../src/configpage.cpp" line="160"/>
         <source>QFileDialog::getSaveFileName()</source>
         <translation type="unfinished"></translation>
     </message>
@@ -112,37 +112,37 @@
 <context>
     <name>Core</name>
     <message>
-        <location filename="../src/core.cpp" line="91"/>
+        <location filename="../src/core.cpp" line="96"/>
         <source>QFileDialog::getOpenFileName()</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/core.cpp" line="113"/>
+        <location filename="../src/core.cpp" line="118"/>
         <source>QFileDialog::getSaveFileName()</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/core.cpp" line="115"/>
+        <location filename="../src/core.cpp" line="120"/>
         <source>Project Files (*.prj)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/core.cpp" line="263"/>
+        <location filename="../src/core.cpp" line="273"/>
         <source>System Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/core.cpp" line="362"/>
+        <location filename="../src/core.cpp" line="382"/>
         <source>Workpiece</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/core.cpp" line="363"/>
+        <location filename="../src/core.cpp" line="383"/>
         <source>Preferences</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/core.cpp" line="364"/>
+        <location filename="../src/core.cpp" line="384"/>
         <source>Operations</source>
         <translation type="unfinished"></translation>
     </message>
@@ -377,6 +377,74 @@
     </message>
 </context>
 <context>
+    <name>GeneralConfig</name>
+    <message>
+        <location filename="../src/cfgGeneral.ui" line="35"/>
+        <source> - Code Generation - </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/cfgGeneral.ui" line="72"/>
+        <source>PostProcessor</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/cfgGeneral.ui" line="79"/>
+        <source>all Operations in one file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/cfgGeneral.ui" line="92"/>
+        <source>gen. Toolchange for separate files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/cfgGeneral.ui" line="115"/>
+        <source>- Common -</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/cfgGeneral.ui" line="149"/>
+        <source> - Machine - </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/cfgGeneral.ui" line="211"/>
+        <source>B-axis moves workpiece (Table)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/cfgGeneral.ui" line="187"/>
+        <source>Machine has BC-axis</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/cfgGeneral.ui" line="136"/>
+        <source>auto rotate face on selection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/cfgGeneral.ui" line="170"/>
+        <source>Machine has AC-axis</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/cfgGeneral.ui" line="177"/>
+        <source>C-axis moves workpiece (Table)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/cfgGeneral.ui" line="194"/>
+        <source>A-axis moves workpiece (Table)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/cfgGeneral.ui" line="204"/>
+        <source>Machine has ABC-axis</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>GeneralTab</name>
     <message>
         <location filename="../src/aboutdialog.cpp" line="64"/>
@@ -387,37 +455,37 @@
 <context>
     <name>GeomNode</name>
     <message>
-        <location filename="../src/geomnodemodel.cpp" line="123"/>
+        <location filename="../src/geomnodemodel.cpp" line="124"/>
         <source>Face</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/geomnodemodel.cpp" line="124"/>
+        <location filename="../src/geomnodemodel.cpp" line="125"/>
         <source>Plane</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/geomnodemodel.cpp" line="125"/>
+        <location filename="../src/geomnodemodel.cpp" line="126"/>
         <source>Line</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/geomnodemodel.cpp" line="126"/>
+        <location filename="../src/geomnodemodel.cpp" line="127"/>
         <source>Ellipse</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/geomnodemodel.cpp" line="127"/>
+        <location filename="../src/geomnodemodel.cpp" line="128"/>
         <source>Circle</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/geomnodemodel.cpp" line="128"/>
+        <location filename="../src/geomnodemodel.cpp" line="129"/>
         <source>Curve</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/geomnodemodel.cpp" line="129"/>
+        <location filename="../src/geomnodemodel.cpp" line="130"/>
         <source>Type</source>
         <translation type="unfinished"></translation>
     </message>
@@ -474,7 +542,7 @@
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="480"/>
-        <location filename="../src/mainwindow.ui" line="627"/>
+        <location filename="../src/mainwindow.ui" line="630"/>
         <source>Operations</source>
         <translation type="unfinished"></translation>
     </message>
@@ -484,234 +552,244 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="496"/>
+        <location filename="../src/mainwindow.ui" line="499"/>
         <source>&amp;Selection</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="514"/>
+        <location filename="../src/mainwindow.ui" line="517"/>
         <source>Setup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="529"/>
+        <location filename="../src/mainwindow.ui" line="532"/>
         <source>open &amp;CAD File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="540"/>
+        <location filename="../src/mainwindow.ui" line="543"/>
         <source>&amp;Orthografic</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="545"/>
+        <location filename="../src/mainwindow.ui" line="548"/>
         <source>&amp;Top</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="550"/>
+        <location filename="../src/mainwindow.ui" line="553"/>
         <source>&amp;Front</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="555"/>
+        <location filename="../src/mainwindow.ui" line="558"/>
         <source>&amp;Left</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="560"/>
+        <location filename="../src/mainwindow.ui" line="563"/>
         <source>&amp;Bottom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="565"/>
+        <location filename="../src/mainwindow.ui" line="568"/>
         <source>Back</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="568"/>
+        <location filename="../src/mainwindow.ui" line="571"/>
         <source>B&amp;ack</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="573"/>
+        <location filename="../src/mainwindow.ui" line="576"/>
         <source>&amp;Right</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="578"/>
+        <location filename="../src/mainwindow.ui" line="581"/>
         <source>Zoom &amp;fit to Window</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="583"/>
+        <location filename="../src/mainwindow.ui" line="586"/>
         <source>E&amp;xit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="588"/>
+        <location filename="../src/mainwindow.ui" line="591"/>
         <source>Iso&amp;1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="593"/>
+        <location filename="../src/mainwindow.ui" line="596"/>
         <source>About</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="598"/>
+        <location filename="../src/mainwindow.ui" line="601"/>
         <source>Iso&amp;2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="603"/>
+        <location filename="../src/mainwindow.ui" line="606"/>
         <source>open &amp;Project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="611"/>
+        <location filename="../src/mainwindow.ui" line="614"/>
         <source>sa&amp;ve Project as</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="614"/>
+        <location filename="../src/mainwindow.ui" line="617"/>
         <source>save Project as</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="619"/>
+        <location filename="../src/mainwindow.ui" line="622"/>
         <source>Model</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="632"/>
-        <location filename="../src/mainwindow.ui" line="744"/>
+        <location filename="../src/mainwindow.ui" line="635"/>
+        <location filename="../src/mainwindow.ui" line="747"/>
         <source>Preferences</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="637"/>
+        <location filename="../src/mainwindow.ui" line="640"/>
         <source>open &amp;Tools</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="642"/>
+        <location filename="../src/mainwindow.ui" line="645"/>
         <source>&amp;save Tools</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="650"/>
+        <location filename="../src/mainwindow.ui" line="653"/>
         <source>hide Model</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="653"/>
+        <location filename="../src/mainwindow.ui" line="656"/>
         <source>&amp;hide Model</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="658"/>
+        <location filename="../src/mainwindow.ui" line="661"/>
         <source>Info</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="666"/>
+        <location filename="../src/mainwindow.ui" line="669"/>
         <source>Wireframe</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="671"/>
+        <location filename="../src/mainwindow.ui" line="674"/>
         <source>&amp;Create Toolpath</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="676"/>
+        <location filename="../src/mainwindow.ui" line="679"/>
         <source>&amp;Generate GCode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="681"/>
+        <location filename="../src/mainwindow.ui" line="684"/>
         <source>Remo&amp;ve</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="686"/>
+        <location filename="../src/mainwindow.ui" line="689"/>
         <source>Contou&amp;r</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="691"/>
+        <location filename="../src/mainwindow.ui" line="694"/>
         <source>&amp;Drill Cycle</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="696"/>
+        <location filename="../src/mainwindow.ui" line="699"/>
         <source>S&amp;weep</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="701"/>
+        <location filename="../src/mainwindow.ui" line="704"/>
         <source>Misc</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="706"/>
+        <location filename="../src/mainwindow.ui" line="709"/>
         <source>Iso&amp;3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="711"/>
+        <location filename="../src/mainwindow.ui" line="714"/>
         <source>Iso&amp;4</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="716"/>
+        <location filename="../src/mainwindow.ui" line="719"/>
         <source>Test</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="721"/>
+        <location filename="../src/mainwindow.ui" line="724"/>
         <source>&amp;Reprocess Selection</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="726"/>
+        <location filename="../src/mainwindow.ui" line="729"/>
         <source>Clamping &amp;Plug</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="734"/>
+        <location filename="../src/mainwindow.ui" line="737"/>
         <source>&amp;vertical</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="739"/>
+        <location filename="../src/mainwindow.ui" line="742"/>
         <source>&amp;horizontal</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="752"/>
+        <location filename="../src/mainwindow.ui" line="755"/>
         <source>clip View</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="760"/>
+        <location filename="../src/mainwindow.ui" line="763"/>
         <source>Clip-Y</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="768"/>
+        <location filename="../src/mainwindow.ui" line="771"/>
         <source>save Project</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="776"/>
+        <location filename="../src/mainwindow.ui" line="779"/>
         <source>hide Toolpath</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="781"/>
+        <location filename="../src/mainwindow.ui" line="784"/>
         <source>&amp;Simulate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="789"/>
+        <source>&amp;Notch</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="794"/>
+        <source>&amp;3D Surface</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -856,87 +934,87 @@
 <context>
     <name>OpSub</name>
     <message>
-        <location filename="../src/opSub.ui" line="58"/>
+        <location filename="../src/opSub.ui" line="51"/>
         <source>F 500</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/opSub.ui" line="68"/>
+        <location filename="../src/opSub.ui" line="61"/>
         <source>invert In/Out</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/opSub.ui" line="113"/>
+        <location filename="../src/opSub.ui" line="106"/>
         <source>[min/max]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/opSub.ui" line="165"/>
+        <location filename="../src/opSub.ui" line="158"/>
         <source>Cooling</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/opSub.ui" line="172"/>
+        <location filename="../src/opSub.ui" line="165"/>
         <source>Cycle</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/opSub.ui" line="198"/>
+        <location filename="../src/opSub.ui" line="191"/>
         <source>Tool</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/opSub.ui" line="218"/>
+        <location filename="../src/opSub.ui" line="211"/>
         <source>Depth</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/opSub.ui" line="225"/>
+        <location filename="../src/opSub.ui" line="218"/>
         <source>[Vc /  fz]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/opSub.ui" line="241"/>
+        <location filename="../src/opSub.ui" line="234"/>
         <source>Speed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/opSub.ui" line="254"/>
+        <location filename="../src/opSub.ui" line="247"/>
         <source>safe Z</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/opSub.ui" line="284"/>
+        <location filename="../src/opSub.ui" line="278"/>
         <source>S 3000</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/opSub.ui" line="294"/>
+        <location filename="../src/opSub.ui" line="288"/>
         <source>Dir</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/opSub.ui" line="304"/>
+        <location filename="../src/opSub.ui" line="298"/>
         <source>absolute</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/opSub.ui" line="323"/>
+        <location filename="../src/opSub.ui" line="317"/>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/opSub.ui" line="330"/>
-        <source>Step</source>
+        <location filename="../src/opSub.ui" line="324"/>
+        <source>Cut</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/opSub.ui" line="343"/>
+        <location filename="../src/opSub.ui" line="337"/>
         <source>[ae / ap]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/opSub.ui" line="387"/>
+        <location filename="../src/opSub.ui" line="381"/>
         <source>retract / dwell</source>
         <translation type="unfinished"></translation>
     </message>
@@ -992,37 +1070,37 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationsubpage.cpp" line="298"/>
+        <location filename="../src/operationsubpage.cpp" line="310"/>
         <source>G80 - no Cycle</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationsubpage.cpp" line="299"/>
+        <location filename="../src/operationsubpage.cpp" line="311"/>
         <source>G76 - fine Boring Cycle</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationsubpage.cpp" line="300"/>
+        <location filename="../src/operationsubpage.cpp" line="312"/>
         <source>G81 - Spot Drill Cycle</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationsubpage.cpp" line="301"/>
+        <location filename="../src/operationsubpage.cpp" line="313"/>
         <source>G82 - Drill with Dwell</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationsubpage.cpp" line="302"/>
+        <location filename="../src/operationsubpage.cpp" line="314"/>
         <source>G83 - Peck Drilling</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationsubpage.cpp" line="303"/>
+        <location filename="../src/operationsubpage.cpp" line="315"/>
         <source>G84 - Tapping</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationsubpage.cpp" line="304"/>
+        <location filename="../src/operationsubpage.cpp" line="316"/>
         <source>G85 - Boring Cycle</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1035,62 +1113,62 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operations.ui" line="176"/>
+        <location filename="../src/operations.ui" line="182"/>
         <source>Operation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operations.ui" line="181"/>
+        <location filename="../src/operations.ui" line="187"/>
         <source>Targets</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operations.ui" line="216"/>
+        <location filename="../src/operations.ui" line="222"/>
         <source>Information</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operations.ui" line="247"/>
+        <location filename="../src/operations.ui" line="253"/>
         <source>create Waterline </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operations.ui" line="269"/>
+        <location filename="../src/operations.ui" line="275"/>
         <source>A</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operations.ui" line="295"/>
+        <location filename="../src/operations.ui" line="304"/>
         <source>B</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationspage.cpp" line="210"/>
+        <location filename="../src/operationspage.cpp" line="259"/>
         <source>Delete Target Definition?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationspage.cpp" line="211"/>
+        <location filename="../src/operationspage.cpp" line="260"/>
         <source>&lt;p&gt;You&apos;re going to delete the selected target definition. This operation can not be undone.&lt;/p&gt;&lt;p&gt;Proceed?&lt;/p&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationspage.cpp" line="228"/>
+        <location filename="../src/operationspage.cpp" line="277"/>
         <source>Delete Operation?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationspage.cpp" line="229"/>
+        <location filename="../src/operationspage.cpp" line="278"/>
         <source>&lt;p&gt;You&apos;re going to delete the selected Operation.&lt;/p&gt;&lt;p&gt;Proceed?&lt;/p&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationspage.cpp" line="257"/>
+        <location filename="../src/operationspage.cpp" line="306"/>
         <source>GCode Files (*.%1)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/operationspage.cpp" line="259"/>
+        <location filename="../src/operationspage.cpp" line="308"/>
         <source>QFileDialog::getSaveFileName()</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1334,7 +1412,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/setuppage.cpp" line="702"/>
+        <location filename="../src/setuppage.cpp" line="703"/>
         <source>select element from model and create Operation</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1374,6 +1452,14 @@
     </message>
 </context>
 <context>
+    <name>SubOP3DFace</name>
+    <message>
+        <location filename="../src/subop3dface.cpp" line="52"/>
+        <source>Notch #%1</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>SubOPClampingPlug</name>
     <message>
         <location filename="../src/subopclampingplug.cpp" line="63"/>
@@ -1397,15 +1483,33 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/subopdrill.cpp" line="66"/>
+        <location filename="../src/subopdrill.cpp" line="56"/>
+        <source>reduce drilldepth by</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/subopdrill.cpp" line="59"/>
+        <source>Drilldepth</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/subopdrill.cpp" line="72"/>
         <source>Drill #%1</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>SubOPNotch</name>
+    <message>
+        <location filename="../src/subopnotch.cpp" line="72"/>
+        <source>Notch #%1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>SubOPSweep</name>
     <message>
-        <location filename="../src/subopsweep.cpp" line="166"/>
+        <location filename="../src/subopsweep.cpp" line="85"/>
         <source>Sweep #%1</source>
         <translation type="unfinished"></translation>
     </message>
